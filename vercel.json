@@ -1,0 +1,17 @@
+{
+  "buildCommand": "next build",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "installCommand": "npm install",
+  "regions": ["iad1"],
+  "images": {
+    "domains": [
+      "placehold.co",
+      "res.cloudinary.com",
+      "images.unsplash.com",
+      "i.postimg.cc",
+      "commondatastorage.googleapis.com"
+    ]
+  },
+  "rewrites": [{ "source": "/(.*)", "destination": "/" }]
+}
