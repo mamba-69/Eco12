@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
 import { AuthProvider } from "@/app/context/AuthContext";
@@ -14,6 +14,7 @@ import {
   FiLogOut,
   FiMenu,
   FiAlertCircle,
+  FiLoader,
 } from "react-icons/fi";
 
 // This is the actual component that uses the useAuth hook
@@ -21,13 +22,40 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   const { user, isAdmin, signOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Protect the admin routes
+  // Protect the admin routes, but wait for auth to initialize
   useEffect(() => {
-    if (!isAdmin) {
-      router.push("/auth/login");
-    }
-  }, [isAdmin, router]);
+    // Set a timeout to allow the auth state to be properly loaded
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+      if (user === null) {
+        // No user is logged in
+        router.push("/auth/login");
+      } else if (!isAdmin) {
+        // User is logged in but not an admin
+        router.push("/auth/login");
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [isAdmin, router, user]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md max-w-md w-full text-center">
+          <div className="animate-spin text-primary mb-4 mx-auto">
+            <FiLoader size={48} />
+          </div>
+          <h1 className="text-2xl font-bold mb-4">Loading</h1>
+          <p className="text-gray-600 dark:text-gray-300 mb-6">
+            Verifying admin access...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAdmin) {
     return (
