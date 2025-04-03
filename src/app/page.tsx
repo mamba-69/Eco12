@@ -28,12 +28,12 @@ export default function Home() {
         </div>
       </div>
 
-      <Link
+      <a
         href="/app"
         className="mt-8 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full transition-all"
       >
         Enter Full Site
-      </Link>
+      </a>
     </div>
   );
 }

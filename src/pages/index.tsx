@@ -28,12 +28,12 @@ export default function LegacyHomePage() {
         </div>
       </div>
 
-      <Link
-        href="/app"
+      <a
+        href="/"
         className="mt-8 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full transition-all"
       >
-        Enter Full Site
-      </Link>
+        Visit Our Site
+      </a>
     </div>
   );
 }
