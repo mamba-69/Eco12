@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
+  swcMinify: true,
   images: {
     domains: [
       "placehold.co",
@@ -19,6 +20,9 @@ const nextConfig = {
     optimizePackageImports: ["framer-motion", "react-icons"],
   },
   output: "standalone",
+  distDir: ".next",
+  poweredByHeader: false,
+  trailingSlash: false,
 };
 
 module.exports = nextConfig;
