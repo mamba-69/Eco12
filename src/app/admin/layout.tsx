@@ -3,10 +3,21 @@
 import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
+import { AuthProvider } from "@/app/context/AuthContext";
 import Link from "next/link";
-import { FiHome, FiSettings, FiLayout, FiImage, FiUsers, FiLogOut, FiMenu, FiAlertCircle } from "react-icons/fi";
+import {
+  FiHome,
+  FiSettings,
+  FiLayout,
+  FiImage,
+  FiUsers,
+  FiLogOut,
+  FiMenu,
+  FiAlertCircle,
+} from "react-icons/fi";
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+// This is the actual component that uses the useAuth hook
+function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   const { user, isAdmin, signOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -88,13 +99,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <span className="text-xl font-bold">Admin Panel</span>
           </Link>
         </div>
-        
+
         <nav className="p-4">
           <ul className="space-y-1">
             {navLinks.map((link) => {
-              const isActive = pathname === link.href || 
-                               (link.submenu && link.submenu.some(sublink => pathname === sublink.href));
-              
+              const isActive =
+                pathname === link.href ||
+                (link.submenu &&
+                  link.submenu.some((sublink) => pathname === sublink.href));
+
               return (
                 <li key={link.href}>
                   <Link
@@ -108,13 +121,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <span className="mr-3">{link.icon}</span>
                     <span>{link.name}</span>
                   </Link>
-                  
+
                   {/* Submenu */}
                   {link.submenu && (
                     <ul className="ml-8 mt-1 space-y-1">
                       {link.submenu.map((sublink) => {
                         const isSubActive = pathname === sublink.href;
-                        
+
                         return (
                           <li key={sublink.href}>
                             <Link
@@ -180,4 +193,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </main>
     </div>
   );
-} 
+}
+
+// Wrapper component that provides the AuthProvider
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <AuthProvider>
+      <AdminLayoutContent>{children}</AdminLayoutContent>
+    </AuthProvider>
+  );
+}
