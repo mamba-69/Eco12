@@ -43,8 +43,8 @@ export default function Footer() {
         siteSettings.footerText ||
           `© ${new Date().getFullYear()} Eco-Expert Recycling. All rights reserved.`
       );
-      setContactEmail(siteSettings.contactEmail || "connect@ecoverva.com");
-      setContactPhone(siteSettings.contactPhone || "1800-120-ECOV");
+      setContactEmail(siteSettings.contactEmail || "experttechnology2016@gmail.com");
+      setContactPhone(siteSettings.contactPhone || "91+ 7096444414");
       setContactAddress(
         siteSettings.contactAddress ||
           "Unit 1116, 1117 & 1119, 11th Floor BPTP Park Centra, Sector 30 NH8, Gurgaon, Haryana 122001"
@@ -96,7 +96,16 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Company Info */}
           <div>
-            <h3 className="text-xl font-bold mb-4">Eco-Expert</h3>
+            <div className="flex items-center mb-4">
+              <Image
+                src="/images/logox.png"
+                alt="Eco-Expert Recycling"
+                width={40}
+                height={40}
+                className="mr-2"
+              />
+              <h3 className="text-xl font-bold">Eco-Expert</h3>
+            </div>
             <p className="text-muted-foreground mb-4">
               Transforming electronic waste into valuable resources for a
               sustainable future.

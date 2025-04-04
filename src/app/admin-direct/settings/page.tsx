@@ -26,82 +26,79 @@ import { broadcastSettingsChange } from "@/app/lib/sitebridge";
 // Inline AdminSidebar component for deployment compatibility
 function AdminSidebar() {
   return (
-    <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 fixed h-full shadow-sm">
-      <div className="p-5 border-b border-gray-200 dark:border-gray-700">
-        <Link href="/admin-direct" className="flex items-center space-x-2">
-          <div className="h-8 w-8 rounded-md bg-green-600 flex items-center justify-center">
-            <span className="text-white font-bold text-lg">G</span>
+    <div className="fixed left-0 top-0 h-screen w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-10">
+      <div className="flex flex-col h-full">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center">
+            <img
+              src="/images/logox.png"
+              alt="Eco-Expert Recycling"
+              className="w-10 h-10 mr-3"
+            />
+            <div>
+              <h2 className="text-lg font-bold flex items-center">
+                <span className="text-green-600 dark:text-green-400">Eco-</span>
+                Expert
+              </h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Admin Panel
+              </p>
+            </div>
           </div>
-          <span className="text-lg font-semibold dark:text-white">
-            Guj Admin
-          </span>
-        </Link>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          Direct access mode
-        </p>
-      </div>
+        </div>
 
-      <nav className="mt-6 px-4">
-        <ul className="space-y-1">
-          <li>
-            <Link
+        <div className="p-4 flex-1">
+          <nav className="space-y-1">
+            <a
               href="/admin-direct"
-              className="flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/50"
+              className="flex items-center px-4 py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
             >
-              <FiHome className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-              <span>Dashboard</span>
-            </Link>
-          </li>
-          <li>
-            <Link
+              <FiHome className="w-5 h-5 mr-3" />
+              Dashboard
+            </a>
+            <a
               href="/admin-direct/content"
-              className="flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/50"
+              className="flex items-center px-4 py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
             >
-              <FiLayout className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-              <span>Content</span>
-            </Link>
-          </li>
-          <li>
-            <Link
+              <FiLayout className="w-5 h-5 mr-3" />
+              Content
+            </a>
+            <a
               href="/admin-direct/media"
-              className="flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/50"
+              className="flex items-center px-4 py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
             >
-              <FiImage className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-              <span>Media</span>
-            </Link>
-          </li>
-          <li>
-            <Link
+              <FiImage className="w-5 h-5 mr-3" />
+              Media
+            </a>
+            <a
               href="/admin-direct/users"
-              className="flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/50"
+              className="flex items-center px-4 py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
             >
-              <FiUsers className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-              <span>Users</span>
-            </Link>
-          </li>
-          <li>
-            <Link
+              <FiUsers className="w-5 h-5 mr-3" />
+              Users
+            </a>
+            <a
               href="/admin-direct/settings"
-              className="flex items-center space-x-3 px-3 py-2.5 rounded-lg bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400"
+              className="flex items-center px-4 py-3 bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-lg font-medium"
             >
-              <FiSettings className="w-5 h-5 text-green-600 dark:text-green-400" />
-              <span>Settings</span>
-            </Link>
-          </li>
-        </ul>
-      </nav>
+              <FiSettings className="w-5 h-5 mr-3" />
+              Settings
+            </a>
+          </nav>
+        </div>
 
-      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 dark:border-gray-700">
-        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-          <h3 className="text-sm font-medium text-gray-800 dark:text-white mb-1">
-            Direct Admin Access
-          </h3>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            This admin panel bypasses authentication for development purposes.
-          </p>
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700 mt-auto">
+          <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+            <h3 className="text-sm font-medium text-gray-800 dark:text-white mb-1">
+              Direct Admin Access
+            </h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              This admin panel bypasses authentication for development purposes.
+            </p>
+          </div>
         </div>
       </div>
-    </aside>
+    </div>
   );
 }
 

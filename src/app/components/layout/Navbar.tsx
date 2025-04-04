@@ -22,7 +22,7 @@ export default function Navbar() {
   const { siteSettings } = useStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [logoUrl, setLogoUrl] = useState<string>("/images/logo.svg");
+  const [logoUrl, setLogoUrl] = useState<string>("/images/logox.png");
   const [primaryColor, setPrimaryColor] = useState<string>("#2ECC71");
   const [siteName, setSiteName] = useState<string>("Eco-Expert");
 
@@ -34,7 +34,8 @@ export default function Navbar() {
   // Load settings from store when component mounts
   useEffect(() => {
     if (siteSettings) {
-      setLogoUrl(siteSettings.logoUrl || "/images/logo.svg");
+      // Always default to logox.png if no custom logo is set
+      setLogoUrl(siteSettings.logoUrl || "/images/logox.png");
       setPrimaryColor(siteSettings.primaryColor || "#2ECC71");
       setSiteName(siteSettings.siteName || "Eco-Expert");
     }
@@ -64,114 +65,41 @@ export default function Navbar() {
 
   // Logo component with advanced styling
   const Logo = () => {
-    // Check if logoUrl is an external URL (for custom logos set in admin)
-    const isExternalLogo =
-      logoUrl && (logoUrl.startsWith("http") || logoUrl.startsWith("https"));
+    // Always use the logox.png unless explicitly changed in admin
+    const isCustomLogo =
+      logoUrl !== "/images/logox.png" &&
+      (logoUrl.startsWith("http") || logoUrl.startsWith("https"));
 
-    // If using a custom logo from settings
-    if (isExternalLogo) {
-      return (
-        <div className="flex items-center">
-          <div className="relative w-10 h-10 mr-2 overflow-hidden">
-            <Image
-              src={logoUrl}
-              alt={siteName || "Logo"}
-              width={40}
-              height={40}
-              className="object-contain"
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <div className="flex items-baseline">
-              <span
-                className="font-extrabold text-xl tracking-tight"
-                style={{ color: primaryColor }}
-              >
-                {siteName?.split(" ")[0] || "Eco"}
-              </span>
-              {siteName?.split(" ")[1] && (
-                <span className="font-extrabold text-xl text-foreground ml-1">
-                  {siteName?.split(" ")[1]}
-                </span>
-              )}
-            </div>
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium leading-tight">
-              Recycling PVT. LTD.
-            </span>
-          </div>
-        </div>
-      );
-    }
-
-    // Default logo with customizable color
+    // If using the default logox.png or a custom logo from settings
     return (
       <div className="flex items-center">
-        <div className="relative w-10 h-10 mr-2">
-          {/* Base circle */}
-          <div
-            className="absolute inset-0 rounded-full shadow-lg transform -rotate-6"
-            style={{
-              background: `linear-gradient(to bottom right, ${primaryColor}, ${primaryColor}CC)`,
-            }}
+        <div className="relative w-12 h-12 mr-2 overflow-hidden">
+          <Image
+            src={logoUrl}
+            alt={siteName || "Eco-Expert Recycling"}
+            width={48}
+            height={48}
+            className="object-contain hover:scale-105 transition-transform"
+            priority
           />
-
-          {/* Leaf icon */}
-          <svg
-            className="absolute inset-0 w-full h-full p-1"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"
-              fill="transparent"
-            />
-            <path
-              fillRule="evenodd"
-              clipRule="evenodd"
-              d="M7 8.5C7 5.46 9.46 3 12.5 3S18 5.46 18 8.5C18 11.54 15.54 14 12.5 14H7V8.5Z"
-              fill="white"
-              opacity="0.9"
-            />
-            <path
-              d="M12.5 14V20"
-              stroke="white"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-            <path
-              d="M9.5 17L15.5 17"
-              stroke="white"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-            <path
-              d="M11 8.5C11 7.67 11.67 7 12.5 7C13.33 7 14 7.67 14 8.5C14 9.33 13.33 10 12.5 10"
-              stroke="white"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
-          </svg>
-
-          {/* Circular orbit */}
-          <div className="absolute inset-0 rounded-full border-2 border-white/20 animate-spin-slow" />
         </div>
 
         <div className="flex flex-col">
           <div className="flex items-baseline">
             <span
-              className="font-extrabold text-xl tracking-tight mr-1"
+              className="font-extrabold text-xl tracking-tight"
               style={{ color: primaryColor }}
             >
               {siteName?.split(" ")[0] || "Eco"}
             </span>
-            <span className="font-extrabold text-xl text-foreground">
-              {siteName?.split(" ")[1] || "Expert"}
-            </span>
+            {siteName?.split(" ")[1] && (
+              <span className="font-extrabold text-xl text-foreground ml-1">
+                {siteName?.split(" ")[1]}
+              </span>
+            )}
           </div>
           <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium leading-tight">
-            Recycling PVT. LTD.
+            RECYCLING PVT. LTD.
           </span>
         </div>
       </div>

@@ -52,10 +52,22 @@ function AdminSidebar() {
     <div className="fixed left-0 top-0 h-screen w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-10">
       <div className="flex flex-col h-full">
         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-bold">Admin Panel</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Direct Access Mode
-          </p>
+          <div className="flex items-center">
+            <img
+              src="/images/logox.png"
+              alt="Eco-Expert Recycling"
+              className="w-10 h-10 mr-3"
+            />
+            <div>
+              <h2 className="text-lg font-bold flex items-center">
+                <span className="text-green-600 dark:text-green-400">Eco-</span>
+                Expert
+              </h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Admin Panel
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="p-4 flex-1">
@@ -98,13 +110,13 @@ function AdminSidebar() {
           </nav>
         </div>
 
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-          <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-            <h3 className="font-medium text-blue-800 dark:text-blue-300 text-sm mb-2">
-              Direct Access Mode
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700 mt-auto">
+          <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+            <h3 className="text-sm font-medium text-gray-800 dark:text-white mb-1">
+              Direct Admin Access
             </h3>
-            <p className="text-blue-700 dark:text-blue-400 text-xs">
-              This mode bypasses authentication to help resolve login issues.
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              This admin panel bypasses authentication for development purposes.
             </p>
           </div>
         </div>
@@ -877,15 +889,14 @@ export default function DirectMediaManagement() {
                 .map((item) => (
                   <div
                     key={item.id}
-                    className={`bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-all duration-200 ${
-                      animatingItemId === item.id ? "transform scale-105" : ""
-                    } ${
-                      item.inMediaSlider
-                        ? "ring-2 ring-green-500 dark:ring-green-400"
-                        : ""
+                    className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden transition-all transform ${
+                      animatingItemId === item.id ? "scale-[1.03]" : "scale-100"
                     }`}
                   >
-                    <div className="aspect-video relative bg-gray-100 dark:bg-gray-700">
+                    <div
+                      className={`aspect-video relative bg-gray-100 dark:bg-gray-700 cursor-pointer`}
+                      onClick={() => toggleMediaSlider(item.id)}
+                    >
                       {item.type === "video" ? (
                         <video
                           src={item.url}
@@ -903,50 +914,58 @@ export default function DirectMediaManagement() {
                         </div>
                       )}
 
+                      {/* Slider overlay on hover */}
+                      <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 transition-colors flex items-center justify-center">
+                        <div
+                          className={`transform transition-transform scale-0 hover:scale-100 ${
+                            item.inMediaSlider ? "text-green-400" : "text-white"
+                          }`}
+                        >
+                          {item.inMediaSlider ? (
+                            <div className="flex flex-col items-center">
+                              <FiCheck className="w-8 h-8 mb-2" />
+                              <span className="text-sm font-medium">
+                                Remove from slider
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center">
+                              <FiPlus className="w-8 h-8 mb-2" />
+                              <span className="text-sm font-medium">
+                                Add to slider
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
                       {/* Always visible control buttons */}
-                      <div className="absolute top-2 left-2 right-2 flex justify-between">
-                        <div className="flex gap-1">
-                          <button
-                            onClick={() => toggleMediaSlider(item.id)}
-                            className={`w-8 h-8 flex items-center justify-center rounded-full backdrop-blur-sm ${
-                              item.inMediaSlider
-                                ? "bg-green-500/90 text-white hover:bg-green-600/90"
-                                : "bg-gray-800/70 text-white hover:bg-gray-700/70"
-                            }`}
-                            title={
-                              item.inMediaSlider
-                                ? "Remove from slider"
-                                : "Add to slider"
-                            }
-                          >
-                            {item.inMediaSlider ? (
-                              <FiCheck className="w-4 h-4" />
-                            ) : (
-                              <FiPlus className="w-4 h-4" />
-                            )}
-                          </button>
-                        </div>
-                        <div className="flex gap-1">
-                          <button
-                            onClick={() => handleEditMedia(item)}
-                            className="w-8 h-8 bg-gray-800/70 text-white hover:bg-gray-700/70 rounded-full flex items-center justify-center backdrop-blur-sm"
-                            title="Edit media"
-                          >
-                            <FiEdit className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteMedia(item.id)}
-                            className="w-8 h-8 bg-gray-800/70 text-white hover:bg-red-600/70 rounded-full flex items-center justify-center backdrop-blur-sm"
-                            title="Delete media"
-                          >
-                            <FiTrash2 className="w-4 h-4" />
-                          </button>
-                        </div>
+                      <div className="absolute top-2 right-2 flex gap-1">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditMedia(item);
+                          }}
+                          className="w-8 h-8 bg-gray-800/70 text-white hover:bg-gray-700/70 rounded-full flex items-center justify-center backdrop-blur-sm"
+                          title="Edit media"
+                        >
+                          <FiEdit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteMedia(item.id);
+                          }}
+                          className="w-8 h-8 bg-gray-800/70 text-white hover:bg-red-600/70 rounded-full flex items-center justify-center backdrop-blur-sm"
+                          title="Delete media"
+                        >
+                          <FiTrash2 className="w-4 h-4" />
+                        </button>
                       </div>
 
                       {/* Status badge for media slider */}
                       {item.inMediaSlider && (
-                        <div className="absolute top-12 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                        <div className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
                           In Slider
                         </div>
                       )}
@@ -958,41 +977,38 @@ export default function DirectMediaManagement() {
                     </div>
 
                     <div className="p-3">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <h3
-                            className="font-medium text-sm truncate"
-                            title={item.name}
-                          >
-                            {item.name}
-                          </h3>
-                          <p
-                            className="text-xs text-gray-500 dark:text-gray-400 truncate"
-                            title={item.description}
-                          >
-                            {item.description || "No description"}
-                          </p>
-                        </div>
+                      <div className="mb-2">
+                        <h3
+                          className="font-medium text-gray-800 dark:text-white mb-1 truncate"
+                          title={item.name}
+                        >
+                          {item.name}
+                        </h3>
+                        <p
+                          className="text-xs text-gray-500 dark:text-gray-400 truncate"
+                          title={item.description}
+                        >
+                          {item.description || "No description"}
+                        </p>
                       </div>
 
                       <div className="pt-2 mt-2 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center">
                         <span className="text-xs text-gray-500 dark:text-gray-400">
                           {new Date(item.uploadedAt).toLocaleDateString()}
                         </span>
-                        <div className="flex items-center">
-                          <span className="mr-2 text-xs text-gray-500 dark:text-gray-400">
-                            Slider
-                          </span>
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              className="sr-only peer"
-                              checked={item.inMediaSlider}
-                              onChange={() => toggleMediaSlider(item.id)}
-                            />
-                            <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-green-600"></div>
-                          </label>
-                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleMediaSlider(item.id);
+                          }}
+                          className={`px-2 py-1 text-xs rounded-md font-medium ${
+                            item.inMediaSlider
+                              ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400"
+                              : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                          }`}
+                        >
+                          {item.inMediaSlider ? "In Slider" : "Add to Slider"}
+                        </button>
                       </div>
                     </div>
                   </div>

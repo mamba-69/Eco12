@@ -14,8 +14,8 @@ export default function ContactPage() {
       </div>
       <div className="mb-6">
         <h2 className="text-xl font-semibold mb-2">Contact Information</h2>
-        <p>Phone: 1800-120-ECOV</p>
-        <p>Email: connect@ecoverva.com</p>
+        <p>Phone: 91+ 7096444414</p>
+        <p>Email: experttechnology2016@gmail.com</p>
       </div>
     </div>
   );
