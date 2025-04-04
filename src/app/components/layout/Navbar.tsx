@@ -22,7 +22,9 @@ export default function Navbar() {
   const { siteSettings } = useStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [logoUrl, setLogoUrl] = useState<string>("/images/logox.png");
+  const [logoUrl, setLogoUrl] = useState<string>(
+    "https://i.postimg.cc/fbTQWhz9/Chat-GPT-Image-Apr-3-2025-09-48-35-PM.png"
+  );
   const [primaryColor, setPrimaryColor] = useState<string>("#2ECC71");
   const [siteName, setSiteName] = useState<string>("Eco-Expert");
 
@@ -34,8 +36,11 @@ export default function Navbar() {
   // Load settings from store when component mounts
   useEffect(() => {
     if (siteSettings) {
-      // Always default to logox.png if no custom logo is set
-      setLogoUrl(siteSettings.logoUrl || "/images/logox.png");
+      // Always default to the online hosted logo if no custom logo is set
+      setLogoUrl(
+        siteSettings.logoUrl ||
+          "https://i.postimg.cc/fbTQWhz9/Chat-GPT-Image-Apr-3-2025-09-48-35-PM.png"
+      );
       setPrimaryColor(siteSettings.primaryColor || "#2ECC71");
       setSiteName(siteSettings.siteName || "Eco-Expert");
     }
@@ -65,12 +70,13 @@ export default function Navbar() {
 
   // Logo component with advanced styling
   const Logo = () => {
-    // Always use the logox.png unless explicitly changed in admin
+    // Always use the online hosted logo unless explicitly changed in admin
     const isCustomLogo =
-      logoUrl !== "/images/logox.png" &&
+      logoUrl !==
+        "https://i.postimg.cc/fbTQWhz9/Chat-GPT-Image-Apr-3-2025-09-48-35-PM.png" &&
       (logoUrl.startsWith("http") || logoUrl.startsWith("https"));
 
-    // If using the default logox.png or a custom logo from settings
+    // If using the default online hosted logo or a custom logo from settings
     return (
       <div className="flex items-center">
         <div className="relative w-12 h-12 mr-2 overflow-hidden">

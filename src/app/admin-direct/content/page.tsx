@@ -46,7 +46,7 @@ function AdminSidebar() {
         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center">
             <img
-              src="/images/logox.png"
+              src="https://i.postimg.cc/fbTQWhz9/Chat-GPT-Image-Apr-3-2025-09-48-35-PM.png"
               alt="Eco-Expert Recycling"
               className="w-10 h-10 mr-3"
             />

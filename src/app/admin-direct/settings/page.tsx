@@ -31,7 +31,7 @@ function AdminSidebar() {
         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center">
             <img
-              src="/images/logox.png"
+              src="https://i.postimg.cc/fbTQWhz9/Chat-GPT-Image-Apr-3-2025-09-48-35-PM.png"
               alt="Eco-Expert Recycling"
               className="w-10 h-10 mr-3"
             />
@@ -113,9 +113,9 @@ export default function DirectSettingsManagement() {
     "Leading e-waste recycling company with sustainable solutions for a greener future."
   );
   const [primaryColor, setPrimaryColor] = useState("#2ECC71");
-  const [logoUrl, setLogoUrl] = useState("/images/logo.svg");
+  const [logoUrl, setLogoUrl] = useState("https://i.postimg.cc/fbTQWhz9/Chat-GPT-Image-Apr-3-2025-09-48-35-PM.png");
   const [footerText, setFooterText] = useState(
-    "© 2023 Eco-Expert Recycling. All rights reserved."
+    `© ${new Date().getFullYear()} EcoExpert. All rights reserved.`
   );
   const [contactEmail, setContactEmail] = useState("connect@ecoverva.com");
   const [contactPhone, setContactPhone] = useState("1800-120-ECOV");
@@ -138,10 +138,10 @@ export default function DirectSettingsManagement() {
           "Leading e-waste recycling company with sustainable solutions for a greener future."
       );
       setPrimaryColor(siteSettings.primaryColor || "#2ECC71");
-      setLogoUrl(siteSettings.logoUrl || "/images/logo.svg");
+      setLogoUrl(siteSettings.logoUrl || "https://i.postimg.cc/fbTQWhz9/Chat-GPT-Image-Apr-3-2025-09-48-35-PM.png");
       setFooterText(
         siteSettings.footerText ||
-          `© ${new Date().getFullYear()} Eco-Expert Recycling. All rights reserved.`
+          `© ${new Date().getFullYear()} EcoExpert. All rights reserved.`
       );
       setContactEmail(siteSettings.contactEmail || "connect@ecoverva.com");
       setContactPhone(siteSettings.contactPhone || "1800-120-ECOV");

@@ -20,12 +20,12 @@ const MotionDiv = memo(motion.div);
 export default function Footer() {
   const { siteSettings, updateSiteSettings } = useStore();
   const [footerText, setFooterText] = useState<string>(
-    `© ${new Date().getFullYear()} Eco-Expert Recycling. All rights reserved.`
+    `© ${new Date().getFullYear()} EcoExpert. All rights reserved.`
   );
   const [contactEmail, setContactEmail] = useState<string>(
-    "connect@ecoverva.com"
+    "experttechnology2016@gmail.com"
   );
-  const [contactPhone, setContactPhone] = useState<string>("1800-120-ECOV");
+  const [contactPhone, setContactPhone] = useState<string>("91+ 7096444414");
   const [contactAddress, setContactAddress] = useState<string>(
     "Unit 1116, 1117 & 1119, 11th Floor BPTP Park Centra, Sector 30 NH8, Gurgaon, Haryana 122001"
   );
@@ -41,9 +41,11 @@ export default function Footer() {
     if (siteSettings) {
       setFooterText(
         siteSettings.footerText ||
-          `© ${new Date().getFullYear()} Eco-Expert Recycling. All rights reserved.`
+          `© ${new Date().getFullYear()} EcoExpert. All rights reserved.`
       );
-      setContactEmail(siteSettings.contactEmail || "experttechnology2016@gmail.com");
+      setContactEmail(
+        siteSettings.contactEmail || "experttechnology2016@gmail.com"
+      );
       setContactPhone(siteSettings.contactPhone || "91+ 7096444414");
       setContactAddress(
         siteSettings.contactAddress ||
@@ -98,7 +100,7 @@ export default function Footer() {
           <div>
             <div className="flex items-center mb-4">
               <Image
-                src="/images/logox.png"
+                src="https://i.postimg.cc/fbTQWhz9/Chat-GPT-Image-Apr-3-2025-09-48-35-PM.png"
                 alt="Eco-Expert Recycling"
                 width={40}
                 height={40}
