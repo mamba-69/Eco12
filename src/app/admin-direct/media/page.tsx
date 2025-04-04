@@ -18,16 +18,15 @@ import {
   FiX,
   FiInfo,
   FiCheck,
-} from "@/app/lib/icons";
-import { useStore } from "@/app/lib/store";
+} from "react-icons/fi";
 import {
   FaUpload,
   FaTrash,
   FaImage,
   FaCheck,
   FaRegCircleXmark,
-} from "@/app/lib/icons";
-import AdminSidebar from "../components/AdminSidebar";
+} from "react-icons/fa6";
+import { useStore } from "@/app/lib/store";
 
 // Type definition for the Cloudinary upload result
 interface CloudinaryResult {
@@ -53,6 +52,88 @@ interface Toast {
   id: string;
   message: string;
   type: "success" | "info" | "error";
+}
+
+// Remove the AdminSidebar import and create a local version
+function AdminSidebar() {
+  return (
+    <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 fixed h-full shadow-sm">
+      <div className="p-5 border-b border-gray-200 dark:border-gray-700">
+        <Link href="/admin-direct" className="flex items-center space-x-2">
+          <div className="h-8 w-8 rounded-md bg-green-600 flex items-center justify-center">
+            <span className="text-white font-bold text-lg">G</span>
+          </div>
+          <span className="text-lg font-semibold dark:text-white">
+            Guj Admin
+          </span>
+        </Link>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          Direct access mode
+        </p>
+      </div>
+
+      <nav className="mt-6 px-4">
+        <ul className="space-y-1">
+          <li>
+            <Link
+              href="/admin-direct"
+              className="flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/50"
+            >
+              <FiHome className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              <span>Dashboard</span>
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/admin-direct/content"
+              className="flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/50"
+            >
+              <FiLayout className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              <span>Content</span>
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/admin-direct/media"
+              className="flex items-center space-x-3 px-3 py-2.5 rounded-lg bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400"
+            >
+              <FiImage className="w-5 h-5 text-green-600 dark:text-green-400" />
+              <span>Media</span>
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/admin-direct/users"
+              className="flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/50"
+            >
+              <FiUsers className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              <span>Users</span>
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/admin-direct/settings"
+              className="flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/50"
+            >
+              <FiSettings className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              <span>Settings</span>
+            </Link>
+          </li>
+        </ul>
+      </nav>
+
+      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+          <h3 className="text-sm font-medium text-gray-800 dark:text-white mb-1">
+            Direct Admin Access
+          </h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            This admin panel bypasses authentication for development purposes.
+          </p>
+        </div>
+      </div>
+    </aside>
+  );
 }
 
 export default function DirectMediaManagement() {
