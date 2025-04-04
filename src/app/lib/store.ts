@@ -16,6 +16,15 @@ interface SiteSettings {
     instagram: string;
     linkedin: string;
   };
+  users?: Array<{
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    status: string;
+    createdAt: string;
+    lastLogin?: string | null;
+  }>;
 }
 
 interface ContentSettings {
