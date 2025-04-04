@@ -23,6 +23,10 @@ import {
 import { useStore } from "@/app/lib/store";
 import { broadcastSettingsChange } from "@/app/lib/sitebridge";
 
+// Add improved admin auth check with consistent values for deployed version
+const ADMIN_EMAIL = "ecoexpert@gmail.com";
+const ADMIN_PASSWORD = "admin123";
+
 // Inline AdminSidebar component for deployment compatibility
 function AdminSidebar() {
   return (
@@ -113,7 +117,9 @@ export default function DirectSettingsManagement() {
     "Leading e-waste recycling company with sustainable solutions for a greener future."
   );
   const [primaryColor, setPrimaryColor] = useState("#2ECC71");
-  const [logoUrl, setLogoUrl] = useState("https://i.postimg.cc/fbTQWhz9/Chat-GPT-Image-Apr-3-2025-09-48-35-PM.png");
+  const [logoUrl, setLogoUrl] = useState(
+    "https://i.postimg.cc/fbTQWhz9/Chat-GPT-Image-Apr-3-2025-09-48-35-PM.png"
+  );
   const [footerText, setFooterText] = useState(
     `© ${new Date().getFullYear()} EcoExpert. All rights reserved.`
   );
@@ -138,7 +144,10 @@ export default function DirectSettingsManagement() {
           "Leading e-waste recycling company with sustainable solutions for a greener future."
       );
       setPrimaryColor(siteSettings.primaryColor || "#2ECC71");
-      setLogoUrl(siteSettings.logoUrl || "https://i.postimg.cc/fbTQWhz9/Chat-GPT-Image-Apr-3-2025-09-48-35-PM.png");
+      setLogoUrl(
+        siteSettings.logoUrl ||
+          "https://i.postimg.cc/fbTQWhz9/Chat-GPT-Image-Apr-3-2025-09-48-35-PM.png"
+      );
       setFooterText(
         siteSettings.footerText ||
           `© ${new Date().getFullYear()} EcoExpert. All rights reserved.`

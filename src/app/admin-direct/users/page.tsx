@@ -28,6 +28,10 @@ interface User {
   lastLogin?: string | null;
 }
 
+// Add improved admin auth check with consistent values for deployed version
+const ADMIN_EMAIL = "ecoexpert@gmail.com";
+const ADMIN_PASSWORD = "admin123";
+
 // Inline AdminSidebar component for deployment compatibility
 function AdminSidebar() {
   return (

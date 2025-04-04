@@ -31,11 +31,32 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Admin credentials - moved to environment-like constants
-// These should ultimately be moved to environment variables in production
-const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin@example.com";
-const ADMIN_PASSWORD =
-  process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "adminpassword";
+// Admin credentials - updated for deployed version
+const ADMIN_EMAIL = "ecoexpert@gmail.com";
+const ADMIN_PASSWORD = "admin123";
+
+// Add a type declaration for window object
+declare global {
+  interface Window {
+    checkAdminAccess: () => { isAdmin: boolean; adminEmail: string };
+  }
+}
+
+// Make admin email available globally
+if (typeof window !== "undefined") {
+  // Set default admin email in localStorage for easier admin access
+  if (!localStorage.getItem("admin-email")) {
+    localStorage.setItem("admin-email", ADMIN_EMAIL);
+  }
+
+  // Create a global access function
+  window.checkAdminAccess = function () {
+    return {
+      isAdmin: localStorage.getItem("is-admin") === "true",
+      adminEmail: localStorage.getItem("admin-email") || ADMIN_EMAIL,
+    };
+  };
+}
 
 // Create a basic mock User object
 const createMockUser = (
@@ -154,6 +175,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (typeof window !== "undefined") {
           localStorage.setItem("is-admin", "true");
           localStorage.setItem("admin-email", email);
+          // Set a longer cookie that's accessible to all pages
+          document.cookie = `admin-session=true;path=/;max-age=${
+            60 * 60 * 24 * 7
+          }`;
         }
 
         console.log("Admin signed in successfully");

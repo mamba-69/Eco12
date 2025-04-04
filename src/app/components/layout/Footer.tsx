@@ -99,13 +99,10 @@ export default function Footer() {
           {/* Company Info */}
           <div>
             <div className="flex items-center mb-4">
-              <Image
+              <img
                 src="https://i.postimg.cc/fbTQWhz9/Chat-GPT-Image-Apr-3-2025-09-48-35-PM.png"
                 alt="Eco-Expert Recycling"
-                width={40}
-                height={40}
-                className="mr-2"
-                unoptimized={true}
+                className="w-10 h-10 mr-2 object-contain"
                 onError={(e) => {
                   // Fallback to local logo if the remote one fails
                   const target = e.target as HTMLImageElement;

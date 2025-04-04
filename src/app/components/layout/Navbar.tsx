@@ -79,15 +79,12 @@ export default function Navbar() {
     // If using the default online hosted logo or a custom logo from settings
     return (
       <div className="flex items-center">
-        <div className="relative w-12 h-12 mr-2 overflow-hidden">
-          <Image
+        <div className="relative w-12 h-12 mr-2 overflow-hidden flex items-center justify-center">
+          {/* Using img tag directly for better compatibility with external URLs */}
+          <img
             src={logoUrl}
             alt={siteName || "Eco-Expert Recycling"}
-            width={48}
-            height={48}
-            className="object-contain hover:scale-105 transition-transform"
-            priority
-            unoptimized={logoUrl.startsWith("https://")}
+            className="max-w-full max-h-full object-contain hover:scale-105 transition-transform"
             onError={(e) => {
               // Fallback to local logo if the remote one fails
               const target = e.target as HTMLImageElement;

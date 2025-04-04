@@ -38,6 +38,10 @@ interface BlogPost {
   featuredImage?: string;
 }
 
+// Add improved admin auth check with consistent values for deployed version
+const ADMIN_EMAIL = "ecoexpert@gmail.com";
+const ADMIN_PASSWORD = "admin123";
+
 // Remove the AdminSidebar import and create a local version
 function AdminSidebar() {
   return (

@@ -27,7 +27,18 @@ interface MediaItem {
   thumbnail?: string;
 }
 
-export default function MediaSlider() {
+// Define props interface for the component
+interface MediaSliderProps {
+  autoPlay?: boolean;
+  autoPlaySpeed?: number;
+  isPaused?: boolean;
+}
+
+export default function MediaSlider({
+  autoPlay = true,
+  autoPlaySpeed = 5000,
+  isPaused = false,
+}: MediaSliderProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
@@ -239,6 +250,39 @@ export default function MediaSlider() {
         "https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=320&h=180&q=80",
     },
   ];
+
+  useEffect(() => {
+    // Preload images for smooth transitions
+    if (mediaItems.length > 0) {
+      mediaItems.forEach((item) => {
+        if (item.type !== "video") {
+          try {
+            // Create an image element to preload
+            const img = document.createElement("img");
+            img.src = item.src;
+          } catch (error) {
+            console.error("Error preloading image:", error);
+          }
+        }
+      });
+    }
+
+    // Set appropriate auto-play duration
+    const interval = autoPlaySpeed || 5000;
+    let autoPlayTimer: NodeJS.Timeout | null = null;
+
+    if (autoPlay && !isPaused) {
+      autoPlayTimer = setInterval(() => {
+        nextSlide();
+      }, interval);
+    }
+
+    return () => {
+      if (autoPlayTimer) {
+        clearInterval(autoPlayTimer);
+      }
+    };
+  }, [activeIndex, mediaItems, autoPlay, isPaused, autoPlaySpeed]);
 
   return (
     <section className="py-20 relative bg-background" ref={containerRef}>

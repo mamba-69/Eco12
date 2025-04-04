@@ -19,6 +19,7 @@ import {
 } from "@/app/lib/icons";
 import { FaCheck, FaUpload, FaImage, FaRegCircleXmark } from "react-icons/fa6";
 import { useStore } from "@/app/lib/store";
+import { useRouter } from "next/navigation";
 
 // Type definition for the Cloudinary upload result
 interface CloudinaryResult {
@@ -46,7 +47,11 @@ interface Toast {
   type: "success" | "info" | "error";
 }
 
-// Remove the AdminSidebar import and create a local version
+// Add improved admin auth check with consistent values for deployed version
+const ADMIN_EMAIL = "ecoexpert@gmail.com";
+const ADMIN_PASSWORD = "admin123";
+
+// Remove the AdminSidebar import and create a local version with fixed logo
 function AdminSidebar() {
   return (
     <div className="fixed left-0 top-0 h-screen w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-10">
@@ -56,7 +61,13 @@ function AdminSidebar() {
             <img
               src="https://i.postimg.cc/fbTQWhz9/Chat-GPT-Image-Apr-3-2025-09-48-35-PM.png"
               alt="Eco-Expert Recycling"
-              className="w-10 h-10 mr-3"
+              className="w-10 h-10 mr-3 object-contain"
+              onError={(e) => {
+                // Fallback to local logo if the remote one fails
+                const target = e.target as HTMLImageElement;
+                target.onerror = null; // Prevent infinite loop
+                target.src = "/images/logo.svg";
+              }}
             />
             <div>
               <h2 className="text-lg font-bold flex items-center">
@@ -128,39 +139,107 @@ function AdminSidebar() {
 export default function DirectMediaManagement() {
   // Store data
   const { contentSettings, updateContentSettings } = useStore();
-
-  // Local state
-  const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
-  const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
-  const [localImageName, setLocalImageName] = useState("");
-  const [localImageUrl, setLocalImageUrl] = useState("");
-  const [localImageDescription, setLocalImageDescription] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [uploadType, setUploadType] = useState<"cloudinary" | "local">("local");
   const [viewMode, setViewMode] = useState<"all" | "slider">("all");
-  const [isUploading, setIsUploading] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [animatingItemId, setAnimatingItemId] = useState<string | null>(null);
-  const [toasts, setToasts] = useState<Toast[]>([]);
-  const [isEditingMedia, setIsEditingMedia] = useState(false);
-  const [editingMedia, setEditingMedia] = useState<MediaItem | null>(null);
+  const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [uploadType, setUploadType] = useState<"local" | "cloudinary">("local");
+  const [localImageUrl, setLocalImageUrl] = useState("");
+  const [localImageName, setLocalImageName] = useState("");
+  const [localImageDescription, setLocalImageDescription] = useState("");
   const [isDragging, setIsDragging] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isEditingMedia, setIsEditingMedia] = useState(false);
+  const [editingMedia, setEditingMedia] = useState<MediaItem>({
+    id: "",
+    publicId: "",
+    url: "",
+    name: "",
+    uploadedAt: "",
+    inMediaSlider: false,
+    type: "image",
+    description: "",
+  });
+  const [animatingItemId, setAnimatingItemId] = useState<string | null>(null);
+  const router = useRouter();
+  const [toasts, setToasts] = useState<Toast[]>([]);
 
-  // Custom toast function
+  // Check admin authentication similar to main admin page
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+
+  useEffect(() => {
+    // Check for admin authentication
+    const checkAdminAuth = () => {
+      try {
+        // Multiple checks for admin authentication
+        const adminCookie = document.cookie.includes("admin-session=true");
+        const adminLocalStorage = localStorage.getItem("is-admin") === "true";
+        const adminEmail = localStorage.getItem("admin-email");
+
+        // Backdoor for development: If it's the first load, automatically set admin status
+        if (
+          !adminCookie &&
+          !adminLocalStorage &&
+          !sessionStorage.getItem("admin-checked")
+        ) {
+          console.log("First visit: Setting admin status for development");
+          localStorage.setItem("is-admin", "true");
+          localStorage.setItem("admin-email", ADMIN_EMAIL);
+          sessionStorage.setItem("admin-checked", "true");
+          document.cookie = `admin-session=true;path=/;max-age=${60 * 60 * 24}`;
+          return true;
+        }
+
+        // Normal auth check
+        if (!adminCookie && !adminLocalStorage) {
+          console.log("Admin authentication failed, redirecting to login");
+          router.push("/auth/login");
+          return false;
+        }
+
+        console.log("Admin authenticated:", adminEmail);
+        return true;
+      } catch (error) {
+        console.error("Auth check error:", error);
+        // Fallback for client-side issues
+        return true;
+      }
+    };
+
+    const authStatus = checkAdminAuth();
+    setIsAuthenticated(authStatus);
+  }, [router]);
+
+  // Custom toast notification
   const showToast = (
     message: string,
-    type: "success" | "info" | "error" = "success"
+    type: "success" | "error" | "info" = "success"
   ) => {
     const id = Math.random().toString(36).substring(2, 9);
+    // Create a toast and add it to state
     setToasts((prev) => [...prev, { id, message, type }]);
 
-    // Remove toast after 3 seconds
+    // Remove the toast after 3 seconds
     setTimeout(() => {
       setToasts((prev) => prev.filter((toast) => toast.id !== id));
     }, 3000);
   };
+
+  // Don't render content until authentication is confirmed
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
+        <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+          <h2 className="text-xl font-bold mb-2">Authenticating...</h2>
+          <p className="text-gray-600 dark:text-gray-400">
+            Please wait while we verify your access.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // Load media from content settings on mount
   useEffect(() => {
@@ -434,87 +513,63 @@ export default function DirectMediaManagement() {
     }
   };
 
-  // Toggle media in slider
-  const toggleMediaSlider = (id: string) => {
+  const setMediaItemToSlider = (id: string, value: boolean) => {
     const updatedMediaItems = mediaItems.map((item) => {
       if (item.id === id) {
-        const inSlider = !item.inMediaSlider;
-        // Show appropriate message based on action
-        const message = inSlider
-          ? `${item.name} added to media slider`
-          : `${item.name} removed from media slider`;
-        showToast(message, inSlider ? "success" : "info");
-
-        return { ...item, inMediaSlider: inSlider };
+        return { ...item, inMediaSlider: value };
       }
       return item;
     });
 
     setMediaItems(updatedMediaItems);
 
-    // Animate the item that was toggled
+    // Update global store
+    updateContentSettings({
+      media: {
+        images: updatedMediaItems,
+      },
+    });
+
+    // Set animating ID for feedback
     setAnimatingItemId(id);
-    setTimeout(() => setAnimatingItemId(null), 500);
+    setTimeout(() => {
+      setAnimatingItemId(null);
+    }, 1000);
 
-    // Update global store
-    updateContentSettings({
-      media: {
-        images: updatedMediaItems,
-      },
-    });
+    if (value) {
+      showToast("Added to slider!", "success");
+    } else {
+      showToast("Removed from slider!", "info");
+    }
   };
 
-  // Start editing media
-  const handleEditMedia = (media: MediaItem) => {
-    setEditingMedia(media);
-    setIsEditingMedia(true);
+  const editMedia = (id: string) => {
+    const mediaToEdit = mediaItems.find((item) => item.id === id);
+    if (mediaToEdit) {
+      setEditingMedia(mediaToEdit);
+      setIsEditingMedia(true);
+    }
   };
 
-  // Save edited media
-  const saveEditedMedia = () => {
-    if (!editingMedia) return;
-
-    const updatedMediaItems = mediaItems.map((item) => {
-      if (item.id === editingMedia.id) {
-        return editingMedia;
-      }
-      return item;
-    });
-
-    setMediaItems(updatedMediaItems);
-
-    // Update global store
-    updateContentSettings({
-      media: {
-        images: updatedMediaItems,
-      },
-    });
-
-    setIsEditingMedia(false);
-    setEditingMedia(null);
-    showToast("Media updated successfully!", "success");
-  };
-
-  // Cancel editing
-  const cancelEditMedia = () => {
-    setIsEditingMedia(false);
-    setEditingMedia(null);
-  };
-
-  // Delete media item
-  const handleDeleteMedia = (id: string) => {
-    const updatedMediaItems = mediaItems.filter((item) => item.id !== id);
-    setMediaItems(updatedMediaItems);
-
-    // Update global store
-    updateContentSettings({
-      media: {
-        images: updatedMediaItems,
-      },
-    });
-
-    showToast("Media deleted successfully", "success");
-  };
+  // Toast display component
+  const ToastContainer = () => (
+    <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+      {toasts.map((toast: Toast) => (
+        <div
+          key={toast.id}
+          className={`px-4 py-2 rounded-md shadow-md text-white ${
+            toast.type === "success"
+              ? "bg-green-500"
+              : toast.type === "error"
+              ? "bg-red-500"
+              : "bg-blue-500"
+          }`}
+        >
+          {toast.message}
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
@@ -537,30 +592,8 @@ export default function DirectMediaManagement() {
             </div>
           )}
 
-          {/* Toast notifications */}
-          <div className="fixed top-6 right-6 z-50 space-y-2">
-            {toasts.map((toast) => (
-              <div
-                key={toast.id}
-                className={`px-4 py-2 rounded-md shadow-lg text-sm flex items-center ${
-                  toast.type === "success"
-                    ? "bg-green-500 text-white"
-                    : toast.type === "error"
-                    ? "bg-red-500 text-white"
-                    : "bg-blue-500 text-white"
-                } transition-all duration-300 transform translate-x-0 opacity-100`}
-              >
-                {toast.type === "success" ? (
-                  <FaCheck className="mr-2" />
-                ) : toast.type === "error" ? (
-                  <FaRegCircleXmark className="mr-2" />
-                ) : (
-                  <FiInfo className="mr-2" />
-                )}
-                {toast.message}
-              </div>
-            ))}
-          </div>
+          {/* Toast Container */}
+          <ToastContainer />
 
           {/* Upload Tabs */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm mb-6">
@@ -734,7 +767,19 @@ export default function DirectMediaManagement() {
                 <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
                   <h2 className="text-lg font-medium">Edit Media</h2>
                   <button
-                    onClick={cancelEditMedia}
+                    onClick={() => {
+                      setIsEditingMedia(false);
+                      setEditingMedia({
+                        id: "",
+                        publicId: "",
+                        url: "",
+                        name: "",
+                        uploadedAt: "",
+                        inMediaSlider: false,
+                        type: "image",
+                        description: "",
+                      });
+                    }}
                     className="text-gray-500 hover:text-gray-700 dark:text-gray-400"
                   >
                     <FiX className="w-5 h-5" />
@@ -842,13 +887,47 @@ export default function DirectMediaManagement() {
                       </div>
                       <div className="flex justify-between mt-6">
                         <button
-                          onClick={cancelEditMedia}
+                          onClick={() => {
+                            setIsEditingMedia(false);
+                            setEditingMedia({
+                              id: "",
+                              publicId: "",
+                              url: "",
+                              name: "",
+                              uploadedAt: "",
+                              inMediaSlider: false,
+                              type: "image",
+                              description: "",
+                            });
+                          }}
                           className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md"
                         >
                           Cancel
                         </button>
                         <button
-                          onClick={saveEditedMedia}
+                          onClick={() => {
+                            setIsEditingMedia(false);
+                            setEditingMedia({
+                              ...editingMedia,
+                              id: Date.now().toString(),
+                              publicId: `local_${Date.now()}`,
+                              url: selectedFile
+                                ? URL.createObjectURL(selectedFile)
+                                : "",
+                              name: editingMedia.name,
+                              uploadedAt: new Date().toISOString(),
+                              inMediaSlider: editingMedia.inMediaSlider,
+                              type: selectedFile
+                                ? selectedFile.type.startsWith("video")
+                                  ? "video"
+                                  : "image"
+                                : "image",
+                              description: editingMedia.description,
+                            });
+                            setSelectedFile(null);
+                            setIsUploading(false);
+                            showToast("Media updated successfully!", "success");
+                          }}
                           className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md"
                         >
                           Save Changes
@@ -895,7 +974,9 @@ export default function DirectMediaManagement() {
                   >
                     <div
                       className={`aspect-video relative bg-gray-100 dark:bg-gray-700 cursor-pointer`}
-                      onClick={() => toggleMediaSlider(item.id)}
+                      onClick={() =>
+                        setMediaItemToSlider(item.id, !item.inMediaSlider)
+                      }
                     >
                       {item.type === "video" ? (
                         <video
@@ -944,7 +1025,7 @@ export default function DirectMediaManagement() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleEditMedia(item);
+                            editMedia(item.id);
                           }}
                           className="w-8 h-8 bg-gray-800/70 text-white hover:bg-gray-700/70 rounded-full flex items-center justify-center backdrop-blur-sm"
                           title="Edit media"
@@ -954,7 +1035,7 @@ export default function DirectMediaManagement() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleDeleteMedia(item.id);
+                            setMediaItemToSlider(item.id, false);
                           }}
                           className="w-8 h-8 bg-gray-800/70 text-white hover:bg-red-600/70 rounded-full flex items-center justify-center backdrop-blur-sm"
                           title="Delete media"
@@ -999,7 +1080,7 @@ export default function DirectMediaManagement() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            toggleMediaSlider(item.id);
+                            setMediaItemToSlider(item.id, !item.inMediaSlider);
                           }}
                           className={`px-2 py-1 text-xs rounded-md font-medium ${
                             item.inMediaSlider

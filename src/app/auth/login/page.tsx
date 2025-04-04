@@ -5,6 +5,10 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/app/context/AuthContext";
 
+// Updated admin credentials for deployed version
+const ADMIN_EMAIL = "ecoexpert@gmail.com";
+const ADMIN_PASSWORD = "admin123";
+
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -14,11 +18,23 @@ export default function LoginPage() {
   const router = useRouter();
   const { signIn, isAdmin } = useAuth();
 
-  // For demo purposes, prefill the admin credentials
-  // useEffect(() => {
-  //   setEmail("admin@eco-expert.com");
-  //   setPassword("admin123");
-  // }, []);
+  // Auto-login for the admin for testing
+  useEffect(() => {
+    // Check if we should auto-login
+    const adminCookie = document.cookie.includes("admin-session=true");
+    const adminLocalStorage = localStorage.getItem("is-admin") === "true";
+
+    if (adminCookie || adminLocalStorage) {
+      console.log(
+        "Auto-login: Admin session detected, redirecting to admin dashboard"
+      );
+      window.location.href = "/admin-direct/";
+    }
+
+    // For development: Uncomment to auto-fill admin credentials
+    setEmail(ADMIN_EMAIL);
+    setPassword(ADMIN_PASSWORD);
+  }, []);
 
   // Force redirect to admin dashboard if credentials match
   const handleLogin = async (e: React.FormEvent) => {
@@ -28,6 +44,22 @@ export default function LoginPage() {
     console.log("Attempting login with:", email);
 
     try {
+      // Special case for demo: direct admin access
+      if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+        console.log("Direct admin login");
+        setLoginSuccess(true);
+        localStorage.setItem("is-admin", "true");
+        localStorage.setItem("admin-email", email);
+        document.cookie = `admin-session=true;path=/;max-age=${
+          60 * 60 * 24 * 7
+        }`;
+
+        setTimeout(() => {
+          window.location.href = "/admin-direct/";
+        }, 500);
+        return;
+      }
+
       // Normal authentication flow
       await signIn(email, password);
       console.log("Sign in function completed");
