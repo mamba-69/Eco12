@@ -15,47 +15,26 @@ export default function LoginPage() {
   const { signIn, isAdmin } = useAuth();
 
   // For demo purposes, prefill the admin credentials
-  useEffect(() => {
-    setEmail("admin@eco-expert.com");
-    setPassword("admin123");
-  }, []);
+  // useEffect(() => {
+  //   setEmail("admin@eco-expert.com");
+  //   setPassword("admin123");
+  // }, []);
 
   // Force redirect to admin dashboard if credentials match
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    console.log("Attempting login with:", email, password);
+    console.log("Attempting login with:", email);
 
     try {
-      // Direct admin short-circuit for development
-      if (email === "admin@eco-expert.com" && password === "admin123") {
-        console.log("Admin credentials detected, bypassing normal flow");
-        setLoginSuccess(true);
-
-        // First set cookies manually
-        if (typeof document !== "undefined") {
-          const expires = new Date();
-          expires.setTime(expires.getTime() + 24 * 60 * 60 * 1000); // 1 day
-          document.cookie = `auth-session=true;expires=${expires.toUTCString()};path=/;SameSite=Strict`;
-          document.cookie = `admin-session=true;expires=${expires.toUTCString()};path=/;SameSite=Strict`;
-        }
-
-        // Then redirect immediately using window.location
-        setTimeout(() => {
-          console.log("Forcing admin redirect now");
-          window.location.href = "/admin-direct/";
-        }, 500);
-        return;
-      }
-
       // Normal authentication flow
       await signIn(email, password);
       console.log("Sign in function completed");
       setLoginSuccess(true);
 
       setTimeout(() => {
-        if (email === "admin@eco-expert.com") {
+        if (isAdmin) {
           console.log("Admin login successful, redirecting to admin dashboard");
           window.location.href = "/admin-direct/";
         } else {
@@ -108,9 +87,7 @@ export default function LoginPage() {
             }}
           >
             Login successful!{" "}
-            {email === "admin@eco-expert.com"
-              ? "Redirecting to admin dashboard..."
-              : "Redirecting..."}
+            {isAdmin ? "Redirecting to admin dashboard..." : "Redirecting..."}
           </div>
         )}
 
@@ -128,7 +105,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        <form onSubmit={handleLogin}>
+        <form onSubmit={handleLogin} autoComplete="off">
           <div style={{ marginBottom: "1rem" }}>
             <label
               htmlFor="email"
@@ -147,6 +124,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              autoComplete="off"
               style={{
                 width: "100%",
                 padding: "0.5rem 0.75rem",
@@ -190,6 +168,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              autoComplete="new-password"
               style={{
                 width: "100%",
                 padding: "0.5rem 0.75rem",
@@ -231,26 +210,6 @@ export default function LoginPage() {
           >
             Sign up
           </Link>
-        </div>
-
-        <div
-          style={{
-            marginTop: "1rem",
-            padding: "0.75rem",
-            backgroundColor: "#374151",
-            borderRadius: "0.375rem",
-            fontSize: "0.75rem",
-            textAlign: "center",
-          }}
-        >
-          <p style={{ marginBottom: "0.5rem", color: "#9CA3AF" }}>
-            Admin credentials
-          </p>
-          <p style={{ color: "#D1D5DB" }}>
-            Email: admin@eco-expert.com
-            <br />
-            Password: admin123
-          </p>
         </div>
       </div>
     </div>
