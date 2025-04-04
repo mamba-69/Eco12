@@ -26,6 +26,8 @@ interface CloudinaryResult {
   public_id: string;
   secure_url: string;
   original_filename: string;
+  width: number;
+  height: number;
 }
 
 // Media item type
@@ -251,30 +253,74 @@ export default function DirectMediaManagement() {
       result.secure_url.includes(".webm") ||
       result.secure_url.includes("youtube");
 
-    const newImage = {
+    const newImage: MediaItem = {
       id: Date.now().toString(),
       publicId: result.public_id,
       url: result.secure_url,
       name: result.original_filename,
       uploadedAt: new Date().toISOString(),
       inMediaSlider: false,
-      type: isVideo ? ("video" as const) : ("image" as const),
+      type: isVideo ? "video" : "image",
       description: `${result.original_filename} - Eco-friendly recycling solutions`,
     };
 
     const updatedMediaItems = [...mediaItems, newImage];
     setMediaItems(updatedMediaItems);
 
-    // Update global store with new media
-    updateContentSettings({
-      media: {
-        images: updatedMediaItems,
+    // Update global store with Firebase sync
+    updateContentSettings(
+      {
+        media: {
+          images: updatedMediaItems,
+        },
       },
-    });
+      true // Ensure Firebase sync is triggered
+    );
 
-    setSuccessMessage("Media uploaded successfully!");
-    showToast("Media uploaded successfully!");
-    setTimeout(() => setSuccessMessage(""), 3000);
+    showToast("Media uploaded successfully and synced to all clients");
+  };
+
+  // Handle media update
+  const updateMediaItem = (
+    id: string,
+    updates: Partial<Omit<MediaItem, "id">>
+  ) => {
+    // Update in local state
+    const updatedMediaItems = mediaItems.map((item) =>
+      item.id === id ? { ...item, ...updates } : item
+    );
+    setMediaItems(updatedMediaItems);
+
+    // Update in global content settings with Firebase sync
+    updateContentSettings(
+      {
+        media: {
+          images: updatedMediaItems,
+        },
+      },
+      true // Ensure Firebase sync is triggered
+    );
+
+    showToast("Media updated successfully and synced to all clients");
+  };
+
+  // Handle media deletion
+  const deleteMediaItem = (id: string) => {
+    // Remove from local state
+    const updatedMediaItems = mediaItems.filter((item) => item.id !== id);
+    setMediaItems(updatedMediaItems);
+
+    // Update global content settings with Firebase sync
+    updateContentSettings(
+      {
+        media: {
+          images: updatedMediaItems,
+        },
+      },
+      true // Ensure Firebase sync is triggered
+    );
+
+    showToast("Media deleted successfully and synced to all clients");
   };
 
   // Handle local image upload

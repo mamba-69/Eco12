@@ -108,7 +108,7 @@ export default function MediaSlider({
         if (playPromise !== undefined) {
           playPromise
             .then(() => {
-              setIsPlaying(true);
+        setIsPlaying(true);
             })
             .catch((error) => {
               console.error("Error playing video:", error);
@@ -287,7 +287,7 @@ export default function MediaSlider({
   return (
     <section className="py-20 relative bg-background" ref={containerRef}>
       <div className="container mx-auto px-4">
-        <motion.div
+        <motion.div 
           className="text-center mb-12"
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
@@ -299,15 +299,15 @@ export default function MediaSlider({
             environmental impact through images and videos.
           </p>
         </motion.div>
-
-        <motion.div
+        
+        <motion.div 
           className="max-w-5xl mx-auto"
           variants={container}
           initial="hidden"
           animate={controls}
         >
           {/* Main slider */}
-          <div
+          <div 
             className="relative rounded-2xl overflow-hidden shadow-2xl bg-card mb-8"
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
@@ -365,7 +365,7 @@ export default function MediaSlider({
                       playsInline
                       preload="auto"
                     />
-
+                    
                     {/* Media title and description */}
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/90 to-transparent p-6 z-10">
                       <h3 className="text-xl font-bold text-white">
@@ -375,7 +375,7 @@ export default function MediaSlider({
                         {mediaItems[activeIndex].description}
                       </p>
                     </div>
-
+                    
                     {/* Center play button (only when not playing) */}
                     {!isPlaying && (
                       <div className="absolute inset-0 flex items-center justify-center z-20">
@@ -387,15 +387,15 @@ export default function MediaSlider({
                         </button>
                       </div>
                     )}
-
+                    
                     {/* Bottom controls bar */}
-                    <div
+                    <div 
                       className={`absolute bottom-0 left-0 right-0 p-4 flex items-center justify-between bg-gradient-to-t from-background/90 to-transparent z-30 transition-opacity duration-300 ${
                         showControls || !isPlaying ? "opacity-100" : "opacity-0"
                       }`}
                     >
                       <div className="flex items-center space-x-3">
-                        <button
+                        <button 
                           onClick={togglePlay}
                           className="w-10 h-10 rounded-full bg-primary/90 text-white flex items-center justify-center hover:bg-primary transition-all"
                         >
@@ -405,8 +405,8 @@ export default function MediaSlider({
                             <FiPlay className="w-4 h-4" />
                           )}
                         </button>
-
-                        <button
+                        
+                        <button 
                           onClick={toggleMute}
                           className="w-10 h-10 rounded-full bg-primary/90 text-white flex items-center justify-center hover:bg-primary transition-all"
                         >
@@ -417,8 +417,8 @@ export default function MediaSlider({
                           )}
                         </button>
                       </div>
-
-                      <button
+                      
+                      <button 
                         onClick={toggleFullscreen}
                         className="w-10 h-10 rounded-full bg-primary/90 text-white flex items-center justify-center hover:bg-primary transition-all"
                       >
@@ -429,23 +429,23 @@ export default function MediaSlider({
                 )}
               </motion.div>
             </AnimatePresence>
-
+            
             {/* Navigation arrows */}
-            <button
+            <button 
               onClick={prevSlide}
               className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-background/50 backdrop-blur-sm text-white flex items-center justify-center hover:bg-primary transition-all z-10"
             >
               <FiChevronLeft className="w-6 h-6" />
             </button>
-
-            <button
+            
+            <button 
               onClick={nextSlide}
               className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-background/50 backdrop-blur-sm text-white flex items-center justify-center hover:bg-primary transition-all z-10"
             >
               <FiChevronRight className="w-6 h-6" />
             </button>
           </div>
-
+          
           {/* Thumbnails slider */}
           <div className="relative overflow-hidden">
             <div className="flex space-x-4 overflow-x-auto pb-4 scrollbar-hide">
@@ -453,7 +453,7 @@ export default function MediaSlider({
                 <motion.div
                   key={index}
                   className={`flex-shrink-0 cursor-pointer transition-all relative rounded-lg overflow-hidden ${
-                    activeIndex === index
+                    activeIndex === index 
                       ? "ring-4 ring-primary scale-105"
                       : "opacity-70 hover:opacity-100"
                   }`}

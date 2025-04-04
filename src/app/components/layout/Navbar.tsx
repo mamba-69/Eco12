@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useTheme } from "@/app/context/ThemeProvider";
+import { useTheme } from "@/app/components/theme/ThemeProvider";
 import { FiSun, FiMoon, FiMenu, FiX } from "@/app/lib/icons";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";

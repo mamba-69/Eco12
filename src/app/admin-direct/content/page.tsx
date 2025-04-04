@@ -269,17 +269,45 @@ export default function DirectContentManagement() {
     }
   });
 
-  // Save content to the store
-  const saveContent = () => {
-    updateContentSettings({
-      pages: pages,
-      blog: blogPosts,
-    });
-    setSuccessMessage("Content updated successfully!");
-    setTimeout(() => setSuccessMessage(""), 3000);
+  // Custom toast notification
+  const showToast = (
+    message: string,
+    type: "success" | "error" | "info" = "success"
+  ) => {
+    const id = Math.random().toString(36).substring(2, 9);
+    // Create a toast and add it to state
+    setSuccessMessage(message);
+
+    // Remove the toast after 3 seconds
+    setTimeout(() => {
+      setSuccessMessage("");
+    }, 3000);
   };
 
-  // Handle editing page
+  // Save content to the store
+  const saveContent = () => {
+    if (activeTab === "pages") {
+      // Update global content settings with latest pages
+      updateContentSettings(
+        {
+          pages: pages,
+        },
+        true // Ensure Firebase sync is triggered
+      );
+    } else if (activeTab === "blog") {
+      // Update global content settings with latest blog posts
+      updateContentSettings(
+        {
+          blog: blogPosts,
+        },
+        true // Ensure Firebase sync is triggered
+      );
+    }
+
+    showToast("Content updated successfully and synced to all clients");
+  };
+
+  // Handle editing a page
   const handleEditPage = (page: Page) => {
     setIsEditing(true);
     setEditingItemId(page.id);
@@ -294,7 +322,7 @@ export default function DirectContentManagement() {
     setActiveTab("pages");
   };
 
-  // Handle editing blog post
+  // Handle editing a blog post
   const handleEditBlogPost = (post: BlogPost) => {
     setIsEditing(true);
     setEditingItemId(post.id);
@@ -309,7 +337,7 @@ export default function DirectContentManagement() {
     setActiveTab("blog");
   };
 
-  // Save edited item
+  // Save the current edit
   const saveEdit = () => {
     if (activeTab === "pages" && editingItemId) {
       const updatedPages = pages.map((page) =>
@@ -345,10 +373,7 @@ export default function DirectContentManagement() {
 
     setIsEditing(false);
     setEditingItemId(null);
-    setSuccessMessage(
-      `${activeTab === "pages" ? "Page" : "Blog post"} updated successfully!`
-    );
-    setTimeout(() => setSuccessMessage(""), 3000);
+    showToast("Content updated successfully and synced to all clients");
   };
 
   // Handle form input changes
@@ -385,12 +410,11 @@ export default function DirectContentManagement() {
         media: { ...contentSettings.media, images: updatedImages },
       });
     }
-    setSuccessMessage(
+    showToast(
       `${
         type === "page" ? "Page" : type === "post" ? "Blog post" : "Media image"
-      } deleted successfully!`
+      } deleted successfully`
     );
-    setTimeout(() => setSuccessMessage(""), 3000);
   };
 
   // Add a new blog post

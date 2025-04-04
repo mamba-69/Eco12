@@ -1,3 +1,8 @@
+/**
+ * DEPRECATED: This ThemeProvider is no longer used.
+ * Please use "@/app/components/theme/ThemeProvider" instead for consistency.
+ */
+
 "use client";
 
 import * as React from "react";

@@ -1,6 +1,12 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { broadcastSettingsChange } from "./sitebridge";
+import {
+  saveSettingsToFirestore,
+  saveContentToFirestore,
+  watchSettings,
+  watchContent,
+} from "./firebase";
 
 // Define types for our store
 export interface SiteSettings {
@@ -257,6 +263,13 @@ export const useStore = create<SiteStore>()(
             setTimeout(() => {
               broadcastSettingsChange(settings, "store-update");
             }, 0);
+
+            // Save to Firestore for global updates
+            saveSettingsToFirestore(updatedSettings)
+              .then(() => console.log("Settings synced to Firestore"))
+              .catch((err) =>
+                console.error("Failed to sync settings to Firestore:", err)
+              );
           }
 
           // Save to store
@@ -281,6 +294,13 @@ export const useStore = create<SiteStore>()(
                 "content-update"
               );
             }, 0);
+
+            // Save to Firestore for global updates
+            saveContentToFirestore(updatedSettings)
+              .then(() => console.log("Content synced to Firestore"))
+              .catch((err) =>
+                console.error("Failed to sync content to Firestore:", err)
+              );
           }
 
           // Save to store
@@ -297,3 +317,38 @@ export const useStore = create<SiteStore>()(
     }
   )
 );
+
+// Initialize Firestore listeners
+if (typeof window !== "undefined") {
+  // Delay initialization to ensure the app is fully loaded
+  const initializeFirestoreListeners = () => {
+    try {
+      // Watch for settings changes in Firestore
+      watchSettings((firestoreSettings) => {
+        if (firestoreSettings) {
+          // Update the local store without broadcasting
+          useStore.getState().updateSiteSettings(firestoreSettings, false);
+        }
+      });
+
+      // Watch for content changes in Firestore
+      watchContent((firestoreContent) => {
+        if (firestoreContent) {
+          // Update the local store without broadcasting
+          useStore.getState().updateContentSettings(firestoreContent, false);
+        }
+      });
+
+      console.log("Firestore real-time listeners initialized");
+    } catch (error) {
+      console.error("Failed to initialize Firestore listeners:", error);
+    }
+  };
+
+  // Wait for the app to be fully loaded before initializing
+  if (document.readyState === "complete") {
+    initializeFirestoreListeners();
+  } else {
+    window.addEventListener("load", initializeFirestoreListeners);
+  }
+}

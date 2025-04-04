@@ -196,42 +196,48 @@ export default function DirectSettingsManagement() {
   }, [siteSettings, router]);
 
   // Handle form submission for General settings
-  const handleGeneralSubmit = (e: React.FormEvent) => {
+  const handleGeneralSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSuccessMessage("Saving settings...");
+    
     const updatedSettings = {
       siteName,
       siteDescription,
     };
 
-    // Update the store
+    // Update the store - this will trigger Firebase sync
     updateSiteSettings(updatedSettings);
 
     // Broadcast the changes to client components
     broadcastSettingsChange(updatedSettings, "settings-update");
 
-    showSuccessMessage();
+    showSuccessMessage("General settings updated and synced to all clients!");
   };
 
   // Handle form submission for Appearance settings
-  const handleAppearanceSubmit = (e: React.FormEvent) => {
+  const handleAppearanceSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSuccessMessage("Saving appearance settings...");
+    
     const updatedSettings = {
       primaryColor,
       logoUrl,
     };
 
-    // Update the store
+    // Update the store - this will trigger Firebase sync
     updateSiteSettings(updatedSettings);
 
     // Broadcast the changes to client components
     broadcastSettingsChange(updatedSettings, "appearance-update");
 
-    showSuccessMessage();
+    showSuccessMessage("Appearance settings updated and synced to all clients!");
   };
 
   // Handle form submission for Footer settings
-  const handleFooterSubmit = (e: React.FormEvent) => {
+  const handleFooterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSuccessMessage("Saving footer settings...");
+    
     const updatedSettings = {
       footerText,
       contactEmail,
@@ -240,20 +246,18 @@ export default function DirectSettingsManagement() {
       socialLinks,
     };
 
-    // Update the store
+    // Update the store - this will trigger Firebase sync
     updateSiteSettings(updatedSettings);
 
     // Broadcast the changes to client components
     broadcastSettingsChange(updatedSettings, "footer-update");
 
-    showSuccessMessage();
+    showSuccessMessage("Footer settings updated and synced to all clients!");
   };
 
   // Helper for showing success message
-  const showSuccessMessage = () => {
-    setSuccessMessage(
-      "Settings updated successfully! Changes are now live on the website."
-    );
+  const showSuccessMessage = (message: string) => {
+    setSuccessMessage(message);
     setTimeout(() => setSuccessMessage(""), 5000);
   };
 

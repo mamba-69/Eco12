@@ -277,7 +277,7 @@ export default function DirectUserManagement() {
       updatedUsers = users.map((user) =>
         user.id === formData.id ? { ...user, ...formData } : user
       );
-      setSuccessMessage("User updated successfully!");
+      setSuccessMessage("User updated successfully and synced to all clients!");
     } else {
       // Create new user
       const newUser = {
@@ -287,15 +287,15 @@ export default function DirectUserManagement() {
         lastLogin: null,
       };
       updatedUsers = [...users, newUser];
-      setSuccessMessage("User created successfully!");
+      setSuccessMessage("User created successfully and synced to all clients!");
     }
 
     setUsers(updatedUsers);
 
-    // Update global store
+    // Update global store with Firebase sync enabled
     updateSiteSettings({
-      users: updatedUsers,
-    });
+      users: updatedUsers
+    }, true); // true means "shouldBroadcast" which triggers Firebase sync
 
     setIsEditingUser(false);
     setTimeout(() => setSuccessMessage(""), 3000);
@@ -310,12 +310,12 @@ export default function DirectUserManagement() {
       setSelectedUser(null);
     }
 
-    // Update global store
+    // Update global store with Firebase sync enabled
     updateSiteSettings({
-      users: updatedUsers,
-    });
+      users: updatedUsers
+    }, true); // true means "shouldBroadcast" which triggers Firebase sync
 
-    setSuccessMessage("User deleted successfully!");
+    setSuccessMessage("User deleted successfully and synced to all clients!");
     setTimeout(() => setSuccessMessage(""), 3000);
   };
 
