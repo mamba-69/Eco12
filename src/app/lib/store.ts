@@ -4,6 +4,8 @@ import { broadcastSettingsChange } from "./sitebridge";
 
 // Define types for our store
 export interface SiteSettings {
+  siteName?: string;
+  siteDescription?: string;
   logoUrl: string;
   primaryColor: string;
   footerText: string;
@@ -97,6 +99,9 @@ interface SiteStore {
 
 // Default site settings
 const defaultSettings: SiteSettings = {
+  siteName: "Eco-Expert Recycling",
+  siteDescription:
+    "Leading e-waste recycling company with sustainable solutions for a greener future.",
   logoUrl: "/images/logo.svg",
   primaryColor: "#2ECC71",
   footerText:
