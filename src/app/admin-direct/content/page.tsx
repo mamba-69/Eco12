@@ -35,6 +35,7 @@ interface BlogPost {
   status: string;
   author: string;
   date: string;
+  featuredImage?: string;
 }
 
 // Inline AdminSidebar component for deployment compatibility
@@ -136,7 +137,12 @@ export default function DirectContentManagement() {
     content: "",
     excerpt: "",
     status: "",
+    featuredImage: "",
   });
+
+  // Add state for media selection modal
+  const [showMediaSelector, setShowMediaSelector] = useState(false);
+  const [selectedMedia, setSelectedMedia] = useState("");
 
   // Load content data from store or use defaults
   useEffect(() => {
@@ -190,6 +196,7 @@ export default function DirectContentManagement() {
             status: "Published",
             author: "Admin",
             date: new Date().toISOString(),
+            featuredImage: "/images/blog1.jpg",
           },
           {
             id: "2",
@@ -201,6 +208,7 @@ export default function DirectContentManagement() {
             status: "Published",
             author: "Admin",
             date: new Date().toISOString(),
+            featuredImage: "/images/blog2.jpg",
           },
           {
             id: "3",
@@ -212,6 +220,7 @@ export default function DirectContentManagement() {
             status: "Draft",
             author: "Admin",
             date: new Date().toISOString(),
+            featuredImage: "",
           },
         ]);
       }
@@ -252,6 +261,7 @@ export default function DirectContentManagement() {
       content: page.content,
       excerpt: "",
       status: "",
+      featuredImage: "",
     });
     setActiveTab("pages");
   };
@@ -266,6 +276,7 @@ export default function DirectContentManagement() {
       content: post.content,
       excerpt: post.excerpt,
       status: post.status,
+      featuredImage: post.featuredImage || "",
     });
     setActiveTab("blog");
   };
@@ -295,6 +306,7 @@ export default function DirectContentManagement() {
               excerpt: editForm.excerpt,
               content: editForm.content,
               status: editForm.status,
+              featuredImage: editForm.featuredImage,
               date: new Date().toISOString(),
             }
           : post
@@ -351,6 +363,34 @@ export default function DirectContentManagement() {
       } deleted successfully!`
     );
     setTimeout(() => setSuccessMessage(""), 3000);
+  };
+
+  // Add a new blog post
+  const addNewBlogPost = () => {
+    const newPost = {
+      id: Date.now().toString(),
+      title: "New Blog Post",
+      excerpt: "Enter a brief excerpt here...",
+      content: "Enter your content here...",
+      status: "Draft",
+      author: "Admin",
+      date: new Date().toISOString(),
+      featuredImage: "",
+    };
+
+    const updatedPosts = [...blogPosts, newPost];
+    setBlogPosts(updatedPosts);
+    updateContentSettings({ blog: updatedPosts });
+
+    // Start editing the new post
+    handleEditBlogPost(newPost);
+  };
+
+  // Handle selecting media for blog post
+  const selectMediaForBlog = (url: string) => {
+    setEditForm((prev) => ({ ...prev, featuredImage: url }));
+    setSelectedMedia(url);
+    setShowMediaSelector(false);
   };
 
   return (
@@ -624,81 +664,314 @@ export default function DirectContentManagement() {
 
           {/* Blog Posts Tab Content */}
           {activeTab === "blog" && !isEditing && (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
-              <div className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-200 dark:border-gray-700">
-                <h2 className="text-lg font-medium mb-2 sm:mb-0">Blog Posts</h2>
-                <button className="w-full sm:w-auto px-3 py-1 bg-green-500 text-white rounded-md text-sm flex items-center justify-center">
-                  <FiPlus className="mr-1" size={16} />
-                  Create New Post
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-lg font-bold">Blog Posts</h2>
+                <button
+                  onClick={addNewBlogPost}
+                  className="flex items-center text-sm px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                >
+                  <FiPlus className="mr-1" />
+                  New Post
                 </button>
               </div>
 
-              {loading ? (
-                <div className="flex items-center justify-center h-60">
-                  <div className="w-8 h-8 border-4 border-gray-200 border-t-green-500 rounded-full animate-spin"></div>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full">
-                    <thead className="bg-gray-50 dark:bg-gray-700">
-                      <tr>
-                        <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          Title
-                        </th>
-                        <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider hidden md:table-cell">
-                          Status
-                        </th>
-                        <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider hidden sm:table-cell">
-                          Date
-                        </th>
-                        <th className="py-3 px-6 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                      {blogPosts.map((post) => (
-                        <tr
-                          key={post.id}
-                          className="hover:bg-gray-50 dark:hover:bg-gray-750"
-                        >
-                          <td className="py-4 px-6 text-sm font-medium">
-                            {post.title}
-                          </td>
-                          <td className="py-4 px-6 text-sm hidden md:table-cell">
-                            <span
-                              className={`px-2 py-1 text-xs rounded-full ${
-                                post.status === "Published"
-                                  ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                                  : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
-                              }`}
-                            >
-                              {post.status}
-                            </span>
-                          </td>
-                          <td className="py-4 px-6 text-sm text-gray-500 dark:text-gray-400 hidden sm:table-cell">
-                            {new Date(post.date).toLocaleDateString()}
-                          </td>
-                          <td className="py-4 px-6 text-sm text-right whitespace-nowrap">
+              {/* Blog posts list */}
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className="bg-gray-50 dark:bg-gray-750">
+                    <tr>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Title
+                      </th>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">
+                        Status
+                      </th>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">
+                        Date
+                      </th>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    {blogPosts.map((post) => (
+                      <tr
+                        key={post.id}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-750"
+                      >
+                        <td className="px-3 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            {post.featuredImage && (
+                              <div className="flex-shrink-0 h-10 w-10 mr-3">
+                                <img
+                                  className="h-10 w-10 rounded-md object-cover"
+                                  src={post.featuredImage}
+                                  alt={post.title}
+                                />
+                              </div>
+                            )}
+                            <div>
+                              <div className="font-medium text-gray-900 dark:text-white">
+                                {post.title}
+                              </div>
+                              <div className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-xs">
+                                {post.excerpt}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-3 py-4 whitespace-nowrap hidden md:table-cell">
+                          <span
+                            className={`px-2 py-1 text-xs rounded-full ${
+                              post.status === "Published"
+                                ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                                : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+                            }`}
+                          >
+                            {post.status}
+                          </span>
+                        </td>
+                        <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 hidden md:table-cell">
+                          {new Date(post.date).toLocaleDateString()}
+                        </td>
+                        <td className="px-3 py-4 whitespace-nowrap text-sm">
+                          <div className="flex space-x-2">
                             <button
                               onClick={() => handleEditBlogPost(post)}
-                              className="text-blue-500 hover:text-blue-700 dark:hover:text-blue-400 mr-3"
+                              className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
                             >
-                              <FiEdit size={18} />
+                              <FiEdit className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => handleDelete(post.id, "post")}
-                              className="text-red-500 hover:text-red-700 dark:hover:text-red-400"
+                              className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
                             >
-                              <FiTrash2 size={18} />
+                              <FiTrash2 className="w-4 h-4" />
                             </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Blog post editing form */}
+          {activeTab === "blog" && isEditing && (
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-lg font-bold">
+                  {editingItemId ? "Edit Blog Post" : "New Blog Post"}
+                </h2>
+                <button
+                  onClick={cancelEdit}
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                >
+                  <FiX className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Title
+                  </label>
+                  <input
+                    type="text"
+                    name="title"
+                    value={editForm.title}
+                    onChange={handleFormChange}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700"
+                  />
                 </div>
-              )}
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Excerpt
+                  </label>
+                  <textarea
+                    name="excerpt"
+                    value={editForm.excerpt}
+                    onChange={handleFormChange}
+                    rows={2}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700"
+                    placeholder="Brief summary of the post..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Content
+                  </label>
+                  <textarea
+                    name="content"
+                    value={editForm.content}
+                    onChange={handleFormChange}
+                    rows={8}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Status
+                  </label>
+                  <select
+                    name="status"
+                    value={editForm.status}
+                    onChange={handleFormChange}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
+                  >
+                    <option value="Draft">Draft</option>
+                    <option value="Published">Published</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Featured Image
+                  </label>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-24 h-24 border border-gray-300 dark:border-gray-600 rounded-md flex items-center justify-center overflow-hidden bg-gray-100 dark:bg-gray-700">
+                      {editForm.featuredImage ? (
+                        <img
+                          src={editForm.featuredImage}
+                          alt="Featured"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <FiImage className="w-8 h-8 text-gray-400" />
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowMediaSelector(true)}
+                      className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
+                    >
+                      Select Image
+                    </button>
+                    {editForm.featuredImage && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setEditForm((prev) => ({
+                            ...prev,
+                            featuredImage: "",
+                          }))
+                        }
+                        className="px-3 py-1.5 bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 text-sm rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-4">
+                  <button
+                    onClick={cancelEdit}
+                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md mr-3 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={saveEdit}
+                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Media selector modal */}
+          {showMediaSelector && (
+            <div className="fixed inset-0 z-50 overflow-y-auto">
+              <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div
+                  className="fixed inset-0 transition-opacity"
+                  aria-hidden="true"
+                >
+                  <div className="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
+                </div>
+
+                <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl w-full">
+                  <div className="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-lg font-medium">Select Media</h3>
+                      <button
+                        onClick={() => setShowMediaSelector(false)}
+                        className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                      >
+                        <FiX className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-h-96 overflow-y-auto">
+                      {contentSettings?.media?.images.map((image) => (
+                        <div
+                          key={image.id}
+                          className={`border rounded-md overflow-hidden cursor-pointer transition-all ${
+                            selectedMedia === image.url
+                              ? "ring-2 ring-green-500 dark:ring-green-400"
+                              : "hover:opacity-80"
+                          }`}
+                          onClick={() => selectMediaForBlog(image.url)}
+                        >
+                          <div className="aspect-w-16 aspect-h-9 bg-gray-100 dark:bg-gray-700">
+                            {image.type === "video" ? (
+                              <video
+                                src={image.url}
+                                className="w-full h-full object-cover"
+                                muted
+                              />
+                            ) : (
+                              <img
+                                src={image.url}
+                                alt={image.name}
+                                className="w-full h-full object-cover"
+                              />
+                            )}
+                          </div>
+                          <div className="p-2 text-sm truncate">
+                            {image.name}
+                          </div>
+                        </div>
+                      ))}
+
+                      {(!contentSettings?.media?.images ||
+                        contentSettings.media.images.length === 0) && (
+                        <div className="col-span-full p-8 text-center text-gray-500 dark:text-gray-400">
+                          No media available. Please upload some media in the
+                          Media section.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 dark:bg-gray-750 px-4 py-3 sm:px-6 flex justify-between">
+                    <button
+                      type="button"
+                      onClick={() => setShowMediaSelector(false)}
+                      className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowMediaSelector(false)}
+                      className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                    >
+                      Select
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 

@@ -13,6 +13,7 @@ interface BlogPost {
   status: string;
   author: string;
   date: string;
+  featuredImage?: string;
 }
 
 export default function BlogPostPage({ params }: { params: { id: string } }) {
@@ -24,7 +25,7 @@ export default function BlogPostPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     if (contentSettings?.blog) {
       const foundPost = contentSettings.blog.find(
-        (p) => p.id === params.id && p.status === "Published"
+        (p: BlogPost) => p.id === params.id && p.status === "Published"
       );
 
       if (foundPost) {
@@ -40,7 +41,7 @@ export default function BlogPostPage({ params }: { params: { id: string } }) {
   useSettingsChangeListener((data) => {
     if (data.settings?.contentSettings?.blog) {
       const foundPost = data.settings.contentSettings.blog.find(
-        (p) => p.id === params.id && p.status === "Published"
+        (p: BlogPost) => p.id === params.id && p.status === "Published"
       );
 
       if (foundPost) {
@@ -109,6 +110,16 @@ export default function BlogPostPage({ params }: { params: { id: string } }) {
         </Link>
 
         <article>
+          {post.featuredImage && (
+            <div className="mb-8 rounded-lg overflow-hidden">
+              <img
+                src={post.featuredImage}
+                alt={post.title}
+                className="w-full h-auto max-h-96 object-cover"
+              />
+            </div>
+          )}
+
           <header className="mb-8">
             <h1 className="text-3xl md:text-4xl font-bold mb-4">
               {post.title}

@@ -13,6 +13,7 @@ interface BlogPost {
   status: string;
   author: string;
   date: string;
+  featuredImage?: string;
 }
 
 export default function BlogPosts() {
@@ -22,10 +23,10 @@ export default function BlogPosts() {
 
   // Load blog posts from store
   useEffect(() => {
-    if (contentSettings?.blog?.length > 0) {
+    if (contentSettings?.blog && contentSettings.blog.length > 0) {
       // Only show published posts
       const publishedPosts = contentSettings.blog.filter(
-        (post) => post.status === "Published"
+        (post: BlogPost) => post.status === "Published"
       );
       setBlogPosts(publishedPosts);
     }
@@ -36,7 +37,7 @@ export default function BlogPosts() {
   useSettingsChangeListener((data) => {
     if (data.settings?.contentSettings?.blog) {
       const publishedPosts = data.settings.contentSettings.blog.filter(
-        (post) => post.status === "Published"
+        (post: BlogPost) => post.status === "Published"
       );
       setBlogPosts(publishedPosts);
       console.log("Blog posts updated from admin panel:", data.source);
@@ -68,6 +69,16 @@ export default function BlogPosts() {
           key={post.id}
           className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
         >
+          {post.featuredImage && (
+            <div className="h-48 overflow-hidden">
+              <img
+                src={post.featuredImage}
+                alt={post.title}
+                className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+              />
+            </div>
+          )}
+
           <div className="p-6">
             <h3 className="text-xl font-bold mb-2">{post.title}</h3>
             <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-3">

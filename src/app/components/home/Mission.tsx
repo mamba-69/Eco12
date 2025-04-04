@@ -205,6 +205,15 @@ export default function Mission() {
   );
 }
 
+// Define interface for CountUpAnimation props
+interface CountUpAnimationProps {
+  end: number;
+  className?: string;
+  suffix?: string;
+  isInView: boolean;
+  duration?: number;
+}
+
 // CountUpAnimation component
 function CountUpAnimation({
   end,
@@ -212,16 +221,16 @@ function CountUpAnimation({
   suffix = "",
   isInView,
   duration = 2.5,
-}) {
+}: CountUpAnimationProps) {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
     if (!isInView) return;
 
-    let startTime;
-    let animationFrameId;
+    let startTime: number | undefined;
+    let animationFrameId: number;
 
-    const updateCount = (timestamp) => {
+    const updateCount = (timestamp: number) => {
       if (!startTime) startTime = timestamp;
       const progress = Math.min((timestamp - startTime) / (duration * 1000), 1);
       setCount(Math.floor(progress * end));

@@ -40,20 +40,14 @@ export default function LoginForm() {
     setError(null);
 
     try {
-      const { error } = await signIn(data.email, data.password);
+      await signIn(data.email, data.password);
 
-      if (error) {
-        // For admin login, we handle this in the AuthContext
-        // This error is only for regular login attempts
-        setError("Invalid email or password");
-      } else {
-        // Successful login - redirect happens in the AuthContext for admin
-        // For regular users, redirect to home
-        router.push("/");
-      }
+      // Successful login - redirect happens in the AuthContext for admin
+      // For regular users, redirect to home
+      router.push("/");
     } catch (err) {
       console.error("Login error:", err);
-      setError("An unexpected error occurred. Please try again.");
+      setError("Invalid email or password");
     } finally {
       setIsLoading(false);
     }

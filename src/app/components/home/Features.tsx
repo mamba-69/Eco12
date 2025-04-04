@@ -12,7 +12,21 @@ import {
   FiCheck,
 } from "@/app/lib/icons";
 
-const ServiceCard = ({ icon: Icon, title, description, href, index }) => {
+interface ServiceCardProps {
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  title: string;
+  description: string;
+  href: string;
+  index: number;
+}
+
+const ServiceCard = ({
+  icon: Icon,
+  title,
+  description,
+  href,
+  index,
+}: ServiceCardProps) => {
   const cardRef = useRef(null);
 
   return (
@@ -72,13 +86,23 @@ const ServiceCard = ({ icon: Icon, title, description, href, index }) => {
   );
 };
 
+// Interface for the dot object
+interface Dot {
+  id: number;
+  width: string;
+  height: string;
+  top: string;
+  left: string;
+  duration: number;
+}
+
 // Animated dots component that renders only client-side
 function AnimatedDots() {
-  const [dots, setDots] = useState([]);
+  const [dots, setDots] = useState<Dot[]>([]);
 
   useEffect(() => {
     // Generate consistent dots on client side
-    const newDots = Array.from({ length: 5 }).map((_, i) => ({
+    const newDots: Dot[] = Array.from({ length: 5 }).map((_, i) => ({
       id: i,
       width: `${10 + i * 5}px`,
       height: `${10 + i * 4}px`,

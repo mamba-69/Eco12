@@ -42,7 +42,8 @@ const createMockUser = (
   fullName: string,
   role?: string
 ): User => {
-  return {
+  // First create a minimal mock user with required properties
+  const mockUser = {
     id,
     email,
     user_metadata: {
@@ -54,9 +55,11 @@ const createMockUser = (
     created_at: new Date().toISOString(),
     confirmed_at: new Date().toISOString(),
     last_sign_in_at: new Date().toISOString(),
-    role: null,
     updated_at: new Date().toISOString(),
-  } as User;
+  } as unknown; // First cast to unknown
+
+  // Then cast to User type
+  return mockUser as User;
 };
 
 // Mock users
