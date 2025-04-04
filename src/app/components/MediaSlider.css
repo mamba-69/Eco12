@@ -1,0 +1,107 @@
+/* MediaSlider custom styles */
+
+.media-slider {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  max-height: 450px;
+}
+
+.media-swiper {
+  width: 100%;
+  height: 100%;
+}
+
+.media-swiper .swiper-slide {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #000;
+  height: auto;
+  max-height: 400px;
+}
+
+/* Pagination bullets */
+.media-slider .swiper-pagination-bullet {
+  width: 8px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.7);
+  opacity: 0.7;
+}
+
+.media-slider .swiper-pagination-bullet-active {
+  background: #22c55e;
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+/* Navigation buttons */
+.media-slider .swiper-button-next,
+.media-slider .swiper-button-prev {
+  background-color: rgba(0, 0, 0, 0.6);
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  color: white;
+  font-weight: bold;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.media-slider .swiper-button-next:after,
+.media-slider .swiper-button-prev:after {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.media-slider .swiper-button-next:hover,
+.media-slider .swiper-button-prev:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+/* Ensure video controls are visible */
+.media-slider video {
+  display: block;
+}
+
+.media-slider video::-webkit-media-controls {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.media-slider video::-webkit-media-controls-enclosure {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Make slider responsive */
+@media (max-width: 768px) {
+  .media-slider {
+    max-height: 350px;
+  }
+  
+  .media-swiper .swiper-slide {
+    max-height: 300px;
+  }
+  
+  .media-slider .swiper-button-next,
+  .media-slider .swiper-button-prev {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .media-slider .swiper-button-next:after,
+  .media-slider .swiper-button-prev:after {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .media-slider {
+    max-height: 300px;
+  }
+  
+  .media-swiper .swiper-slide {
+    max-height: 250px;
+  }
+} 

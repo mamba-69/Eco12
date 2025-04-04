@@ -6,15 +6,15 @@ import { useRouter } from "next/navigation";
 
 // Simple cookie management functions
 function setCookie(name: string, value: string, days: number) {
-  if (typeof document === 'undefined') return;
-  
+  if (typeof document === "undefined") return;
+
   const expires = new Date();
   expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
   document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Strict`;
 }
 
 function deleteCookie(name: string) {
-  if (typeof document === 'undefined') return;
+  if (typeof document === "undefined") return;
   document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
 }
 
@@ -35,24 +35,38 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const ADMIN_EMAIL = "admin@eco-expert.com";
 const ADMIN_PASSWORD = "admin123";
 
-// Mock user for development
-const mockUser = {
-  id: '123456',
-  email: 'test@eco-expert.com',
-  user_metadata: {
-    full_name: 'Test User'
-  }
-} as User;
+// Create a basic mock User object
+const createMockUser = (
+  id: string,
+  email: string,
+  fullName: string,
+  role?: string
+): User => {
+  return {
+    id,
+    email,
+    user_metadata: {
+      full_name: fullName,
+      ...(role && { role }),
+    },
+    app_metadata: {},
+    aud: "authenticated",
+    created_at: new Date().toISOString(),
+    confirmed_at: new Date().toISOString(),
+    last_sign_in_at: new Date().toISOString(),
+    role: null,
+    updated_at: new Date().toISOString(),
+  } as User;
+};
 
-// Mock admin user
-const mockAdminUser = {
-  id: 'admin123',
-  email: ADMIN_EMAIL,
-  user_metadata: {
-    full_name: 'Admin User',
-    role: 'admin'
-  }
-} as User;
+// Mock users
+const mockUser = createMockUser("123456", "test@eco-expert.com", "Test User");
+const mockAdminUser = createMockUser(
+  "admin123",
+  ADMIN_EMAIL,
+  "Admin User",
+  "admin"
+);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -61,24 +75,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   // Check if the user is an admin
-  const isAdmin = user?.email === ADMIN_EMAIL || user?.user_metadata?.role === 'admin' || false;
-  
+  const isAdmin =
+    user?.email === ADMIN_EMAIL ||
+    user?.user_metadata?.role === "admin" ||
+    false;
+
+  useEffect(() => {
+    console.log("Auth context - User state:", user?.email);
+    console.log("Auth context - Is admin?", isAdmin);
+  }, [user, isAdmin]);
+
   // Set auth cookies when user or isAdmin changes
   useEffect(() => {
     if (user) {
       // Set auth session cookie for general authentication
-      setCookie('auth-session', 'true', 1); // 1 day
-      
+      setCookie("auth-session", "true", 1); // 1 day
+
       // Set admin session cookie if user is admin
       if (isAdmin) {
-        setCookie('admin-session', 'true', 1); // 1 day
+        setCookie("admin-session", "true", 1); // 1 day
       } else {
-        deleteCookie('admin-session');
+        deleteCookie("admin-session");
       }
     } else {
       // Delete both cookies on logout
-      deleteCookie('auth-session');
-      deleteCookie('admin-session');
+      deleteCookie("auth-session");
+      deleteCookie("admin-session");
     }
   }, [user, isAdmin]);
 
@@ -86,43 +108,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      
+      console.log("Attempting login with:", email, password);
+
       // Check for admin credentials
       if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-        setUser(mockAdminUser);
-        console.log("Admin signed in successfully");
-        
-        // Create a mock session
+        console.log("Admin credentials are correct");
+
+        // Create a simple mock session
         const mockSession = {
-          access_token: 'mock-token',
-          refresh_token: 'mock-refresh-token',
+          access_token: "mock-token-" + Date.now(),
+          refresh_token: "mock-refresh-token-" + Date.now(),
           expires_in: 3600,
-          user: mockAdminUser
+          user: mockAdminUser,
+          expires_at: Math.floor(Date.now() / 1000) + 3600,
         } as Session;
-        
+
+        // Set both session and user together
         setSession(mockSession);
+        setUser(mockAdminUser);
+
+        console.log("Admin signed in successfully");
         setIsLoading(false);
-        
-        // Redirect to admin dashboard after login
-        setTimeout(() => {
-          router.push('/admin/dashboard');
-        }, 500);
-        
         return;
       }
-      
+
       // Regular user sign in
       if (password !== "password") {
+        console.error("Invalid credentials");
         throw new Error("Invalid email or password");
       }
-      
+
       // Create a mock user based on the email
-      const newUser = {
-        ...mockUser,
-        email: email
-      };
-      
-      setUser(newUser);
+      const userRecord = createMockUser(
+        "user-" + Date.now(),
+        email,
+        email.split("@")[0] // Use part of the email as the name
+      );
+
+      setUser(userRecord);
       console.log("Signed in with:", email);
       setIsLoading(false);
     } catch (error) {
@@ -138,7 +161,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       // In development, just log the registration
       console.log("Registered user:", { email, fullName });
-      
+
       setTimeout(() => {
         setIsLoading(false);
       }, 1000);
@@ -154,13 +177,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setUser(null);
       setSession(null);
-      
+
       // Clear auth cookies
-      deleteCookie('auth-session');
-      deleteCookie('admin-session');
-      
+      deleteCookie("auth-session");
+      deleteCookie("admin-session");
+
       console.log("Signed out");
-      router.push('/');
+      router.push("/");
     } catch (error) {
       console.error("Error signing out:", error);
       throw error;
@@ -197,4 +220,4 @@ export const useAuth = () => {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
-}; 
+};
