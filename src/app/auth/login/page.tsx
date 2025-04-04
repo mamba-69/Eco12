@@ -31,9 +31,9 @@ export default function LoginPage() {
       window.location.href = "/admin-direct/";
     }
 
-    // For development: Uncomment to auto-fill admin credentials
-    setEmail(ADMIN_EMAIL);
-    setPassword(ADMIN_PASSWORD);
+    // Remove auto-fill of admin credentials for security
+    // setEmail(ADMIN_EMAIL);
+    // setPassword(ADMIN_PASSWORD);
   }, []);
 
   // Force redirect to admin dashboard if credentials match

@@ -170,79 +170,31 @@ export default function DirectMediaManagement() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   useEffect(() => {
-    // Check for admin authentication
+    // Check for admin authentication before showing content
     const checkAdminAuth = () => {
       try {
-        // Multiple checks for admin authentication
         const adminCookie = document.cookie.includes("admin-session=true");
         const adminLocalStorage = localStorage.getItem("is-admin") === "true";
-        const adminEmail = localStorage.getItem("admin-email");
 
-        // Backdoor for development: If it's the first load, automatically set admin status
-        if (
-          !adminCookie &&
-          !adminLocalStorage &&
-          !sessionStorage.getItem("admin-checked")
-        ) {
-          console.log("First visit: Setting admin status for development");
-          localStorage.setItem("is-admin", "true");
-          localStorage.setItem("admin-email", ADMIN_EMAIL);
-          sessionStorage.setItem("admin-checked", "true");
-          document.cookie = `admin-session=true;path=/;max-age=${60 * 60 * 24}`;
-          return true;
-        }
-
-        // Normal auth check
         if (!adminCookie && !adminLocalStorage) {
-          console.log("Admin authentication failed, redirecting to login");
+          console.log("Admin authentication required");
           router.push("/auth/login");
           return false;
         }
 
-        console.log("Admin authenticated:", adminEmail);
         return true;
       } catch (error) {
         console.error("Auth check error:", error);
-        // Fallback for client-side issues
-        return true;
+        router.push("/auth/login");
+        return false;
       }
     };
 
-    const authStatus = checkAdminAuth();
-    setIsAuthenticated(authStatus);
-  }, [router]);
+    if (!checkAdminAuth()) {
+      return;
+    }
 
-  // Custom toast notification
-  const showToast = (
-    message: string,
-    type: "success" | "error" | "info" = "success"
-  ) => {
-    const id = Math.random().toString(36).substring(2, 9);
-    // Create a toast and add it to state
-    setToasts((prev) => [...prev, { id, message, type }]);
-
-    // Remove the toast after 3 seconds
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((toast) => toast.id !== id));
-    }, 3000);
-  };
-
-  // Don't render content until authentication is confirmed
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
-        <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-          <h2 className="text-xl font-bold mb-2">Authenticating...</h2>
-          <p className="text-gray-600 dark:text-gray-400">
-            Please wait while we verify your access.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // Load media from content settings on mount
-  useEffect(() => {
+    // Load media from content settings on mount
     if (contentSettings?.media?.images?.length > 0) {
       setMediaItems(contentSettings.media.images);
     } else {
@@ -275,7 +227,22 @@ export default function DirectMediaManagement() {
       ]);
     }
     setLoading(false);
-  }, [contentSettings]);
+  }, [contentSettings, router]);
+
+  // Custom toast notification
+  const showToast = (
+    message: string,
+    type: "success" | "error" | "info" = "success"
+  ) => {
+    const id = Math.random().toString(36).substring(2, 9);
+    // Create a toast and add it to state
+    setToasts((prev) => [...prev, { id, message, type }]);
+
+    // Remove the toast after 3 seconds
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((toast) => toast.id !== id));
+    }, 3000);
+  };
 
   // Handle media upload from Cloudinary
   const handleMediaUpload = (result: CloudinaryResult) => {

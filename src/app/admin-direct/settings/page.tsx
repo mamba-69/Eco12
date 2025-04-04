@@ -22,6 +22,7 @@ import {
 } from "react-icons/fi";
 import { useStore } from "@/app/lib/store";
 import { broadcastSettingsChange } from "@/app/lib/sitebridge";
+import { useRouter } from "next/navigation";
 
 // Add improved admin auth check with consistent values for deployed version
 const ADMIN_EMAIL = "ecoexpert@gmail.com";
@@ -110,6 +111,7 @@ export default function DirectSettingsManagement() {
   const { siteSettings, updateSiteSettings } = useStore();
   const [activeTab, setActiveTab] = useState("general");
   const [successMessage, setSuccessMessage] = useState("");
+  const router = useRouter();
 
   // Form states with defaults from store
   const [siteName, setSiteName] = useState("Eco-Expert Recycling");
@@ -135,8 +137,32 @@ export default function DirectSettingsManagement() {
     linkedin: "https://linkedin.com",
   });
 
-  // Load settings from store when component mounts
+  // Check for admin authentication
   useEffect(() => {
+    const checkAdminAuth = () => {
+      try {
+        const adminCookie = document.cookie.includes("admin-session=true");
+        const adminLocalStorage = localStorage.getItem("is-admin") === "true";
+
+        if (!adminCookie && !adminLocalStorage) {
+          console.log("Admin authentication required");
+          router.push("/auth/login");
+          return false;
+        }
+
+        return true;
+      } catch (error) {
+        console.error("Auth check error:", error);
+        router.push("/auth/login");
+        return false;
+      }
+    };
+
+    if (!checkAdminAuth()) {
+      return;
+    }
+
+    // Load settings from store when component mounts
     if (siteSettings) {
       setSiteName(siteSettings.siteName || "Eco-Expert Recycling");
       setSiteDescription(
@@ -167,7 +193,7 @@ export default function DirectSettingsManagement() {
         }
       );
     }
-  }, [siteSettings]);
+  }, [siteSettings, router]);
 
   // Handle form submission for General settings
   const handleGeneralSubmit = (e: React.FormEvent) => {

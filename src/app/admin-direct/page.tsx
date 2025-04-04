@@ -42,21 +42,8 @@ export default function AdminDirectDashboard() {
         const adminLocalStorage = localStorage.getItem("is-admin") === "true";
         const adminEmail = localStorage.getItem("admin-email");
 
-        // Backdoor for development: If it's the first load, automatically set admin status
-        if (
-          !adminCookie &&
-          !adminLocalStorage &&
-          !sessionStorage.getItem("admin-checked")
-        ) {
-          console.log("First visit: Setting admin status for development");
-          localStorage.setItem("is-admin", "true");
-          localStorage.setItem("admin-email", ADMIN_EMAIL);
-          sessionStorage.setItem("admin-checked", "true");
-          document.cookie = `admin-session=true;path=/;max-age=${60 * 60 * 24}`;
-          return true;
-        }
-
-        // Normal auth check
+        // Removed backdoor for development to improve security
+        // Only proceed if proper authentication exists
         if (!adminCookie && !adminLocalStorage) {
           console.log("Admin authentication failed, redirecting to login");
           router.push("/auth/login");
@@ -67,14 +54,15 @@ export default function AdminDirectDashboard() {
         return true;
       } catch (error) {
         console.error("Auth check error:", error);
-        // Fallback for client-side issues
-        return true;
+        // For errors, redirect to login instead of allowing access
+        router.push("/auth/login");
+        return false;
       }
     };
 
     const authStatus = checkAdminAuth();
     setIsAuthenticated(authStatus);
-
+    
     if (authStatus) {
       // Set last updated time
       setLastUpdated(new Date().toLocaleString());

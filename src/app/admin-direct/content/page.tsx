@@ -17,6 +17,7 @@ import {
 } from "react-icons/fi";
 import { useStore } from "@/app/lib/store";
 import { useSettingsChangeListener } from "@/app/lib/sitebridge";
+import { useRouter } from "next/navigation";
 
 // Define content types
 interface Page {
@@ -145,8 +146,34 @@ export default function DirectContentManagement() {
   const [showMediaSelector, setShowMediaSelector] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState("");
 
+  const router = useRouter();
+
   // Load content data from store or use defaults
   useEffect(() => {
+    // Check for admin authentication before showing content
+    const checkAdminAuth = () => {
+      try {
+        const adminCookie = document.cookie.includes("admin-session=true");
+        const adminLocalStorage = localStorage.getItem("is-admin") === "true";
+
+        if (!adminCookie && !adminLocalStorage) {
+          console.log("Admin authentication required");
+          router.push("/auth/login");
+          return false;
+        }
+
+        return true;
+      } catch (error) {
+        console.error("Auth check error:", error);
+        router.push("/auth/login");
+        return false;
+      }
+    };
+
+    if (!checkAdminAuth()) {
+      return;
+    }
+
     if (contentSettings) {
       if (contentSettings.pages) {
         setPages(contentSettings.pages);
@@ -227,7 +254,7 @@ export default function DirectContentManagement() {
       }
     }
     setLoading(false);
-  }, [contentSettings]);
+  }, [contentSettings, router]);
 
   // Listen for content setting changes
   useSettingsChangeListener((data) => {

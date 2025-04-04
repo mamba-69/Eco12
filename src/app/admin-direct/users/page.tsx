@@ -16,6 +16,7 @@ import {
   FiX,
 } from "react-icons/fi";
 import { useStore, SiteSettings } from "@/app/lib/store";
+import { useRouter } from "next/navigation";
 
 // Define interface for a user
 interface User {
@@ -116,6 +117,7 @@ function AdminSidebar() {
 
 export default function DirectUserManagement() {
   const { siteSettings, updateSiteSettings } = useStore();
+  const router = useRouter();
 
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -136,6 +138,30 @@ export default function DirectUserManagement() {
 
   // Load users data on mount
   useEffect(() => {
+    // Check for admin authentication before showing content
+    const checkAdminAuth = () => {
+      try {
+        const adminCookie = document.cookie.includes("admin-session=true");
+        const adminLocalStorage = localStorage.getItem("is-admin") === "true";
+
+        if (!adminCookie && !adminLocalStorage) {
+          console.log("Admin authentication required");
+          router.push("/auth/login");
+          return false;
+        }
+
+        return true;
+      } catch (error) {
+        console.error("Auth check error:", error);
+        router.push("/auth/login");
+        return false;
+      }
+    };
+
+    if (!checkAdminAuth()) {
+      return;
+    }
+
     if (siteSettings?.users) {
       setUsers(siteSettings.users);
     } else {
@@ -186,7 +212,7 @@ export default function DirectUserManagement() {
       });
     }
     setLoading(false);
-  }, [siteSettings, updateSiteSettings]);
+  }, [siteSettings, updateSiteSettings, router]);
 
   // Filter users based on search query
   const filteredUsers = users.filter((user) => {
