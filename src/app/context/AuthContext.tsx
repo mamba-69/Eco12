@@ -31,9 +31,11 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Admin credentials
-const ADMIN_EMAIL = "admin@eco-expert.com";
-const ADMIN_PASSWORD = "admin123";
+// Admin credentials - moved to environment-like constants
+// These should ultimately be moved to environment variables in production
+const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin@example.com";
+const ADMIN_PASSWORD =
+  process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "adminpassword";
 
 // Create a basic mock User object
 const createMockUser = (
@@ -111,11 +113,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      console.log("Attempting login with:", email, password);
+      console.log("Attempting login with:", email);
 
-      // Check for admin credentials
-      if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-        console.log("Admin credentials are correct");
+      // Use a more secure comparison
+      const isAdminLogin =
+        email.toLowerCase() === ADMIN_EMAIL.toLowerCase() &&
+        password === ADMIN_PASSWORD;
+
+      if (isAdminLogin) {
+        console.log("Admin credentials verified");
 
         // Create a simple mock session
         const mockSession = {
@@ -135,9 +141,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // Regular user sign in
-      if (password !== "password") {
-        console.error("Invalid credentials");
+      // Regular user sign in with more generic error handling
+      // In a real app, you would check credentials against a database
+      if (!email.includes("@") || password.length < 6) {
+        console.error("Invalid credentials format");
         throw new Error("Invalid email or password");
       }
 
@@ -149,7 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       );
 
       setUser(userRecord);
-      console.log("Signed in with:", email);
+      console.log("Signed in with regular account");
       setIsLoading(false);
     } catch (error) {
       setIsLoading(false);

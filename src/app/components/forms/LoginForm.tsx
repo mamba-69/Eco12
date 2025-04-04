@@ -69,7 +69,12 @@ export default function LoginForm() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form 
+        onSubmit={handleSubmit(onSubmit)} 
+        className="space-y-6" 
+        autoComplete="off"
+        data-form-type="login"
+      >
         <div className="space-y-2">
           <label htmlFor="email" className="block text-sm font-medium">
             Email
@@ -89,6 +94,7 @@ export default function LoginForm() {
                   : "border-gray-300 dark:border-gray-600"
               } bg-white dark:bg-gray-900`}
               disabled={isLoading}
+              autoComplete="off"
             />
           </div>
           {errors.email && (
@@ -115,6 +121,7 @@ export default function LoginForm() {
                   : "border-gray-300 dark:border-gray-600"
               } bg-white dark:bg-gray-900`}
               disabled={isLoading}
+              autoComplete="new-password"
             />
           </div>
           {errors.password && (
