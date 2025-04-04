@@ -1,0 +1,5 @@
+[33mcommit 307a9c055b09916ff6ab64ec9850d53eca1bf69d[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: mamba-69 <jennypankajpatel0511@gmail.com>
+Date:   Fri Apr 4 18:06:34 2025 +0530
+
+    Add siteName and siteDescription to SiteSettings interface

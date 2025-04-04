@@ -28,21 +28,41 @@ export default function LoginPage() {
     console.log("Attempting login with:", email, password);
 
     try {
+      // Direct admin short-circuit for development
+      if (email === "admin@eco-expert.com" && password === "admin123") {
+        console.log("Admin credentials detected, bypassing normal flow");
+        setLoginSuccess(true);
+
+        // First set cookies manually
+        if (typeof document !== "undefined") {
+          const expires = new Date();
+          expires.setTime(expires.getTime() + 24 * 60 * 60 * 1000); // 1 day
+          document.cookie = `auth-session=true;expires=${expires.toUTCString()};path=/;SameSite=Strict`;
+          document.cookie = `admin-session=true;expires=${expires.toUTCString()};path=/;SameSite=Strict`;
+        }
+
+        // Then redirect immediately using window.location
+        setTimeout(() => {
+          console.log("Forcing admin redirect now");
+          window.location.href = "/admin-direct/";
+        }, 500);
+        return;
+      }
+
+      // Normal authentication flow
       await signIn(email, password);
       console.log("Sign in function completed");
       setLoginSuccess(true);
 
-      if (email === "admin@eco-expert.com" && password === "admin123") {
-        console.log("Admin login successful, redirecting to admin dashboard");
-        // Set a timeout to ensure state updates before redirect
-        setTimeout(() => {
-          console.log("Executing admin redirect now");
-          window.location.href = "/admin/dashboard";
-        }, 1500);
-      } else {
-        console.log("Regular user login, redirecting to home");
-        router.push("/"); // Redirect regular users to home
-      }
+      setTimeout(() => {
+        if (email === "admin@eco-expert.com") {
+          console.log("Admin login successful, redirecting to admin dashboard");
+          window.location.href = "/admin-direct/";
+        } else {
+          console.log("Regular user login, redirecting to home");
+          router.push("/");
+        }
+      }, 500);
     } catch (error: any) {
       console.error("Login error:", error);
       setError(error.message || "Failed to sign in");

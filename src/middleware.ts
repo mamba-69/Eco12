@@ -11,11 +11,32 @@ const ADMIN_ROUTES = [
   "/admin/users",
 ];
 
+// Define admin-direct routes that should bypass authentication
+const ADMIN_DIRECT_ROUTES = [
+  "/admin-direct",
+  "/admin-direct/content",
+  "/admin-direct/media",
+  "/admin-direct/settings",
+  "/admin-direct/users",
+];
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Check if the requested path is an admin-direct route
+  const isAdminDirectRoute = ADMIN_DIRECT_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(route + "/")
+  );
+
+  // If it's an admin-direct route, allow access without authentication
+  if (isAdminDirectRoute) {
+    return NextResponse.next();
+  }
+
   // Check if the requested path is an admin route
-  const isAdminRoute = ADMIN_ROUTES.some((route) => pathname.startsWith(route));
+  const isAdminRoute = ADMIN_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(route + "/")
+  );
 
   if (isAdminRoute) {
     // Check for admin session from cookies
@@ -37,7 +58,7 @@ export function middleware(request: NextRequest) {
   return NextResponse.next();
 }
 
-// Configure middleware to run only on admin routes
+// Configure middleware to run on both admin and admin-direct routes
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin/:path*", "/admin-direct/:path*"],
 };

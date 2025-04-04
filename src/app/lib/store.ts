@@ -289,7 +289,7 @@ export const useStore = create<SiteStore>()(
       },
     }),
     {
-      name: "ecoverva-store", // name of the item in local storage
+      name: "eco-expert-store", // name of the item in local storage
       partialize: (state) => ({
         siteSettings: state.siteSettings,
         contentSettings: state.contentSettings,

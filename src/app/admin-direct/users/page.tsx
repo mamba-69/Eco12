@@ -15,7 +15,18 @@ import {
   FiCheck,
   FiX,
 } from "react-icons/fi";
-import { useStore } from "@/app/lib/store";
+import { useStore, SiteSettings } from "@/app/lib/store";
+
+// Define interface for a user
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+  createdAt: string;
+  lastLogin?: string | null;
+}
 
 // Inline AdminSidebar component for deployment compatibility
 function AdminSidebar() {
@@ -102,8 +113,8 @@ function AdminSidebar() {
 export default function DirectUserManagement() {
   const { siteSettings, updateSiteSettings } = useStore();
 
-  const [users, setUsers] = useState<any[]>([]);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [users, setUsers] = useState<User[]>([]);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isEditingUser, setIsEditingUser] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -209,7 +220,7 @@ export default function DirectUserManagement() {
   };
 
   // Start editing existing user
-  const handleEditUser = (user: any) => {
+  const handleEditUser = (user: User) => {
     setFormData({
       id: user.id,
       name: user.name,

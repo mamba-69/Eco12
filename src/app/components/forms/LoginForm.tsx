@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
-import { FiMail, FiLock, FiAlertCircle } from "react-icons/fi";
+import { FiMail, FiLock, FiAlertCircle } from "@/app/lib/icons";
 import { useAuth } from "@/app/context/AuthContext";
 
 // Form validation schema
@@ -174,4 +174,4 @@ export default function LoginForm() {
       </form>
     </motion.div>
   );
-} 
+}
