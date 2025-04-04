@@ -52,12 +52,13 @@ const createMockUser = (
       full_name: fullName,
       ...(role && { role }),
     },
-    app_metadata: {},
+    app_metadata: role === "admin" ? { role: "admin" } : {},
     aud: "authenticated",
     created_at: new Date().toISOString(),
     confirmed_at: new Date().toISOString(),
     last_sign_in_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
+    role: role || "user", // Add explicit role property
   } as unknown; // First cast to unknown
 
   // Then cast to User type
@@ -83,11 +84,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isAdmin =
     user?.email === ADMIN_EMAIL ||
     user?.user_metadata?.role === "admin" ||
+    user?.app_metadata?.role === "admin" ||
+    user?.role === "admin" ||
     false;
 
   useEffect(() => {
     console.log("Auth context - User state:", user?.email);
     console.log("Auth context - Is admin?", isAdmin);
+    console.log("Auth context - User metadata:", user?.user_metadata);
+    console.log("Auth context - App metadata:", user?.app_metadata);
   }, [user, isAdmin]);
 
   // Set auth cookies when user or isAdmin changes
@@ -99,13 +104,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Set admin session cookie if user is admin
       if (isAdmin) {
         setCookie("admin-session", "true", 1); // 1 day
+        // Store admin email in local storage for additional verification
+        if (typeof window !== "undefined") {
+          localStorage.setItem("admin-email", user.email || "");
+        }
       } else {
         deleteCookie("admin-session");
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("admin-email");
+        }
       }
     } else {
       // Delete both cookies on logout
       deleteCookie("auth-session");
       deleteCookie("admin-session");
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("admin-email");
+      }
     }
   }, [user, isAdmin]);
 
@@ -116,17 +131,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("Attempting login with:", email);
 
       // Use a more secure comparison
-      const isAdminLogin =
-        email.toLowerCase() === ADMIN_EMAIL.toLowerCase() &&
-        password === ADMIN_PASSWORD;
+      const isAdminEmail = email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+      const isAdminLogin = isAdminEmail && password === ADMIN_PASSWORD;
 
       if (isAdminLogin) {
         console.log("Admin credentials verified");
 
         // Create a simple mock session
         const mockSession = {
-          access_token: "mock-token-" + Date.now(),
-          refresh_token: "mock-refresh-token-" + Date.now(),
+          access_token: "admin-token-" + Date.now(),
+          refresh_token: "admin-refresh-token-" + Date.now(),
           expires_in: 3600,
           user: mockAdminUser,
           expires_at: Math.floor(Date.now() / 1000) + 3600,
@@ -136,9 +150,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(mockSession);
         setUser(mockAdminUser);
 
+        // Store admin info in localStorage as fallback
+        if (typeof window !== "undefined") {
+          localStorage.setItem("is-admin", "true");
+          localStorage.setItem("admin-email", email);
+        }
+
         console.log("Admin signed in successfully");
         setIsLoading(false);
         return;
+      } else if (isAdminEmail) {
+        // If email is admin but password is wrong
+        throw new Error("Invalid admin password");
       }
 
       // Regular user sign in with more generic error handling

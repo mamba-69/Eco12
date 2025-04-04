@@ -105,6 +105,13 @@ export default function Footer() {
                 width={40}
                 height={40}
                 className="mr-2"
+                unoptimized={true}
+                onError={(e) => {
+                  // Fallback to local logo if the remote one fails
+                  const target = e.target as HTMLImageElement;
+                  target.onerror = null; // Prevent infinite loop
+                  target.src = "/images/logo.svg"; // Fallback to local logo
+                }}
               />
               <h3 className="text-xl font-bold">Eco-Expert</h3>
             </div>

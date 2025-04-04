@@ -21,15 +21,37 @@ import {
   FiLayers,
 } from "react-icons/fi";
 import { useStore } from "@/app/lib/store";
+import { useRouter } from "next/navigation";
 
 export default function AdminDirectDashboard() {
   const { siteSettings, contentSettings } = useStore();
   const [lastUpdated, setLastUpdated] = useState<string>("Loading...");
+  const router = useRouter();
 
   useEffect(() => {
-    // Set last updated time
-    setLastUpdated(new Date().toLocaleString());
-  }, []);
+    // Check for admin authentication
+    const checkAdminAuth = () => {
+      // Get admin cookie or localStorage as fallback
+      const adminCookie = document.cookie.includes("admin-session=true");
+      const adminLocalStorage = localStorage.getItem("is-admin") === "true";
+      const adminEmail = localStorage.getItem("admin-email");
+
+      if (!adminCookie && !adminLocalStorage) {
+        console.log("Admin authentication failed, redirecting to login");
+        router.push("/auth/login");
+        return false;
+      }
+
+      console.log("Admin authenticated:", adminEmail);
+      return true;
+    };
+
+    const isAuthenticated = checkAdminAuth();
+    if (isAuthenticated) {
+      // Set last updated time
+      setLastUpdated(new Date().toLocaleString());
+    }
+  }, [router]);
 
   // Statistics and quick info data
   const siteStats = [

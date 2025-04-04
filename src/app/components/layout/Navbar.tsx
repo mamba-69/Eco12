@@ -87,6 +87,13 @@ export default function Navbar() {
             height={48}
             className="object-contain hover:scale-105 transition-transform"
             priority
+            unoptimized={logoUrl.startsWith("https://")}
+            onError={(e) => {
+              // Fallback to local logo if the remote one fails
+              const target = e.target as HTMLImageElement;
+              target.onerror = null; // Prevent infinite loop
+              target.src = "/images/logo.svg"; // Fallback to local logo
+            }}
           />
         </div>
 

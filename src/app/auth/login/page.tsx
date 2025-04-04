@@ -36,6 +36,7 @@ export default function LoginPage() {
       setTimeout(() => {
         if (isAdmin) {
           console.log("Admin login successful, redirecting to admin dashboard");
+          // Use direct URL for admin access instead of router to ensure proper navigation
           window.location.href = "/admin-direct/";
         } else {
           console.log("Regular user login, redirecting to home");
