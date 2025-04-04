@@ -3,7 +3,7 @@ import { persist } from "zustand/middleware";
 import { broadcastSettingsChange } from "./sitebridge";
 
 // Define types for our store
-interface SiteSettings {
+export interface SiteSettings {
   logoUrl: string;
   primaryColor: string;
   footerText: string;
@@ -111,6 +111,7 @@ const defaultSettings: SiteSettings = {
     instagram: "https://instagram.com",
     linkedin: "https://linkedin.com",
   },
+  users: [],
 };
 
 // Default content settings
