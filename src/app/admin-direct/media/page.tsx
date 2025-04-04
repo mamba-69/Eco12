@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import {
   FiHome,
@@ -11,21 +10,14 @@ import {
   FiPlus,
   FiTrash2,
   FiUpload,
-  FiCopy,
-  FiLink,
-  FiRefreshCw,
   FiEdit,
   FiX,
   FiInfo,
   FiCheck,
-} from "react-icons/fi";
-import {
-  FaUpload,
-  FaTrash,
-  FaImage,
-  FaCheck,
-  FaRegCircleXmark,
-} from "react-icons/fa6";
+  FiChevronLeft,
+  FiChevronRight,
+} from "@/app/lib/icons";
+import { FaCheck, FaUpload, FaImage, FaRegCircleXmark } from "react-icons/fa6";
 import { useStore } from "@/app/lib/store";
 
 // Type definition for the Cloudinary upload result
@@ -57,82 +49,67 @@ interface Toast {
 // Remove the AdminSidebar import and create a local version
 function AdminSidebar() {
   return (
-    <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 fixed h-full shadow-sm">
-      <div className="p-5 border-b border-gray-200 dark:border-gray-700">
-        <Link href="/admin-direct" className="flex items-center space-x-2">
-          <div className="h-8 w-8 rounded-md bg-green-600 flex items-center justify-center">
-            <span className="text-white font-bold text-lg">G</span>
-          </div>
-          <span className="text-lg font-semibold dark:text-white">
-            Guj Admin
-          </span>
-        </Link>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          Direct access mode
-        </p>
-      </div>
-
-      <nav className="mt-6 px-4">
-        <ul className="space-y-1">
-          <li>
-            <Link
-              href="/admin-direct"
-              className="flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/50"
-            >
-              <FiHome className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-              <span>Dashboard</span>
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/admin-direct/content"
-              className="flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/50"
-            >
-              <FiLayout className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-              <span>Content</span>
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/admin-direct/media"
-              className="flex items-center space-x-3 px-3 py-2.5 rounded-lg bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400"
-            >
-              <FiImage className="w-5 h-5 text-green-600 dark:text-green-400" />
-              <span>Media</span>
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/admin-direct/users"
-              className="flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/50"
-            >
-              <FiUsers className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-              <span>Users</span>
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/admin-direct/settings"
-              className="flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/50"
-            >
-              <FiSettings className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-              <span>Settings</span>
-            </Link>
-          </li>
-        </ul>
-      </nav>
-
-      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 dark:border-gray-700">
-        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-          <h3 className="text-sm font-medium text-gray-800 dark:text-white mb-1">
-            Direct Admin Access
-          </h3>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            This admin panel bypasses authentication for development purposes.
+    <div className="fixed left-0 top-0 h-screen w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-10">
+      <div className="flex flex-col h-full">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-bold">Admin Panel</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Direct Access Mode
           </p>
         </div>
+
+        <div className="p-4 flex-1">
+          <nav className="space-y-1">
+            <a
+              href="/admin-direct"
+              className="flex items-center px-4 py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            >
+              <FiHome className="w-5 h-5 mr-3" />
+              Dashboard
+            </a>
+            <a
+              href="/admin-direct/content"
+              className="flex items-center px-4 py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            >
+              <FiLayout className="w-5 h-5 mr-3" />
+              Content
+            </a>
+            <a
+              href="/admin-direct/media"
+              className="flex items-center px-4 py-3 bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-lg font-medium"
+            >
+              <FiImage className="w-5 h-5 mr-3" />
+              Media
+            </a>
+            <a
+              href="/admin-direct/users"
+              className="flex items-center px-4 py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            >
+              <FiUsers className="w-5 h-5 mr-3" />
+              Users
+            </a>
+            <a
+              href="/admin-direct/settings"
+              className="flex items-center px-4 py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            >
+              <FiSettings className="w-5 h-5 mr-3" />
+              Settings
+            </a>
+          </nav>
+        </div>
+
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+            <h3 className="font-medium text-blue-800 dark:text-blue-300 text-sm mb-2">
+              Direct Access Mode
+            </h3>
+            <p className="text-blue-700 dark:text-blue-400 text-xs">
+              This mode bypasses authentication to help resolve login issues.
+            </p>
+          </div>
+        </div>
       </div>
-    </aside>
+    </div>
   );
 }
 
@@ -1079,17 +1056,47 @@ export default function DirectMediaManagement() {
 
               <div className="bg-gray-50 dark:bg-gray-750 p-4 rounded-lg">
                 <h3 className="font-medium mb-3">Slider Preview</h3>
-                <div className="aspect-[16/9] bg-black rounded-lg overflow-hidden flex items-center justify-center border border-gray-300 dark:border-gray-600">
-                  <div className="text-center p-6">
+                <div className="aspect-[16/9] bg-black rounded-lg overflow-hidden flex items-center justify-center border border-gray-300 dark:border-gray-600 shadow-md relative">
+                  <div className="text-center p-6 w-full h-full relative">
                     <img
                       src="/images/slider-preview.jpg"
                       alt="Slider Preview"
-                      className="max-w-full max-h-full object-contain mb-4 opacity-70"
+                      className="max-w-full max-h-full object-contain mb-4"
                     />
                     <p className="text-white text-sm">
-                      The slider now has a optimized boxed design
+                      The slider now has an optimized boxed design
                     </p>
+
+                    {/* Navigation buttons */}
+                    <button className="absolute top-1/2 left-4 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors">
+                      <FiChevronLeft size={24} />
+                    </button>
+                    <button className="absolute top-1/2 right-4 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors">
+                      <FiChevronRight size={24} />
+                    </button>
+
+                    {/* Pagination dots */}
+                    <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2">
+                      <span className="w-2 h-2 rounded-full bg-white"></span>
+                      <span className="w-2 h-2 rounded-full bg-white/50"></span>
+                      <span className="w-2 h-2 rounded-full bg-white/50"></span>
+                      <span className="w-2 h-2 rounded-full bg-white/50"></span>
+                    </div>
+
+                    {/* Slide counter */}
+                    <div className="absolute bottom-4 right-4 bg-black/70 text-white text-xs px-2 py-1 rounded-full">
+                      1/4
+                    </div>
                   </div>
+                </div>
+                <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>Supports both images and videos</li>
+                    <li>
+                      Visible navigation controls for better user experience
+                    </li>
+                    <li>Items rotate automatically with added pagination</li>
+                  </ul>
                 </div>
               </div>
             </div>
