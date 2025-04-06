@@ -1,12 +1,9 @@
-"use client";
-
-import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "../globals.css";
 import ThemeProvider from "../components/theme/ThemeProvider";
 import { StoreProvider } from "../components/layout/StoreProvider";
 import FirebaseInit from "../components/layout/FirebaseInit";
-import { useEffect, useState } from "react";
+import ClientAdminLayout from "./client-layout";
 
 // Configure Inter font with fallback to system fonts
 const inter = Inter({
@@ -27,7 +24,7 @@ const inter = Inter({
   ],
 });
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "Admin Panel - Eco-Expert Recycling",
   description: "Admin dashboard for Eco-Expert Recycling website",
 };
@@ -37,30 +34,6 @@ export default function AdminLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Use client-side only rendering for the admin section
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-
-    // Add a class to the body to prevent the main layout's footer from appearing
-    document.body.classList.add("admin-page");
-
-    // Clean up on unmount
-    return () => {
-      document.body.classList.remove("admin-page");
-    };
-  }, []);
-
-  // Don't render anything during SSR to avoid hydration issues
-  if (!mounted) {
-    return (
-      <html lang="en" suppressHydrationWarning>
-        <body suppressHydrationWarning></body>
-      </html>
-    );
-  }
-
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -70,10 +43,7 @@ export default function AdminLayout({
         <ThemeProvider>
           <StoreProvider>
             <FirebaseInit />
-            {/* Admin-specific layout that doesn't include the global footer */}
-            <div className="min-h-screen flex flex-col isolate bg-gray-100 dark:bg-gray-900">
-              {children}
-            </div>
+            <ClientAdminLayout>{children}</ClientAdminLayout>
           </StoreProvider>
         </ThemeProvider>
       </body>

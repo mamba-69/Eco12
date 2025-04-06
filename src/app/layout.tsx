@@ -1,5 +1,3 @@
-"use client";
-
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -8,7 +6,6 @@ import { StoreProvider } from "./components/layout/StoreProvider";
 import FirebaseInit from "./components/layout/FirebaseInit";
 import Navbar from "@/app/components/layout/Navbar";
 import Footer from "@/app/components/layout/Footer";
-import { usePathname } from "next/navigation";
 
 // Configure Inter font with fallback to system fonts
 const inter = Inter({
@@ -43,9 +40,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
-  const isAdminPage = pathname?.startsWith("/admin-direct");
-
   return (
     <html lang="en" className={inter.className}>
       <body className="min-h-screen flex flex-col">
@@ -53,13 +47,11 @@ export default function RootLayout({
           <StoreProvider>
             <FirebaseInit />
             <div className="flex-1 flex flex-col">
-              {!isAdminPage && <Navbar />}
+              <Navbar />
               <main className="flex-1 isolate relative">{children}</main>
-              {!isAdminPage && (
-                <div className="mt-auto">
-                  <Footer />
-                </div>
-              )}
+              <div className="mt-auto">
+                <Footer />
+              </div>
             </div>
           </StoreProvider>
         </ThemeProvider>
