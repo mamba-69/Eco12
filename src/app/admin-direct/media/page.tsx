@@ -20,6 +20,11 @@ import {
 import { FaCheck, FaUpload, FaImage, FaRegCircleXmark } from "react-icons/fa6";
 import { useStore } from "@/app/lib/store";
 import { useRouter } from "next/navigation";
+import {
+  uploadMediaFromUrl,
+  deleteMediaItem as deleteMediaItemFromFirebase,
+  MediaItem,
+} from "@/app/lib/firebase";
 
 // Type definition for the Cloudinary upload result
 interface CloudinaryResult {
@@ -28,18 +33,6 @@ interface CloudinaryResult {
   original_filename: string;
   width: number;
   height: number;
-}
-
-// Media item type
-interface MediaItem {
-  id: string;
-  publicId: string;
-  url: string;
-  name: string;
-  uploadedAt: string;
-  inMediaSlider?: boolean;
-  type?: "image" | "video";
-  description?: string;
 }
 
 // Custom Toast type
@@ -257,8 +250,8 @@ export default function DirectMediaManagement() {
     }, 3000);
   };
 
-  // Simplify adding media to only use external URLs
-  const handleExternalImageUpload = () => {
+  // Handle external URL image upload using Firebase
+  const handleExternalImageUpload = async () => {
     if (!externalImageUrl) {
       showToast("Please enter an image URL", "error");
       return;
@@ -266,35 +259,48 @@ export default function DirectMediaManagement() {
 
     setIsUploading(true);
 
-    // Create a new media item with the external URL
-    const newMediaItem: MediaItem = {
-      id: `media-${Date.now()}`,
-      publicId: `external-${Date.now()}`,
-      url: externalImageUrl,
-      name: externalImageName || `Image ${mediaItems.length + 1}`,
-      description: externalImageDescription || "",
-      uploadedAt: new Date().toISOString(),
-      inMediaSlider: false,
-      type: "image",
-    };
+    try {
+      // Determine if the URL is for an image or video based on extension
+      const isVideo = /\.(mp4|webm|ogg|mov)$/i.test(externalImageUrl);
+      const mediaType = isVideo ? "video" : "image";
 
-    // Add to state and save to store
-    const updatedItems = [...mediaItems, newMediaItem];
-    setMediaItems(updatedItems);
+      // Use our new Firebase upload function
+      const newMediaItem = await uploadMediaFromUrl(
+        externalImageUrl,
+        externalImageName || `Media ${Date.now()}`,
+        mediaType,
+        externalImageDescription || "",
+        false, // Not in slider by default
+        contentSettings
+      );
 
-    // Update content settings in the store
-    updateContentSettings({
-      media: {
-        images: updatedItems,
-      },
-    });
+      // Add to local state for immediate UI update
+      const updatedItems = [...mediaItems, newMediaItem];
+      setMediaItems(updatedItems);
 
-    // Clear form and show success message
-    setExternalImageUrl("");
-    setExternalImageName("");
-    setExternalImageDescription("");
-    setIsUploading(false);
-    showToast("Image added successfully", "success");
+      // Clear form
+      setExternalImageUrl("");
+      setExternalImageName("");
+      setExternalImageDescription("");
+
+      // Show success message
+      showToast(
+        `${
+          mediaType === "video" ? "Video" : "Image"
+        } uploaded successfully to Firebase`,
+        "success"
+      );
+    } catch (error) {
+      console.error("Error uploading media:", error);
+      showToast(
+        `Upload failed: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
+        "error"
+      );
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   // Handle media update
@@ -321,52 +327,95 @@ export default function DirectMediaManagement() {
     showToast("Media updated successfully and synced to all clients");
   };
 
-  // Handle media deletion
-  const deleteMediaItem = (id: string) => {
-    // Remove from local state
-    const updatedMediaItems = mediaItems.filter((item) => item.id !== id);
-    setMediaItems(updatedMediaItems);
+  // Handle media deletion using Firebase
+  const deleteMediaItem = async (id: string) => {
+    try {
+      const itemToDelete = mediaItems.find((item) => item.id === id);
 
-    // Update global content settings with Firebase sync
-    updateContentSettings(
-      {
-        media: {
-          images: updatedMediaItems,
-        },
-      },
-      true // Ensure Firebase sync is triggered
-    );
+      if (!itemToDelete) {
+        showToast("Media item not found", "error");
+        return;
+      }
 
-    showToast("Media deleted successfully and synced to all clients");
+      // Remove from local state first for immediate UI feedback
+      const updatedMediaItems = mediaItems.filter((item) => item.id !== id);
+      setMediaItems(updatedMediaItems);
+
+      // Delete from Firebase Storage and update content settings
+      await deleteMediaItemFromFirebase(itemToDelete, contentSettings);
+
+      showToast("Media deleted successfully", "success");
+    } catch (error) {
+      console.error("Error deleting media:", error);
+      showToast(
+        `Deletion failed: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
+        "error"
+      );
+
+      // Reload the media items from contentSettings to restore state
+      if (contentSettings?.media?.images) {
+        setMediaItems(contentSettings.media.images);
+      }
+    }
   };
 
-  const setMediaItemToSlider = (id: string, value: boolean) => {
-    const updatedMediaItems = mediaItems.map((item) => {
-      if (item.id === id) {
-        return { ...item, inMediaSlider: value };
+  // Update the slider toggle to use Firebase updates
+  const setMediaItemToSlider = async (id: string, value: boolean) => {
+    try {
+      // Find the media item to update
+      const mediaItem = mediaItems.find((item) => item.id === id);
+      if (!mediaItem) {
+        showToast("Media item not found", "error");
+        return;
       }
-      return item;
-    });
 
-    setMediaItems(updatedMediaItems);
+      // Update the item in local state for immediate UI feedback
+      const updatedMediaItems = mediaItems.map((item) => {
+        if (item.id === id) {
+          return { ...item, inMediaSlider: value };
+        }
+        return item;
+      });
 
-    // Update global store
-    updateContentSettings({
-      media: {
-        images: updatedMediaItems,
-      },
-    });
+      // Set animating ID for visual feedback
+      setAnimatingItemId(id);
+      setTimeout(() => {
+        setAnimatingItemId(null);
+      }, 1000);
 
-    // Set animating ID for feedback
-    setAnimatingItemId(id);
-    setTimeout(() => {
-      setAnimatingItemId(null);
-    }, 1000);
+      // Update the media items in state
+      setMediaItems(updatedMediaItems);
 
-    if (value) {
-      showToast("Added to slider!", "success");
-    } else {
-      showToast("Removed from slider!", "info");
+      // Update content settings in Firebase
+      await updateContentSettings(
+        {
+          media: {
+            images: updatedMediaItems,
+          },
+        },
+        true
+      );
+
+      if (value) {
+        showToast("Added to slider!", "success");
+      } else {
+        showToast("Removed from slider!", "info");
+      }
+    } catch (error) {
+      console.error("Error updating media slider status:", error);
+      showToast(
+        `Update failed: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
+        "error"
+      );
+
+      // Reload the media items from contentSettings on error
+      if (contentSettings?.media?.images) {
+        setMediaItems(contentSettings.media.images);
+      }
     }
   };
 
@@ -398,36 +447,92 @@ export default function DirectMediaManagement() {
     </div>
   );
 
-  // Fix the edit function to use URL instead of local file
-  const saveEditedMedia = () => {
-    setIsEditingMedia(false);
+  // Update the edit function to work with Firebase
+  const saveEditedMedia = async () => {
+    try {
+      // Check if we have the necessary fields
+      if (!editingMedia.url || !editingMedia.name) {
+        showToast("Please provide a URL and name for the media", "error");
+        return;
+      }
 
-    const updatedMedia: MediaItem = {
-      ...editingMedia,
-      id: editingMedia.id || Date.now().toString(),
-      publicId: editingMedia.publicId || `url_${Date.now()}`,
-      uploadedAt: editingMedia.uploadedAt || new Date().toISOString(),
-      type: (editingMedia.url?.match(/\.(mp4|webm|ogg)$/i)
-        ? "video"
-        : "image") as "video" | "image",
-    };
+      setIsEditingMedia(false);
 
-    // Update the media item in the list
-    const updatedMediaItems: MediaItem[] = mediaItems.map((item) =>
-      item.id === updatedMedia.id ? updatedMedia : item
-    );
+      // Determine if it's a video or image based on URL
+      const isVideo = /\.(mp4|webm|ogg|mov)$/i.test(editingMedia.url);
+      const mediaType = isVideo ? "video" : "image";
 
-    // If it's a new item (doesn't exist in current list), add it
-    if (!mediaItems.find((item) => item.id === updatedMedia.id)) {
-      updatedMediaItems.push(updatedMedia);
+      // If this is an existing item, update it
+      if (
+        editingMedia.id &&
+        mediaItems.find((item) => item.id === editingMedia.id)
+      ) {
+        // Update the existing media item without re-uploading
+        const updatedMediaItems = mediaItems.map((item) => {
+          if (item.id === editingMedia.id) {
+            return {
+              ...item,
+              name: editingMedia.name,
+              description: editingMedia.description,
+              inMediaSlider: editingMedia.inMediaSlider,
+              // Don't change URL, publicId, type if it already exists
+            };
+          }
+          return item;
+        });
+
+        // Update in state and Firestore
+        setMediaItems(updatedMediaItems);
+        await updateContentSettings(
+          {
+            media: {
+              ...contentSettings.media,
+              images: updatedMediaItems,
+            },
+          },
+          true
+        ); // Ensure sync with Firebase
+
+        showToast("Media updated successfully!", "success");
+      } else {
+        // This is a new media item being added via the edit form
+        // Use our upload function to handle it
+        const newMediaItem = await uploadMediaFromUrl(
+          editingMedia.url,
+          editingMedia.name,
+          mediaType,
+          editingMedia.description || "",
+          editingMedia.inMediaSlider || false,
+          contentSettings
+        );
+
+        // Add to local state
+        const updatedMediaItems = [...mediaItems, newMediaItem];
+        setMediaItems(updatedMediaItems);
+
+        showToast("New media added successfully!", "success");
+      }
+
+      // Reset the editing state
+      setEditingMedia({
+        id: "",
+        publicId: "",
+        url: "",
+        name: "",
+        uploadedAt: "",
+        inMediaSlider: false,
+        type: "image",
+        description: "",
+      });
+    } catch (error) {
+      console.error("Error saving media:", error);
+      showToast(
+        `Save failed: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
+        "error"
+      );
     }
-
-    setMediaItems(updatedMediaItems);
-    updateContentSettings({
-      media: { ...contentSettings.media, images: updatedMediaItems },
-    });
-
-    showToast("Media updated successfully!", "success");
   };
 
   return (

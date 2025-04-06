@@ -7,6 +7,9 @@ import {
   watchContent,
   initializeFirestoreData,
   isFirestoreAvailable,
+  isStorageAvailable,
+  loadSettingsFromStorage,
+  loadContentFromStorage,
 } from "@/app/lib/firebase";
 import { usePathname } from "next/navigation";
 
@@ -22,6 +25,7 @@ export default function FirebaseInit() {
     updateContentSettings,
   } = useStore();
   const [initialized, setInitialized] = useState(false);
+  const [firebaseReady, setFirebaseReady] = useState(false);
 
   // Get the current pathname directly
   const pathname = usePathname();
@@ -39,67 +43,99 @@ export default function FirebaseInit() {
     contentRef.current = contentSettings;
   }, [siteSettings, contentSettings]);
 
+  // Initialize Firebase and load initial data
   useEffect(() => {
-    // Only run this on the client side and once
-    if (typeof window !== "undefined" && !initialized) {
-      console.log("FirebaseInit: Initializing with current path:", pathname);
+    const initializeFirebase = async () => {
+      // Only run this on the client side and once
+      if (typeof window === "undefined" || initialized) {
+        return;
+      }
+
+      console.log("FirebaseInit: Starting Firebase initialization");
+      console.log("FirebaseInit: Current path:", pathname);
       console.log("FirebaseInit: Is admin page:", isAdminPage);
 
-      // First check if Firestore is available
-      if (isFirestoreAvailable()) {
-        // Initialize Firestore with default data if needed
-        initializeFirestoreData(settingsRef.current, contentRef.current)
-          .then(() => {
-            console.log(
-              "FirebaseInit: Firestore initialized with default data if needed"
-            );
+      // Log Firebase configuration status
+      console.log(
+        "FirebaseInit: Firebase config available:",
+        !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
+          !!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+      );
 
-            // Never set up Firestore watchers on admin pages to avoid conflicts
-            if (isAdminPage) {
-              console.log(
-                "FirebaseInit: Admin page detected, skipping watchers"
-              );
-              setInitialized(true);
-              return;
-            }
+      // First check if Firestore and Storage are available
+      const firestoreAvailable = isFirestoreAvailable();
+      const storageAvailable = isStorageAvailable();
 
-            // Set up watchers for settings and content only on non-admin pages
-            const unsubscribeSettings = watchSettings((newSettings) => {
-              console.log(
-                "FirebaseInit: New settings from Firestore:",
-                newSettings
-              );
-              // Update store without broadcasting to avoid circular updates
-              updateSiteSettings(newSettings, false);
-            });
+      console.log("FirebaseInit: Firestore available:", firestoreAvailable);
+      console.log("FirebaseInit: Storage available:", storageAvailable);
 
-            const unsubscribeContent = watchContent((newContent) => {
-              console.log(
-                "FirebaseInit: New content from Firestore:",
-                newContent
-              );
-              // Update store without broadcasting to avoid circular updates
-              updateContentSettings(newContent, false);
-            });
+      if (!firestoreAvailable || !storageAvailable) {
+        console.error(
+          "FirebaseInit: Firebase services not available, skipping initialization"
+        );
+        return;
+      }
 
-            setInitialized(true);
+      try {
+        // Initialize Firebase with default data if needed
+        console.log("FirebaseInit: Initializing Firebase with default data");
+        await initializeFirestoreData(settingsRef.current, contentRef.current);
 
-            // Cleanup function
-            return () => {
-              if (unsubscribeSettings) unsubscribeSettings();
-              if (unsubscribeContent) unsubscribeContent();
-              console.log("FirebaseInit: Unsubscribed from Firestore watchers");
-            };
-          })
-          .catch((error) => {
-            console.error("FirebaseInit: Error initializing Firestore:", error);
-          });
-      } else {
-        console.log(
-          "FirebaseInit: Firestore not available, skipping initialization"
+        // Initial load of settings and content from Storage
+        console.log("FirebaseInit: Loading initial settings from Storage");
+        const initialSettings = await loadSettingsFromStorage();
+        if (initialSettings) {
+          console.log("FirebaseInit: Initial settings loaded successfully");
+          updateSiteSettings(initialSettings, false);
+        }
+
+        console.log("FirebaseInit: Loading initial content from Storage");
+        const initialContent = await loadContentFromStorage();
+        if (initialContent) {
+          console.log("FirebaseInit: Initial content loaded successfully");
+          updateContentSettings(initialContent, false);
+        }
+
+        // Set up watchers for settings and content on all pages
+        console.log("FirebaseInit: Setting up Firestore watchers for changes");
+
+        const unsubscribeSettings = watchSettings((newSettings) => {
+          console.log(
+            "FirebaseInit: New settings from Storage via Firestore notification:",
+            Object.keys(newSettings)
+          );
+          // Update store without broadcasting to avoid circular updates
+          updateSiteSettings(newSettings, false);
+        });
+
+        const unsubscribeContent = watchContent((newContent) => {
+          console.log(
+            "FirebaseInit: New content from Storage via Firestore notification:",
+            Object.keys(newContent)
+          );
+          // Update store without broadcasting to avoid circular updates
+          updateContentSettings(newContent, false);
+        });
+
+        setFirebaseReady(true);
+        setInitialized(true);
+        console.log("FirebaseInit: Firebase initialization complete");
+
+        // Cleanup function
+        return () => {
+          if (unsubscribeSettings) unsubscribeSettings();
+          if (unsubscribeContent) unsubscribeContent();
+          console.log("FirebaseInit: Unsubscribed from Firestore watchers");
+        };
+      } catch (error) {
+        console.error(
+          "FirebaseInit: Error during Firebase initialization:",
+          error
         );
       }
-    }
+    };
+
+    initializeFirebase();
   }, [
     updateSiteSettings,
     updateContentSettings,
@@ -107,6 +143,13 @@ export default function FirebaseInit() {
     isAdminPage,
     pathname,
   ]);
+
+  // Log startup status for debugging
+  useEffect(() => {
+    if (firebaseReady) {
+      console.log("FirebaseInit: Firebase is ready and listening for changes");
+    }
+  }, [firebaseReady]);
 
   // This component doesn't render anything
   return null;

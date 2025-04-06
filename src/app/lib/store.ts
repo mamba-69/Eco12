@@ -2,10 +2,12 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { broadcastSettingsChange } from "./sitebridge";
 import {
-  saveSettingsToFirestore,
-  saveContentToFirestore,
+  saveSettingsToStorage,
+  saveContentToStorage,
   watchSettings,
   watchContent,
+  loadSettingsFromStorage,
+  loadContentFromStorage,
 } from "./firebase";
 
 // Define types for our store
@@ -260,30 +262,51 @@ const useStore = create<SiteStore>()(
         set({ siteSettings: newSettings });
 
         // Log what we're saving
-        console.log("Updating settings:", settings);
-        console.log("New full settings state:", newSettings);
+        console.log("Store: Updating settings:", settings);
+        console.log("Store: New full settings state:", newSettings);
 
-        // Save to Firestore if it's available
+        // Save to Firebase Storage if it's available
         if (typeof window !== "undefined") {
           try {
-            saveSettingsToFirestore(newSettings)
-              .then(() => {
-                console.log("Settings saved to Firestore successfully");
+            console.log(
+              "Store: Attempting to save settings to Firebase Storage"
+            );
+            saveSettingsToStorage(newSettings)
+              .then((success) => {
+                if (success) {
+                  console.log(
+                    "Store: Settings saved to Firebase Storage successfully"
+                  );
 
-                // Broadcast changes to other components if requested
-                if (shouldBroadcast) {
-                  broadcastSettingsChange({
-                    settings,
-                    source: "admin",
-                  });
+                  // Broadcast changes to other components if requested
+                  if (shouldBroadcast) {
+                    console.log(
+                      "Store: Broadcasting settings change to other components"
+                    );
+                    broadcastSettingsChange({
+                      settings,
+                      source: "admin",
+                    });
+                  }
+                } else {
+                  console.error(
+                    "Store: Failed to save settings to Firebase Storage"
+                  );
                 }
               })
               .catch((error) => {
-                console.error("Error saving settings to Firestore:", error);
+                console.error(
+                  "Store: Error saving settings to Firebase Storage:",
+                  error
+                );
               });
           } catch (error) {
-            console.error("Error in store when saving settings:", error);
+            console.error("Store: Error in store when saving settings:", error);
           }
+        } else {
+          console.warn(
+            "Store: Window not available, skipping Firebase Storage save"
+          );
         }
       },
 
@@ -300,29 +323,51 @@ const useStore = create<SiteStore>()(
         set({ contentSettings: newContent });
 
         // Log what we're saving
-        console.log("Updating content:", content);
+        console.log("Store: Updating content:", content);
+        console.log("Store: New full content state:", Object.keys(newContent));
 
-        // Save to Firestore if it's available
+        // Save to Firebase Storage if it's available
         if (typeof window !== "undefined") {
           try {
-            saveContentToFirestore(newContent)
-              .then(() => {
-                console.log("Content saved to Firestore successfully");
+            console.log(
+              "Store: Attempting to save content to Firebase Storage"
+            );
+            saveContentToStorage(newContent)
+              .then((success) => {
+                if (success) {
+                  console.log(
+                    "Store: Content saved to Firebase Storage successfully"
+                  );
 
-                // Broadcast changes to other components if requested
-                if (shouldBroadcast) {
-                  broadcastSettingsChange({
-                    contentSettings: content,
-                    source: "admin",
-                  });
+                  // Broadcast changes to other components if requested
+                  if (shouldBroadcast) {
+                    console.log(
+                      "Store: Broadcasting content change to other components"
+                    );
+                    broadcastSettingsChange({
+                      contentSettings: content,
+                      source: "admin",
+                    });
+                  }
+                } else {
+                  console.error(
+                    "Store: Failed to save content to Firebase Storage"
+                  );
                 }
               })
               .catch((error) => {
-                console.error("Error saving content to Firestore:", error);
+                console.error(
+                  "Store: Error saving content to Firebase Storage:",
+                  error
+                );
               });
           } catch (error) {
-            console.error("Error in store when saving content:", error);
+            console.error("Store: Error in store when saving content:", error);
           }
+        } else {
+          console.warn(
+            "Store: Window not available, skipping Firebase Storage save"
+          );
         }
       },
     }),

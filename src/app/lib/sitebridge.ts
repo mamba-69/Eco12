@@ -40,23 +40,70 @@ if (typeof window !== "undefined") {
       const data = event.data as SettingsChangeMessage;
 
       if (data.type === "settings-change") {
-        console.log("Received settings change via BroadcastChannel:", data);
+        console.log(
+          "SiteBridge: Received settings change via BroadcastChannel:",
+          data
+        );
 
         // Notify all listeners
         listeners.forEach((listener) => {
-          listener({
-            settings: data.settings,
-            contentSettings: data.contentSettings,
-            source: data.source,
-          });
+          try {
+            listener({
+              settings: data.settings,
+              contentSettings: data.contentSettings,
+              source: data.source,
+            });
+          } catch (error) {
+            console.error("SiteBridge: Error in listener callback:", error);
+          }
         });
       }
     };
 
-    console.log("SiteBridge initialized with BroadcastChannel");
+    console.log("SiteBridge: Successfully initialized with BroadcastChannel");
   } catch (error) {
-    console.error("Failed to initialize BroadcastChannel:", error);
-    // Fallback could be implemented here if needed
+    console.error("SiteBridge: Failed to initialize BroadcastChannel:", error);
+
+    // Create a fallback mechanism using localStorage
+    window.addEventListener("storage", (event) => {
+      if (event.key === "eco-expert-settings-bridge") {
+        try {
+          const data = JSON.parse(
+            event.newValue || "{}"
+          ) as SettingsChangeMessage;
+          if (data.type === "settings-change") {
+            console.log(
+              "SiteBridge: Received settings change via localStorage:",
+              data
+            );
+
+            listeners.forEach((listener) => {
+              try {
+                listener({
+                  settings: data.settings,
+                  contentSettings: data.contentSettings,
+                  source: data.source,
+                });
+              } catch (error) {
+                console.error(
+                  "SiteBridge: Error in fallback listener callback:",
+                  error
+                );
+              }
+            });
+          }
+        } catch (error) {
+          console.error(
+            "SiteBridge: Error processing localStorage event:",
+            error
+          );
+        }
+      }
+    });
+
+    console.log(
+      "SiteBridge: Initialized fallback communication via localStorage"
+    );
   }
 }
 
@@ -68,57 +115,95 @@ export function broadcastSettingsChange(data: {
   contentSettings?: Partial<ContentSettings>;
   source: "admin" | "client";
 }) {
+  if (typeof window === "undefined") {
+    console.warn("SiteBridge: Cannot broadcast in server environment");
+    return;
+  }
+
+  console.log("SiteBridge: Broadcasting settings change:", data);
+
+  const message: SettingsChangeMessage = {
+    type: "settings-change",
+    settings: data.settings,
+    contentSettings: data.contentSettings,
+    source: data.source,
+  };
+
+  // Try the BroadcastChannel first
   if (channel) {
     try {
-      const message: SettingsChangeMessage = {
-        type: "settings-change",
-        settings: data.settings,
-        contentSettings: data.contentSettings,
-        source: data.source,
-      };
-
-      console.log("Broadcasting settings change:", message);
       channel.postMessage(message);
-
-      // Also notify local listeners directly
-      listeners.forEach((listener) => {
-        listener(data);
-      });
+      console.log("SiteBridge: Message sent via BroadcastChannel");
     } catch (error) {
-      console.error("Error broadcasting settings change:", error);
+      console.error(
+        "SiteBridge: Error broadcasting via BroadcastChannel:",
+        error
+      );
+
+      // Fallback to localStorage
+      try {
+        localStorage.setItem(
+          "eco-expert-settings-bridge",
+          JSON.stringify(message)
+        );
+        console.log("SiteBridge: Message sent via localStorage fallback");
+      } catch (localStorageError) {
+        console.error(
+          "SiteBridge: Error broadcasting via localStorage:",
+          localStorageError
+        );
+      }
     }
   } else {
-    console.warn("BroadcastChannel not available, local notification only");
-
-    // Fallback to just local notification
-    listeners.forEach((listener) => {
-      listener(data);
-    });
+    // No BroadcastChannel, use localStorage
+    try {
+      localStorage.setItem(
+        "eco-expert-settings-bridge",
+        JSON.stringify(message)
+      );
+      console.log("SiteBridge: Message sent via localStorage (primary)");
+    } catch (error) {
+      console.error("SiteBridge: Error broadcasting via localStorage:", error);
+    }
   }
+
+  // Always notify local listeners directly
+  listeners.forEach((listener) => {
+    try {
+      listener(data);
+    } catch (error) {
+      console.error("SiteBridge: Error in local listener notification:", error);
+    }
+  });
 }
 
 /**
  * Performance-optimized hook to listen for settings changes
  */
 export function useSettingsChangeListener(callback: SettingsChangeListener) {
-  // Register the listener when the component mounts
-  if (typeof window !== "undefined") {
-    // Add listener if it doesn't already exist
-    if (!listeners.includes(callback)) {
-      listeners.push(callback);
+  useEffect(() => {
+    // Register the listener when the component mounts
+    if (typeof window !== "undefined") {
+      console.log("SiteBridge: Registering new settings change listener");
+
+      // Add listener if it doesn't already exist
+      if (!listeners.includes(callback)) {
+        listeners.push(callback);
+      }
+
+      // Return cleanup function to remove listener
+      return () => {
+        console.log("SiteBridge: Removing settings change listener");
+        const index = listeners.indexOf(callback);
+        if (index !== -1) {
+          listeners.splice(index, 1);
+        }
+      };
     }
 
-    // Return cleanup function to remove listener
-    return () => {
-      const index = listeners.indexOf(callback);
-      if (index !== -1) {
-        listeners.splice(index, 1);
-      }
-    };
-  }
-
-  // Return no-op cleanup for SSR
-  return () => {};
+    // Return no-op cleanup for SSR
+    return () => {};
+  }, [callback]);
 }
 
 /**
