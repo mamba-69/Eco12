@@ -2,7 +2,12 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination, Navigation, Autoplay } from "swiper/modules";
+// Import modules separately
+import { Pagination } from "swiper/modules";
+import { Navigation } from "swiper/modules";
+import { Autoplay } from "swiper/modules";
+// Import Swiper core and required types
+import type { Swiper as SwiperType } from "swiper";
 import { useStore } from "@/app/lib/store";
 
 // Import Swiper styles
@@ -28,6 +33,7 @@ export default function MediaSlider() {
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
   const videoRefs = useRef<Record<string, HTMLVideoElement>>({});
+  const swiperRef = useRef<SwiperType | null>(null);
 
   useEffect(() => {
     if (contentSettings?.media?.images) {
@@ -63,27 +69,38 @@ export default function MediaSlider() {
     setLoading(false);
   }, [contentSettings]);
 
-  // Handle slide change to pause videos
-  const handleSlideChange = (swiper: any) => {
-    const newIndex = swiper.activeIndex;
-    setActiveIndex(newIndex);
+  // Setup event handler to manage slide changes
+  useEffect(() => {
+    if (!swiperRef.current) return;
 
-    // Pause all videos when changing slides
-    Object.values(videoRefs.current).forEach((video) => {
-      if (video && !video.paused) {
-        video.pause();
-      }
-    });
+    const swiper = swiperRef.current;
+    const handleSlide = (s: SwiperType) => {
+      const newIndex = s.activeIndex;
+      setActiveIndex(newIndex);
 
-    // Play the current video if it's a video slide
-    const currentItem = mediaItems[newIndex];
-    if (currentItem?.type === "video") {
-      const video = videoRefs.current[currentItem.id];
-      if (video) {
-        video.play().catch((e) => console.log("Cannot autoplay video:", e));
+      // Pause all videos when changing slides
+      Object.values(videoRefs.current).forEach((video) => {
+        if (video && !video.paused) {
+          video.pause();
+        }
+      });
+
+      // Play the current video if it's a video slide
+      const currentItem = mediaItems[newIndex];
+      if (currentItem?.type === "video") {
+        const video = videoRefs.current[currentItem.id];
+        if (video) {
+          video.play().catch((e) => console.log("Cannot autoplay video:", e));
+        }
       }
-    }
-  };
+    };
+
+    swiper.on("slideChange", () => handleSlide(swiper));
+
+    return () => {
+      swiper.off("slideChange");
+    };
+  }, [swiperRef.current, mediaItems]);
 
   if (loading) {
     return (
@@ -116,7 +133,9 @@ export default function MediaSlider() {
           pauseOnMouseEnter: true,
         }}
         loop={mediaItems.length > 1}
-        onSlideChange={handleSlideChange}
+        onSwiper={(swiper) => {
+          swiperRef.current = swiper;
+        }}
         className="media-swiper"
       >
         {mediaItems.map((item, index) => (

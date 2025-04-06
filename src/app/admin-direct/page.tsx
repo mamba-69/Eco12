@@ -32,8 +32,17 @@ export default function AdminDirectDashboard() {
   const [lastUpdated, setLastUpdated] = useState<string>("Loading...");
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [mounted, setMounted] = useState<boolean>(false);
+
+  // Basic client-side only check
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
+    if (!mounted) return;
+
     // Check for admin authentication
     const checkAdminAuth = () => {
       try {
@@ -42,11 +51,18 @@ export default function AdminDirectDashboard() {
         const adminLocalStorage = localStorage.getItem("is-admin") === "true";
         const adminEmail = localStorage.getItem("admin-email");
 
-        // Removed backdoor for development to improve security
         // Only proceed if proper authentication exists
-        if (!adminCookie && !adminLocalStorage) {
+        if ((!adminCookie && !adminLocalStorage) || !adminEmail) {
           console.log("Admin authentication failed, redirecting to login");
-          router.push("/auth/login");
+          // Use window.location instead of router to avoid hydration issues
+          window.location.href = "/auth/login";
+          return false;
+        }
+
+        // Check if the stored email matches the admin email
+        if (adminEmail !== ADMIN_EMAIL) {
+          console.log("Invalid admin email, redirecting to login");
+          window.location.href = "/auth/login";
           return false;
         }
 
@@ -55,29 +71,59 @@ export default function AdminDirectDashboard() {
       } catch (error) {
         console.error("Auth check error:", error);
         // For errors, redirect to login instead of allowing access
-        router.push("/auth/login");
+        window.location.href = "/auth/login";
         return false;
       }
     };
 
-    const authStatus = checkAdminAuth();
-    setIsAuthenticated(authStatus);
-    
-    if (authStatus) {
-      // Set last updated time
-      setLastUpdated(new Date().toLocaleString());
-    }
-  }, [router]);
+    // Delay the auth check to avoid immediate redirects
+    const timer = setTimeout(() => {
+      const authStatus = checkAdminAuth();
+      setIsAuthenticated(authStatus);
+      setIsLoading(false);
+
+      if (authStatus) {
+        // Set last updated time
+        setLastUpdated(new Date().toLocaleString());
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [mounted]);
+
+  // Only render loading state until client-side code has executed
+  if (!mounted) {
+    return null;
+  }
 
   // Don't render content until authentication is confirmed
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
+        <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+          <h2 className="text-xl font-bold mb-2">Loading Admin Panel...</h2>
+          <p className="text-gray-600 dark:text-gray-400">
+            Please wait while we verify your access.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
         <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-          <h2 className="text-xl font-bold mb-2">Authenticating...</h2>
-          <p className="text-gray-600 dark:text-gray-400">
-            Please wait while we verify your access.
+          <h2 className="text-xl font-bold mb-2">Access Denied</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            You do not have permission to view this page.
           </p>
+          <a
+            href="/auth/login"
+            className="inline-block px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors"
+          >
+            Go to Login
+          </a>
         </div>
       </div>
     );
@@ -179,13 +225,13 @@ export default function AdminDirectDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+    <div className="min-h-screen pt-14">
       <div className="flex">
         {/* Sidebar */}
         <AdminSidebar />
 
         {/* Main content */}
-        <main className="ml-64 flex-1 p-6">
+        <main className="ml-64 flex-1 p-6 pb-20">
           {/* Header section */}
           <div className="bg-gradient-to-r from-green-600 to-teal-600 rounded-xl p-6 text-white shadow-lg mb-8">
             <div className="flex justify-between items-center mb-2">
@@ -369,14 +415,19 @@ function AdminSidebar() {
         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center">
             <img
-              src="https://i.postimg.cc/fbTQWhz9/Chat-GPT-Image-Apr-3-2025-09-48-35-PM.png"
+              src="https://i.postimg.cc/2SW1kwbf/Final.png"
               alt="Eco-Expert Recycling"
-              className="w-10 h-10 mr-3 object-contain"
+              className="w-12 h-12 mr-3 object-contain"
               onError={(e) => {
-                // Fallback to local logo if the remote one fails
+                console.log(
+                  "Admin sidebar logo failed to load, trying fallback"
+                );
+                // Fallback to another image
                 const target = e.target as HTMLImageElement;
                 target.onerror = null; // Prevent infinite loop
-                target.src = "/images/logo.svg";
+                // Try a different URL completely
+                target.src =
+                  "https://placehold.co/100x100/22c55e/ffffff?text=EE";
               }}
             />
             <div>
@@ -391,7 +442,7 @@ function AdminSidebar() {
           </div>
         </div>
 
-        <div className="p-4 flex-1">
+        <div className="p-4 flex-1 overflow-y-auto">
           <nav className="space-y-1">
             <a
               href="/admin-direct"
@@ -431,7 +482,7 @@ function AdminSidebar() {
           </nav>
         </div>
 
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700 mt-auto">
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
           <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
             <h3 className="text-sm font-medium text-gray-800 dark:text-white mb-1">
               Direct Admin Access

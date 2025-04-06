@@ -53,6 +53,37 @@ interface Toast {
 const ADMIN_EMAIL = "ecoexpert@gmail.com";
 const ADMIN_PASSWORD = "admin123";
 
+// Update the DefaultMediaItems to use working URLs
+const DEFAULT_MEDIA_ITEMS: MediaItem[] = [
+  {
+    id: "1",
+    name: "Earth Graphic",
+    url: "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&w=1200&q=80",
+    publicId: "earth-graphic",
+    uploadedAt: new Date().toISOString(),
+    inMediaSlider: true,
+    description: "Beautiful earth view from space",
+  },
+  {
+    id: "2",
+    name: "Recycling Icon",
+    url: "https://images.unsplash.com/photo-1563089145-599997674d42?auto=format&fit=crop&w=1200&q=80",
+    publicId: "recycling-icon",
+    uploadedAt: new Date().toISOString(),
+    inMediaSlider: true,
+    description: "Green recycling concept",
+  },
+  {
+    id: "3",
+    name: "Company Logo",
+    url: "https://i.postimg.cc/2SW1kwbf/Final.png",
+    publicId: "company-logo",
+    uploadedAt: new Date().toISOString(),
+    inMediaSlider: false,
+    description: "Official company logo",
+  },
+];
+
 // Remove the AdminSidebar import and create a local version with fixed logo
 function AdminSidebar() {
   return (
@@ -61,14 +92,19 @@ function AdminSidebar() {
         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center">
             <img
-              src="https://i.postimg.cc/fbTQWhz9/Chat-GPT-Image-Apr-3-2025-09-48-35-PM.png"
+              src="https://i.postimg.cc/2SW1kwbf/Final.png"
               alt="Eco-Expert Recycling"
-              className="w-10 h-10 mr-3 object-contain"
+              className="w-12 h-12 mr-3 object-contain"
               onError={(e) => {
-                // Fallback to local logo if the remote one fails
+                console.log(
+                  "Admin sidebar logo failed to load, trying fallback"
+                );
+                // Fallback to another image
                 const target = e.target as HTMLImageElement;
                 target.onerror = null; // Prevent infinite loop
-                target.src = "/images/logo.svg";
+                // Try a different URL completely
+                target.src =
+                  "https://placehold.co/100x100/22c55e/ffffff?text=EE";
               }}
             />
             <div>
@@ -83,7 +119,7 @@ function AdminSidebar() {
           </div>
         </div>
 
-        <div className="p-4 flex-1">
+        <div className="p-4 flex-1 overflow-y-auto">
           <nav className="space-y-1">
             <a
               href="/admin-direct"
@@ -123,7 +159,7 @@ function AdminSidebar() {
           </nav>
         </div>
 
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700 mt-auto">
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
           <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
             <h3 className="text-sm font-medium text-gray-800 dark:text-white mb-1">
               Direct Admin Access
@@ -145,14 +181,11 @@ export default function DirectMediaManagement() {
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [successMessage, setSuccessMessage] = useState("");
-  const [uploadType, setUploadType] = useState<"local" | "cloudinary">("local");
-  const [localImageUrl, setLocalImageUrl] = useState("");
-  const [localImageName, setLocalImageName] = useState("");
-  const [localImageDescription, setLocalImageDescription] = useState("");
-  const [isDragging, setIsDragging] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  // Remove local upload and only use URL method
+  const [externalImageUrl, setExternalImageUrl] = useState("");
+  const [externalImageName, setExternalImageName] = useState("");
+  const [externalImageDescription, setExternalImageDescription] = useState("");
   const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isEditingMedia, setIsEditingMedia] = useState(false);
   const [editingMedia, setEditingMedia] = useState<MediaItem>({
     id: "",
@@ -200,33 +233,8 @@ export default function DirectMediaManagement() {
     if (contentSettings?.media?.images?.length > 0) {
       setMediaItems(contentSettings.media.images);
     } else {
-      // Default media items if none exist
-      setMediaItems([
-        {
-          id: "1",
-          name: "Earth Graphic",
-          url: "https://i.postimg.cc/J4hR6v1V/earth-graphics.png",
-          publicId: "earth-graphic",
-          uploadedAt: new Date().toISOString(),
-          inMediaSlider: true,
-        },
-        {
-          id: "2",
-          name: "Recycling Icon",
-          url: "https://i.postimg.cc/QM5P5Pb3/recycling.png",
-          publicId: "recycling-icon",
-          uploadedAt: new Date().toISOString(),
-          inMediaSlider: true,
-        },
-        {
-          id: "3",
-          name: "Company Logo",
-          url: "/images/logo.svg",
-          publicId: "company-logo",
-          uploadedAt: new Date().toISOString(),
-          inMediaSlider: false,
-        },
-      ]);
+      // Use our updated default media items
+      setMediaItems(DEFAULT_MEDIA_ITEMS);
     }
     setLoading(false);
   }, [contentSettings, router]);
@@ -246,38 +254,44 @@ export default function DirectMediaManagement() {
     }, 3000);
   };
 
-  // Handle media upload from Cloudinary
-  const handleMediaUpload = (result: CloudinaryResult) => {
-    const isVideo =
-      result.secure_url.includes(".mp4") ||
-      result.secure_url.includes(".webm") ||
-      result.secure_url.includes("youtube");
+  // Simplify adding media to only use external URLs
+  const handleExternalImageUpload = () => {
+    if (!externalImageUrl) {
+      showToast("Please enter an image URL", "error");
+      return;
+    }
 
-    const newImage: MediaItem = {
-      id: Date.now().toString(),
-      publicId: result.public_id,
-      url: result.secure_url,
-      name: result.original_filename,
+    setIsUploading(true);
+
+    // Create a new media item with the external URL
+    const newMediaItem: MediaItem = {
+      id: `media-${Date.now()}`,
+      publicId: `external-${Date.now()}`,
+      url: externalImageUrl,
+      name: externalImageName || `Image ${mediaItems.length + 1}`,
+      description: externalImageDescription || "",
       uploadedAt: new Date().toISOString(),
       inMediaSlider: false,
-      type: isVideo ? "video" : "image",
-      description: `${result.original_filename} - Eco-friendly recycling solutions`,
+      type: "image",
     };
 
-    const updatedMediaItems = [...mediaItems, newImage];
-    setMediaItems(updatedMediaItems);
+    // Add to state and save to store
+    const updatedItems = [...mediaItems, newMediaItem];
+    setMediaItems(updatedItems);
 
-    // Update global store with Firebase sync
-    updateContentSettings(
-      {
-        media: {
-          images: updatedMediaItems,
-        },
+    // Update content settings in the store
+    updateContentSettings({
+      media: {
+        images: updatedItems,
       },
-      true // Ensure Firebase sync is triggered
-    );
+    });
 
-    showToast("Media uploaded successfully and synced to all clients");
+    // Clear form and show success message
+    setExternalImageUrl("");
+    setExternalImageName("");
+    setExternalImageDescription("");
+    setIsUploading(false);
+    showToast("Image added successfully", "success");
   };
 
   // Handle media update
@@ -321,209 +335,6 @@ export default function DirectMediaManagement() {
     );
 
     showToast("Media deleted successfully and synced to all clients");
-  };
-
-  // Handle local image upload
-  const handleLocalImageUpload = () => {
-    if (!localImageUrl || !localImageName) {
-      setSuccessMessage("Please provide both URL and name for the media");
-      showToast("Please provide both URL and name for the media", "error");
-      setTimeout(() => setSuccessMessage(""), 3000);
-      return;
-    }
-
-    const isVideo =
-      localImageUrl.includes(".mp4") ||
-      localImageUrl.includes(".webm") ||
-      localImageUrl.includes("youtube");
-
-    const newImage = {
-      id: Date.now().toString(),
-      publicId: `local_${Date.now()}`,
-      url: localImageUrl,
-      name: localImageName,
-      uploadedAt: new Date().toISOString(),
-      inMediaSlider: false,
-      type: isVideo ? ("video" as const) : ("image" as const),
-      description:
-        localImageDescription ||
-        `${localImageName} - Eco-friendly recycling solutions`,
-    };
-
-    // Save image to local storage if it's a remote URL
-    if (localImageUrl.startsWith("http")) {
-      try {
-        // Create a new hidden link element
-        const link = document.createElement("a");
-        link.href = localImageUrl;
-        link.download =
-          localImageName.replace(/\s+/g, "_").toLowerCase() +
-          (isVideo ? ".mp4" : ".jpg");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        showToast("Media saved to your downloads folder", "info");
-      } catch (error) {
-        console.error("Failed to download image:", error);
-      }
-    }
-
-    const updatedMediaItems = [...mediaItems, newImage];
-    setMediaItems(updatedMediaItems);
-
-    // Update global store
-    updateContentSettings({
-      media: {
-        images: updatedMediaItems,
-      },
-    });
-
-    // Clear form
-    setLocalImageName("");
-    setLocalImageUrl("");
-    setLocalImageDescription("");
-
-    setSuccessMessage("Media added successfully!");
-    showToast("Media added successfully!");
-    setTimeout(() => setSuccessMessage(""), 3000);
-  };
-
-  // Handle file selection from input
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-      setSelectedFile(file);
-      setIsUploading(true);
-
-      // Create a file reader
-      const reader = new FileReader();
-
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          const fileName = file.name;
-          const fileUrl = event.target.result.toString();
-
-          const isVideo =
-            fileName.toLowerCase().endsWith(".mp4") ||
-            fileName.toLowerCase().endsWith(".webm") ||
-            fileName.toLowerCase().endsWith(".mov");
-
-          const newImage = {
-            id: Date.now().toString(),
-            publicId: `local_${Date.now()}`,
-            url: fileUrl,
-            name: fileName,
-            uploadedAt: new Date().toISOString(),
-            inMediaSlider: false,
-            type: isVideo ? ("video" as const) : ("image" as const),
-            description: `${fileName}`,
-          };
-
-          const updatedMediaItems = [...mediaItems, newImage];
-          setMediaItems(updatedMediaItems);
-
-          // Update global store
-          updateContentSettings({
-            media: {
-              images: updatedMediaItems,
-            },
-          });
-
-          setSuccessMessage("Media uploaded successfully!");
-          showToast("Media uploaded successfully!");
-          setTimeout(() => setSuccessMessage(""), 3000);
-        }
-
-        setIsUploading(false);
-        // Clear the file input
-        if (fileInputRef.current) {
-          fileInputRef.current.value = "";
-        }
-      };
-
-      reader.onerror = () => {
-        showToast("Error uploading file", "error");
-        setIsUploading(false);
-      };
-
-      // Read the file as data URL
-      reader.readAsDataURL(file);
-    }
-  };
-
-  // Drag and drop handlers
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const file = e.dataTransfer.files[0];
-      setSelectedFile(file);
-      setIsUploading(true);
-
-      // Create a file reader
-      const reader = new FileReader();
-
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          const fileName = file.name;
-          const fileUrl = event.target.result.toString();
-
-          const isVideo =
-            fileName.toLowerCase().endsWith(".mp4") ||
-            fileName.toLowerCase().endsWith(".webm") ||
-            fileName.toLowerCase().endsWith(".mov");
-
-          const newImage = {
-            id: Date.now().toString(),
-            publicId: `local_${Date.now()}`,
-            url: fileUrl,
-            name: fileName,
-            uploadedAt: new Date().toISOString(),
-            inMediaSlider: false,
-            type: isVideo ? ("video" as const) : ("image" as const),
-            description: `${fileName}`,
-          };
-
-          const updatedMediaItems = [...mediaItems, newImage];
-          setMediaItems(updatedMediaItems);
-
-          // Update global store
-          updateContentSettings({
-            media: {
-              images: updatedMediaItems,
-            },
-          });
-
-          setSuccessMessage("Media uploaded successfully!");
-          showToast("Media uploaded successfully!");
-          setTimeout(() => setSuccessMessage(""), 3000);
-        }
-
-        setIsUploading(false);
-      };
-
-      reader.onerror = () => {
-        showToast("Error uploading file", "error");
-        setIsUploading(false);
-      };
-
-      // Read the file as data URL
-      reader.readAsDataURL(file);
-    }
   };
 
   const setMediaItemToSlider = (id: string, value: boolean) => {
@@ -585,12 +396,12 @@ export default function DirectMediaManagement() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 overflow-x-hidden">
       <div className="flex">
         <AdminSidebar />
 
         {/* Main content */}
-        <main className="ml-64 flex-1 p-6">
+        <main className="ml-64 flex-1 p-6 pb-24">
           <div className="mb-8">
             <h1 className="text-2xl font-bold mb-2">Media Management</h1>
             <p className="text-gray-600 dark:text-gray-400">
@@ -608,142 +419,73 @@ export default function DirectMediaManagement() {
           {/* Toast Container */}
           <ToastContainer />
 
-          {/* Upload Tabs */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm mb-6">
-            <div className="flex border-b border-gray-200 dark:border-gray-700">
-              <button
-                className={`px-4 py-3 text-sm font-medium ${
-                  uploadType === "local"
-                    ? "border-b-2 border-green-500 text-green-600 dark:text-green-400"
-                    : "text-gray-500 dark:text-gray-400"
-                }`}
-                onClick={() => setUploadType("local")}
-              >
-                Upload From URL
-              </button>
-              <button
-                className={`px-4 py-3 text-sm font-medium ${
-                  uploadType === "cloudinary"
-                    ? "border-b-2 border-green-500 text-green-600 dark:text-green-400"
-                    : "text-gray-500 dark:text-gray-400"
-                }`}
-                onClick={() => setUploadType("cloudinary")}
-              >
-                Upload From Computer
-              </button>
-            </div>
+          {/* Upload section */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm mb-6">
+            <h2 className="text-lg font-semibold mb-4">Add Media from URL</h2>
 
-            {/* Local Upload Form */}
-            {uploadType === "local" && (
-              <div className="p-6">
-                <div className="mb-6">
-                  <label className="block text-sm font-medium mb-2">
-                    Media URL
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="https://example.com/image.jpg"
-                    value={localImageUrl}
-                    onChange={(e) => setLocalImageUrl(e.target.value)}
-                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
-                  />
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Enter URL of an image or video (supports jpg, png, gif, mp4,
-                    webm)
-                  </p>
-                </div>
-                <div className="mb-6">
-                  <label className="block text-sm font-medium mb-2">
-                    Media Name
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Product Image"
-                    value={localImageName}
-                    onChange={(e) => setLocalImageName(e.target.value)}
-                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
-                  />
-                </div>
-                <div className="mb-6">
-                  <label className="block text-sm font-medium mb-2">
-                    Description
-                  </label>
-                  <textarea
-                    placeholder="Brief description for this media"
-                    value={localImageDescription}
-                    onChange={(e) => setLocalImageDescription(e.target.value)}
-                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
-                    rows={2}
-                  />
-                </div>
+            <div className="space-y-4">
+              <div>
+                <label
+                  htmlFor="external-url"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Image URL
+                </label>
+                <input
+                  type="text"
+                  id="external-url"
+                  value={externalImageUrl}
+                  onChange={(e) => setExternalImageUrl(e.target.value)}
+                  placeholder="https://example.com/image.jpg"
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="image-name"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Image Name
+                </label>
+                <input
+                  type="text"
+                  id="image-name"
+                  value={externalImageName}
+                  onChange={(e) => setExternalImageName(e.target.value)}
+                  placeholder="My Image"
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="image-description"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Description (optional)
+                </label>
+                <textarea
+                  id="image-description"
+                  value={externalImageDescription}
+                  onChange={(e) => setExternalImageDescription(e.target.value)}
+                  placeholder="Description of the image"
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  rows={2}
+                ></textarea>
+              </div>
+
+              <div>
                 <button
-                  onClick={handleLocalImageUpload}
-                  disabled={!localImageUrl || !localImageName}
-                  className={`px-4 py-2 rounded-md flex items-center justify-center ${
-                    !localImageUrl || !localImageName
-                      ? "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-                      : "bg-green-600 hover:bg-green-700 text-white"
-                  }`}
+                  onClick={handleExternalImageUpload}
+                  disabled={isUploading || !externalImageUrl}
+                  className="flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <FiUpload className="mr-2" />
-                  Add Media
+                  <FaUpload className="mr-2" />
+                  {isUploading ? "Adding..." : "Add Image"}
                 </button>
-                <p className="text-xs text-blue-600 dark:text-blue-400 mt-3">
-                  Remote media will also be saved to your local downloads
-                  folder.
-                </p>
               </div>
-            )}
-
-            {/* Computer Upload Form */}
-            {uploadType === "cloudinary" && (
-              <div className="p-6">
-                <div
-                  className={`text-center p-8 border-2 border-dashed rounded-lg transition-colors duration-200 ${
-                    isDragging
-                      ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                      : "border-gray-300 dark:border-gray-600"
-                  }`}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                >
-                  {isUploading ? (
-                    <div className="flex flex-col items-center justify-center">
-                      <div className="w-10 h-10 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin mb-3"></div>
-                      <p className="text-gray-500 dark:text-gray-400">
-                        Uploading media...
-                      </p>
-                    </div>
-                  ) : (
-                    <>
-                      <FaUpload className="mx-auto text-gray-400 text-4xl mb-4" />
-                      <h3 className="text-lg font-medium mb-2">
-                        Upload Image or Video
-                      </h3>
-                      <p className="text-gray-500 dark:text-gray-400 mb-4">
-                        {isDragging
-                          ? "Drop your file here"
-                          : "Drag and drop files here or click to select files"}
-                      </p>
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleFileSelect}
-                        className="hidden"
-                        accept="image/*,video/*"
-                      />
-                      <button
-                        className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors"
-                        onClick={() => fileInputRef.current?.click()}
-                      >
-                        Select Files
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
+            </div>
           </div>
 
           {/* View mode toggle */}
@@ -966,14 +708,14 @@ export default function DirectMediaManagement() {
                 Upload images or videos to get started
               </p>
               <button
-                onClick={() => setUploadType("local")}
+                onClick={() => setViewMode("all")}
                 className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors"
               >
                 Upload Your First Media
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
               {mediaItems
                 .filter(
                   (item) => viewMode === "all" || item.inMediaSlider === true
@@ -983,6 +725,10 @@ export default function DirectMediaManagement() {
                     key={item.id}
                     className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden transition-all transform ${
                       animatingItemId === item.id ? "scale-[1.03]" : "scale-100"
+                    } border ${
+                      item.inMediaSlider
+                        ? "border-green-500"
+                        : "border-transparent"
                     }`}
                   >
                     <div
@@ -994,7 +740,7 @@ export default function DirectMediaManagement() {
                       {item.type === "video" ? (
                         <video
                           src={item.url}
-                          className="w-full h-full object-contain"
+                          className="w-full h-full object-cover"
                           controls={false}
                           preload="metadata"
                         />
@@ -1003,35 +749,17 @@ export default function DirectMediaManagement() {
                           <img
                             src={item.url}
                             alt={item.name}
-                            className="max-w-full max-h-full object-contain"
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              console.log("Image failed to load:", item.url);
+                              const target = e.target as HTMLImageElement;
+                              target.onerror = null;
+                              target.src =
+                                "https://placehold.co/600x400/22c55e/ffffff?text=Image+Error";
+                            }}
                           />
                         </div>
                       )}
-
-                      {/* Slider overlay on hover */}
-                      <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 transition-colors flex items-center justify-center">
-                        <div
-                          className={`transform transition-transform scale-0 hover:scale-100 ${
-                            item.inMediaSlider ? "text-green-400" : "text-white"
-                          }`}
-                        >
-                          {item.inMediaSlider ? (
-                            <div className="flex flex-col items-center">
-                              <FiCheck className="w-8 h-8 mb-2" />
-                              <span className="text-sm font-medium">
-                                Remove from slider
-                              </span>
-                            </div>
-                          ) : (
-                            <div className="flex flex-col items-center">
-                              <FiPlus className="w-8 h-8 mb-2" />
-                              <span className="text-sm font-medium">
-                                Add to slider
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
 
                       {/* Always visible control buttons */}
                       <div className="absolute top-2 right-2 flex gap-1">
@@ -1048,7 +776,13 @@ export default function DirectMediaManagement() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            setMediaItemToSlider(item.id, false);
+                            if (
+                              confirm(
+                                "Are you sure you want to delete this media?"
+                              )
+                            ) {
+                              deleteMediaItem(item.id);
+                            }
                           }}
                           className="w-8 h-8 bg-gray-800/70 text-white hover:bg-red-600/70 rounded-full flex items-center justify-center backdrop-blur-sm"
                           title="Delete media"
@@ -1110,7 +844,7 @@ export default function DirectMediaManagement() {
             </div>
           )}
 
-          {/* Media Slider Size Guide */}
+          {/* Media Slider Preview with fixed image URLs */}
           <div className="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
             <h2 className="text-lg font-bold mb-4">Media Slider Settings</h2>
 
@@ -1168,25 +902,57 @@ export default function DirectMediaManagement() {
                 <h3 className="font-medium mb-3">Slider Preview</h3>
                 <div className="aspect-[16/9] bg-black rounded-lg overflow-hidden flex items-center justify-center border border-gray-300 dark:border-gray-600 shadow-md relative">
                   <div className="text-center p-6 w-full h-full relative">
-                    <img
-                      src="/images/slider-preview.jpg"
-                      alt="Slider Preview"
-                      className="max-w-full max-h-full object-contain mb-4"
-                    />
-                    <p className="text-white text-sm">
-                      The slider now has an optimized boxed design
-                    </p>
+                    {mediaItems.length > 0 &&
+                    mediaItems.some((item) => item.inMediaSlider) ? (
+                      <img
+                        src={
+                          mediaItems.find((item) => item.inMediaSlider)?.url ||
+                          DEFAULT_MEDIA_ITEMS[0].url
+                        }
+                        alt="Slider Preview"
+                        className="w-full h-full object-cover absolute inset-0"
+                        onError={(e) => {
+                          console.log("Preview image failed to load");
+                          const target = e.target as HTMLImageElement;
+                          target.onerror = null;
+                          target.src =
+                            "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&w=1200&q=80";
+                        }}
+                      />
+                    ) : (
+                      <img
+                        src="https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&w=1200&q=80"
+                        alt="Default Slider Preview"
+                        className="w-full h-full object-cover absolute inset-0"
+                      />
+                    )}
+
+                    {/* Dark overlay for better text visibility */}
+                    <div className="absolute inset-0 bg-black/30"></div>
+
+                    <div className="relative z-10 h-full flex flex-col justify-between">
+                      <div></div> {/* Spacer */}
+                      <p className="text-white text-xl font-bold">
+                        {mediaItems.find((item) => item.inMediaSlider)?.name ||
+                          "Eco-Expert Recycling"}
+                      </p>
+                      <p className="text-white text-sm mb-8">
+                        {mediaItems.find((item) => item.inMediaSlider)
+                          ?.description ||
+                          "Transforming electronic waste into valuable resources"}
+                      </p>
+                    </div>
 
                     {/* Navigation buttons */}
-                    <button className="absolute top-1/2 left-4 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors">
+                    <button className="absolute top-1/2 left-4 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors z-20">
                       <FiChevronLeft size={24} />
                     </button>
-                    <button className="absolute top-1/2 right-4 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors">
+                    <button className="absolute top-1/2 right-4 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors z-20">
                       <FiChevronRight size={24} />
                     </button>
 
                     {/* Pagination dots */}
-                    <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2">
+                    <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2 z-20">
                       <span className="w-2 h-2 rounded-full bg-white"></span>
                       <span className="w-2 h-2 rounded-full bg-white/50"></span>
                       <span className="w-2 h-2 rounded-full bg-white/50"></span>
@@ -1194,8 +960,10 @@ export default function DirectMediaManagement() {
                     </div>
 
                     {/* Slide counter */}
-                    <div className="absolute bottom-4 right-4 bg-black/70 text-white text-xs px-2 py-1 rounded-full">
-                      1/4
+                    <div className="absolute bottom-4 right-4 bg-black/70 text-white text-xs px-2 py-1 rounded-full z-20">
+                      1/
+                      {mediaItems.filter((item) => item.inMediaSlider).length ||
+                        1}
                     </div>
                   </div>
                 </div>
@@ -1210,12 +978,6 @@ export default function DirectMediaManagement() {
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Development Notice */}
-          <div className="mt-6 text-center p-4 text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-750 rounded-lg">
-            This is a direct media management page without authentication to
-            help bypass login issues.
           </div>
         </main>
       </div>

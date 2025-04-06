@@ -9,13 +9,16 @@ import {
   FaInstagram,
   FaLinkedin,
 } from "@/app/lib/icons";
-import { motion } from "framer-motion";
 import { useStore } from "@/app/lib/store";
 import { useSettingsChangeListener } from "@/app/lib/sitebridge";
 import { useEffect, useState, memo } from "react";
+import dynamic from "next/dynamic";
 
-// Memoized motion components for better performance
-const MotionDiv = memo(motion.div);
+// Dynamically import motion components
+const MotionDiv = dynamic(
+  () => import("framer-motion").then((mod) => mod.motion.div),
+  { ssr: false }
+);
 
 export default function Footer() {
   const { siteSettings, updateSiteSettings } = useStore();
@@ -93,26 +96,27 @@ export default function Footer() {
   const addressLines = contactAddress.split("\n");
 
   return (
-    <footer className="bg-card pt-12 pb-6">
+    <footer className="footer bg-gray-900 text-white pt-12 pb-6 relative z-10 mt-20 border-t border-gray-800">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Company Info */}
           <div>
             <div className="flex items-center mb-4">
               <img
-                src="https://i.postimg.cc/fbTQWhz9/Chat-GPT-Image-Apr-3-2025-09-48-35-PM.png"
+                src="https://i.postimg.cc/2SW1kwbf/Final.png"
                 alt="Eco-Expert Recycling"
-                className="w-10 h-10 mr-2 object-contain"
+                className="w-12 h-12 mr-2 object-contain"
                 onError={(e) => {
-                  // Fallback to local logo if the remote one fails
+                  // Fallback to placeholder if the remote one fails
                   const target = e.target as HTMLImageElement;
                   target.onerror = null; // Prevent infinite loop
-                  target.src = "/images/logo.svg"; // Fallback to local logo
+                  target.src =
+                    "https://placehold.co/100x100/22c55e/ffffff?text=EE";
                 }}
               />
               <h3 className="text-xl font-bold">Eco-Expert</h3>
             </div>
-            <p className="text-muted-foreground mb-4">
+            <p className="text-gray-400 mb-4">
               Transforming electronic waste into valuable resources for a
               sustainable future.
             </p>
@@ -121,7 +125,7 @@ export default function Footer() {
                 href={socialLinks.twitter}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary hover:text-primary/80"
+                className="text-green-500 hover:text-green-400"
               >
                 <span className="sr-only">Twitter</span>
                 <FaTwitter className="h-6 w-6" />
@@ -130,7 +134,7 @@ export default function Footer() {
                 href={socialLinks.linkedin}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary hover:text-primary/80"
+                className="text-green-500 hover:text-green-400"
               >
                 <span className="sr-only">LinkedIn</span>
                 <FaLinkedin className="h-6 w-6" />
@@ -139,7 +143,7 @@ export default function Footer() {
                 href={socialLinks.facebook}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary hover:text-primary/80"
+                className="text-green-500 hover:text-green-400"
               >
                 <span className="sr-only">Facebook</span>
                 <FaFacebook className="h-6 w-6" />
@@ -148,7 +152,7 @@ export default function Footer() {
                 href={socialLinks.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary hover:text-primary/80"
+                className="text-green-500 hover:text-green-400"
               >
                 <span className="sr-only">Instagram</span>
                 <FaInstagram className="h-6 w-6" />
@@ -277,9 +281,13 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-muted pt-6 mt-8 text-center text-muted-foreground text-sm">
-          <p>{footerText}</p>
+        {/* Copyright */}
+        <div className="mt-8 pt-6 border-t border-gray-800">
+          <p className="text-center text-gray-400 text-sm">{footerText}</p>
         </div>
+
+        {/* Clear separation from admin dashboard */}
+        <div className="mt-20"></div>
       </div>
     </footer>
   );

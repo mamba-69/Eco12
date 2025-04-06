@@ -1,21 +1,106 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { motion, useInView, useAnimation } from "framer-motion";
 import Image from "next/image";
 import { FiStar, FiRefreshCw, FiShield, FiUsers } from "@/app/lib/icons";
+import dynamic from "next/dynamic";
+
+// Dynamically import framer-motion hooks and components
+const MotionDiv = dynamic(
+  () => import("framer-motion").then((mod) => mod.motion.div),
+  { ssr: false }
+);
+
+const MotionButton = dynamic(
+  () => import("framer-motion").then((mod) => mod.motion.button),
+  { ssr: false }
+);
+
+// Custom hook to replace useInView
+function useClientInView(ref: React.RefObject<Element>) {
+  const [isInView, setIsInView] = useState(false);
+
+  useEffect(() => {
+    if (!ref.current) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsInView(entry.isIntersecting);
+      },
+      { threshold: 0.2 }
+    );
+
+    observer.observe(ref.current);
+
+    return () => {
+      if (ref.current) {
+        observer.unobserve(ref.current);
+      }
+    };
+  }, [ref]);
+
+  return isInView;
+}
+
+// Simple animation control replacement
+function useClientAnimation() {
+  const [state, setState] = useState("hidden");
+
+  const start = (newState: string) => {
+    setState(newState);
+  };
+
+  return {
+    start,
+    state,
+  };
+}
 
 export default function Mission() {
   const containerRef = useRef(null);
   const imageRef = useRef(null);
-  const isInView = useInView(containerRef, { once: true, amount: 0.2 });
-  const mainControls = useAnimation();
+  const isInView = useClientInView(containerRef);
+  const mainControls = useClientAnimation();
 
   useEffect(() => {
     if (isInView) {
       mainControls.start("visible");
     }
   }, [isInView, mainControls]);
+
+  const missionPoints = [
+    {
+      icon: <FiStar className="w-6 h-6 text-primary" />,
+      title: "Responsible Recycling",
+      description:
+        "We ensure all e-waste is processed through environmentally responsible methods that minimize pollution and maximize resource recovery.",
+    },
+    {
+      icon: <FiRefreshCw className="w-6 h-6 text-primary" />,
+      title: "Material Recovery",
+      description:
+        "Our advanced recycling processes recover valuable materials like gold, silver, copper, and rare earth elements from discarded electronics.",
+    },
+    {
+      icon: <FiShield className="w-6 h-6 text-primary" />,
+      title: "Data Security",
+      description:
+        "We provide certified data destruction services to ensure sensitive information is completely and securely erased from all devices.",
+    },
+    {
+      icon: <FiUsers className="w-6 h-6 text-primary" />,
+      title: "Community Education",
+      description:
+        "We work with communities to raise awareness about e-waste challenges and promote sustainable electronics management practices.",
+    },
+  ];
+
+  const stats = [
+    { value: 500, suffix: "K+", label: "Devices Recycled" },
+    { value: 95, suffix: "%", label: "Recovery Rate" },
+    { value: 100, suffix: "+", label: "Corporate Clients" },
+    { value: 20, suffix: "+", label: "Years Experience" },
+  ];
 
   return (
     <section className="py-24 relative overflow-hidden">
@@ -34,11 +119,10 @@ export default function Mission() {
 
       <div className="container mx-auto px-4 relative z-10" ref={containerRef}>
         {/* Section Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7 }}
-          className="max-w-3xl mx-auto text-center mb-16"
+        <div
+          className={`max-w-3xl mx-auto text-center mb-16 transition-all duration-700 ${
+            isInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-20"
+          }`}
         >
           <span className="text-primary text-sm uppercase tracking-wider font-semibold">
             Our Purpose
@@ -51,23 +135,20 @@ export default function Mission() {
             circular economy where every electronic device finds new purpose,
             protecting our planet for future generations.
           </p>
-        </motion.div>
+        </div>
 
         {/* Main content with earth image */}
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left side image with 3D effect */}
-          <motion.div
+          <div
             ref={imageRef}
-            className="w-full"
-            initial={{ x: 100, opacity: 0 }}
-            animate={isInView ? { x: 0, opacity: 1 } : {}}
-            transition={{ duration: 1, delay: 0.3 }}
+            className={`w-full transition-all duration-1000 ${
+              isInView
+                ? "opacity-100 translate-x-0"
+                : "opacity-0 translate-x-20"
+            }`}
           >
-            <motion.div
-              className="relative"
-              whileHover={{ scale: 1.05 }}
-              transition={{ type: "spring", stiffness: 300, damping: 15 }}
-            >
+            <div className="relative hover:scale-105 transition-transform duration-300">
               <div className="relative w-full max-w-[450px] h-[450px] mx-auto">
                 <div className="w-full h-full pointer-events-none">
                   <img
@@ -93,28 +174,22 @@ export default function Mission() {
                   </div>
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
 
           {/* Right side mission points */}
           <div className="space-y-8">
             {missionPoints.map((point, index) => (
-              <motion.div
+              <div
                 key={index}
-                initial={{ opacity: 0, x: 50 }}
-                animate={isInView ? { opacity: 1, x: 0 } : {}}
-                transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
-                className="relative"
+                className={`relative transition-all duration-500 ${
+                  isInView
+                    ? "opacity-100 translate-x-0"
+                    : "opacity-0 translate-x-50"
+                }`}
+                style={{ transitionDelay: `${0.3 + index * 0.1}s` }}
               >
-                <motion.div
-                  className="bg-card hover:bg-card/90 border border-border/60 rounded-xl p-6 relative z-10 transition-all duration-300 group"
-                  whileHover={{
-                    y: -5,
-                    boxShadow: "0 10px 30px -5px rgba(0, 0, 0, 0.1)",
-                    scale: 1.02,
-                  }}
-                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                >
+                <div className="bg-card hover:bg-card/90 border border-border/60 rounded-xl p-6 relative z-10 transition-all duration-300 group hover:-translate-y-1 hover:shadow-xl">
                   <div className="flex flex-col md:flex-row md:items-start gap-4">
                     <div className="flex-shrink-0">
                       <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -130,33 +205,28 @@ export default function Mission() {
                       </p>
                     </div>
                   </div>
-                </motion.div>
+                </div>
 
                 {/* Decorative line connecting points */}
                 {index < missionPoints.length - 1 && (
                   <div className="absolute left-6 top-[4.5rem] h-[calc(100%-1rem)] w-0 border-l-2 border-dashed border-primary/20" />
                 )}
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
 
         {/* Stats section */}
-        <motion.div
-          className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-20"
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7, delay: 0.5 }}
+        <div
+          className={`grid grid-cols-2 md:grid-cols-4 gap-6 mt-20 transition-all duration-700 ${
+            isInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-30"
+          }`}
+          style={{ transitionDelay: "0.5s" }}
         >
           {stats.map((stat, index) => (
-            <motion.div
+            <div
               key={index}
-              className="text-center p-6 rounded-lg bg-card border border-border/60 shadow-sm"
-              whileHover={{
-                y: -5,
-                boxShadow: "0 10px 30px -5px rgba(0, 0, 0, 0.1)",
-              }}
-              transition={{ type: "spring", stiffness: 400, damping: 10 }}
+              className="text-center p-6 rounded-lg bg-card border border-border/60 shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-300"
             >
               <CountUpAnimation
                 className="text-3xl md:text-4xl font-bold text-primary mb-2"
@@ -165,25 +235,18 @@ export default function Mission() {
                 isInView={isInView}
               />
               <p className="text-muted-foreground text-sm">{stat.label}</p>
-            </motion.div>
+            </div>
           ))}
-        </motion.div>
+        </div>
 
         {/* CTA Button */}
-        <motion.div
-          className="text-center mt-16"
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.5, delay: 0.8 }}
+        <div
+          className={`text-center mt-16 transition-all duration-500 ${
+            isInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-20"
+          }`}
+          style={{ transitionDelay: "0.8s" }}
         >
-          <motion.button
-            className="btn-primary py-3 px-8 text-lg inline-flex items-center gap-2 shadow-lg"
-            whileHover={{
-              scale: 1.03,
-              boxShadow: "0 10px 25px -5px rgba(16, 185, 129, 0.2)",
-            }}
-            whileTap={{ scale: 0.98 }}
-          >
+          <button className="btn-primary py-3 px-8 text-lg inline-flex items-center gap-2 shadow-lg hover:scale-105 hover:shadow-xl transition-all duration-300">
             Join Our Mission
             <svg
               className="w-5 h-5"
@@ -198,8 +261,8 @@ export default function Mission() {
                 d="M14 5l7 7m0 0l-7 7m7-7H3"
               />
             </svg>
-          </motion.button>
-        </motion.div>
+          </button>
+        </div>
       </div>
     </section>
   );
@@ -248,44 +311,9 @@ function CountUpAnimation({
   }, [end, duration, isInView]);
 
   return (
-    <div className={className}>
+    <span className={className}>
       {count}
       {suffix}
-    </div>
+    </span>
   );
 }
-
-// Data
-const missionPoints = [
-  {
-    icon: <FiRefreshCw className="w-6 h-6 text-primary" />,
-    title: "Sustainable Recycling",
-    description:
-      "Our advanced recycling processes recover up to 95% of materials from e-waste, minimizing landfill impact and conserving natural resources.",
-  },
-  {
-    icon: <FiShield className="w-6 h-6 text-primary" />,
-    title: "Data Security",
-    description:
-      "We ensure complete data destruction on all recycled devices, protecting sensitive information with certified security protocols.",
-  },
-  {
-    icon: <FiUsers className="w-6 h-6 text-primary" />,
-    title: "Community Impact",
-    description:
-      "Through education and local partnerships, we raise awareness about responsible e-waste management and create green job opportunities.",
-  },
-  {
-    icon: <FiStar className="w-6 h-6 text-primary" />,
-    title: "Circular Economy",
-    description:
-      "We transform e-waste into valuable resources that can be reintegrated into manufacturing, completing the circular economy loop.",
-  },
-];
-
-const stats = [
-  { value: 50000, suffix: "+", label: "Devices Recycled" },
-  { value: 500, suffix: "+", label: "Tons of E-Waste Processed" },
-  { value: 5000, suffix: "+", label: "Trees Saved" },
-  { value: 25, suffix: "%", label: "Carbon Footprint Reduction" },
-];

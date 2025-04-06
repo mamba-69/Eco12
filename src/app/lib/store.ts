@@ -108,12 +108,12 @@ const defaultSettings: SiteSettings = {
   siteName: "Eco-Expert Recycling",
   siteDescription:
     "Leading e-waste recycling company with sustainable solutions for a greener future.",
-  logoUrl: "/images/logo.svg",
+  logoUrl: "https://i.postimg.cc/2SW1kwbf/Final.png",
   primaryColor: "#2ECC71",
   footerText:
     "© " + new Date().getFullYear() + " EcoVerva. All rights reserved.",
-  contactEmail: "connect@ecoverva.com",
-  contactPhone: "1800-120-ECOV",
+  contactEmail: "experttechnology2016@gmail.com",
+  contactPhone: "91+ 7096444414",
   contactAddress:
     "Unit 1116, 1117 & 1119, 11th Floor BPTP Park Centra, Sector 30 NH8, Gurgaon, Haryana 122001",
   socialLinks: {
@@ -240,115 +240,101 @@ const defaultContentSettings: ContentSettings = {
 };
 
 // Create the store with persistence
-export const useStore = create<SiteStore>()(
+const useStore = create<SiteStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       // Initial state
       siteSettings: defaultSettings,
       contentSettings: defaultContentSettings,
 
-      // Actions
-      updateSiteSettings: (settings, shouldBroadcast = true) => {
-        // First update the store state
-        set((state) => {
-          const updatedSettings = {
-            ...state.siteSettings,
-            ...settings,
-          };
+      // Update site settings
+      updateSiteSettings: (
+        settings: Partial<SiteSettings>,
+        shouldBroadcast = true
+      ) => {
+        // Important: First update the local state immediately
+        const currentSettings = get().siteSettings;
+        const newSettings = { ...currentSettings, ...settings };
 
-          // When shouldBroadcast is false, we're receiving updates from elsewhere
-          // so we don't want to trigger another broadcast
-          if (shouldBroadcast) {
-            // Broadcast changes to other components via SiteBridge
-            setTimeout(() => {
-              broadcastSettingsChange(settings, "store-update");
-            }, 0);
+        // Update local state first for immediate UI feedback
+        set({ siteSettings: newSettings });
 
-            // Save to Firestore for global updates
-            saveSettingsToFirestore(updatedSettings)
-              .then(() => console.log("Settings synced to Firestore"))
-              .catch((err) =>
-                console.error("Failed to sync settings to Firestore:", err)
-              );
+        // Log what we're saving
+        console.log("Updating settings:", settings);
+        console.log("New full settings state:", newSettings);
+
+        // Save to Firestore if it's available
+        if (typeof window !== "undefined") {
+          try {
+            saveSettingsToFirestore(newSettings)
+              .then(() => {
+                console.log("Settings saved to Firestore successfully");
+
+                // Broadcast changes to other components if requested
+                if (shouldBroadcast) {
+                  broadcastSettingsChange({
+                    settings,
+                    source: "admin",
+                  });
+                }
+              })
+              .catch((error) => {
+                console.error("Error saving settings to Firestore:", error);
+              });
+          } catch (error) {
+            console.error("Error in store when saving settings:", error);
           }
-
-          // Save to store
-          return { siteSettings: updatedSettings };
-        });
+        }
       },
 
-      updateContentSettings: (settings, shouldBroadcast = true) => {
-        // First update the store state
-        set((state) => {
-          const updatedSettings = {
-            ...state.contentSettings,
-            ...settings,
-          };
+      // Update content settings
+      updateContentSettings: (
+        content: Partial<ContentSettings>,
+        shouldBroadcast = true
+      ) => {
+        // Important: First update the local state immediately
+        const currentContent = get().contentSettings;
+        const newContent = { ...currentContent, ...content };
 
-          // When shouldBroadcast is false, we're receiving updates from elsewhere
-          if (shouldBroadcast) {
-            // Broadcast changes to other components via SiteBridge
-            setTimeout(() => {
-              broadcastSettingsChange(
-                { contentSettings: settings },
-                "content-update"
-              );
-            }, 0);
+        // Update local state first for immediate UI feedback
+        set({ contentSettings: newContent });
 
-            // Save to Firestore for global updates
-            saveContentToFirestore(updatedSettings)
-              .then(() => console.log("Content synced to Firestore"))
-              .catch((err) =>
-                console.error("Failed to sync content to Firestore:", err)
-              );
+        // Log what we're saving
+        console.log("Updating content:", content);
+
+        // Save to Firestore if it's available
+        if (typeof window !== "undefined") {
+          try {
+            saveContentToFirestore(newContent)
+              .then(() => {
+                console.log("Content saved to Firestore successfully");
+
+                // Broadcast changes to other components if requested
+                if (shouldBroadcast) {
+                  broadcastSettingsChange({
+                    contentSettings: content,
+                    source: "admin",
+                  });
+                }
+              })
+              .catch((error) => {
+                console.error("Error saving content to Firestore:", error);
+              });
+          } catch (error) {
+            console.error("Error in store when saving content:", error);
           }
-
-          // Save to store
-          return { contentSettings: updatedSettings };
-        });
+        }
       },
     }),
     {
-      name: "eco-expert-store", // name of the item in local storage
-      partialize: (state) => ({
-        siteSettings: state.siteSettings,
-        contentSettings: state.contentSettings,
-      }),
+      name: "eco-expert-site-storage",
+      // Don't use skipHydration as it's causing issues
+      // Instead we'll handle initialization more carefully
     }
   )
 );
 
-// Initialize Firestore listeners
-if (typeof window !== "undefined") {
-  // Delay initialization to ensure the app is fully loaded
-  const initializeFirestoreListeners = () => {
-    try {
-      // Watch for settings changes in Firestore
-      watchSettings((firestoreSettings) => {
-        if (firestoreSettings) {
-          // Update the local store without broadcasting
-          useStore.getState().updateSiteSettings(firestoreSettings, false);
-        }
-      });
+// Don't initialize Firebase listeners here
+// This is now handled in FirebaseInit component
 
-      // Watch for content changes in Firestore
-      watchContent((firestoreContent) => {
-        if (firestoreContent) {
-          // Update the local store without broadcasting
-          useStore.getState().updateContentSettings(firestoreContent, false);
-        }
-      });
-
-      console.log("Firestore real-time listeners initialized");
-    } catch (error) {
-      console.error("Failed to initialize Firestore listeners:", error);
-    }
-  };
-
-  // Wait for the app to be fully loaded before initializing
-  if (document.readyState === "complete") {
-    initializeFirestoreListeners();
-  } else {
-    window.addEventListener("load", initializeFirestoreListeners);
-  }
-}
+export { useStore };

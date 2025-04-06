@@ -14,6 +14,7 @@ export default function AdminSidebar() {
   const pathname = usePathname();
 
   const isActiveLink = (path: string) => {
+    if (!pathname) return false;
     return pathname === path || pathname.startsWith(`${path}/`);
   };
 

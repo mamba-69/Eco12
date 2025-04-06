@@ -1,25 +1,17 @@
+import * as React from "react";
+import { SwiperOptions, Swiper as SwiperClass } from "swiper/types";
+import { Pagination, Navigation, Autoplay } from "swiper/modules";
+
 declare module "swiper/react" {
-  import { FC, ReactElement, RefObject } from "react";
-  import { SwiperOptions, Swiper as SwiperClass } from "swiper";
-
-  interface SwiperProps extends SwiperOptions {
-    children: ReactElement | ReactElement[];
-    className?: string;
-    onBeforeInit?: (swiper: SwiperClass) => void;
-    onAny?: (eventName: string, ...args: any[]) => void;
-    onSlideChange?: () => void;
+  export interface SwiperProps
+    extends React.HTMLAttributes<HTMLElement>,
+      SwiperOptions {
+    modules?: Array<
+      typeof Pagination | typeof Navigation | typeof Autoplay | any
+    >;
+    onSwiper?: (swiper: SwiperClass) => void;
+    onSlideChange?: (swiper: SwiperClass) => void;
   }
-
-  interface SwiperSlideProps {
-    children: ReactElement | ReactElement[] | string;
-    className?: string;
-    key?: string | number;
-    virtualIndex?: number;
-    zoom?: boolean;
-  }
-
-  export const Swiper: FC<SwiperProps>;
-  export const SwiperSlide: FC<SwiperSlideProps>;
 }
 
 declare module "swiper" {

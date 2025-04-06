@@ -3,53 +3,122 @@
  * Optimized for performance with minimal overhead
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from "react";
+import type { SiteSettings, ContentSettings } from "./store";
 
 // Custom event name
-const SETTINGS_CHANGED = 'site-settings-changed';
+const SETTINGS_CHANGED = "site-settings-changed";
+
+// Define the types for messages sent over the channel
+interface SettingsChangeMessage {
+  type: "settings-change";
+  settings?: Partial<SiteSettings>;
+  contentSettings?: Partial<ContentSettings>;
+  source: "admin" | "client";
+}
+
+// Create a type for the callback function
+type SettingsChangeListener = (data: {
+  settings?: Partial<SiteSettings>;
+  contentSettings?: Partial<ContentSettings>;
+  source: string;
+}) => void;
+
+// Store active listeners
+const listeners: SettingsChangeListener[] = [];
+
+// Initialize the broadcast channel
+let channel: BroadcastChannel | null = null;
+
+// Initialize the channel if in browser environment
+if (typeof window !== "undefined") {
+  try {
+    channel = new BroadcastChannel("eco-expert-settings");
+
+    // Listen for messages
+    channel.onmessage = (event) => {
+      const data = event.data as SettingsChangeMessage;
+
+      if (data.type === "settings-change") {
+        console.log("Received settings change via BroadcastChannel:", data);
+
+        // Notify all listeners
+        listeners.forEach((listener) => {
+          listener({
+            settings: data.settings,
+            contentSettings: data.contentSettings,
+            source: data.source,
+          });
+        });
+      }
+    };
+
+    console.log("SiteBridge initialized with BroadcastChannel");
+  } catch (error) {
+    console.error("Failed to initialize BroadcastChannel:", error);
+    // Fallback could be implemented here if needed
+  }
+}
 
 /**
  * Broadcast settings changes efficiently
  */
-export function broadcastSettingsChange(settings: any, source: string = 'unknown') {
-  if (typeof window === 'undefined') return;
-  
-  // Create a simple event with minimal payload
-  const event = new CustomEvent(SETTINGS_CHANGED, {
-    detail: {
-      settings,
-      timestamp: Date.now(),
-      source
+export function broadcastSettingsChange(data: {
+  settings?: Partial<SiteSettings>;
+  contentSettings?: Partial<ContentSettings>;
+  source: "admin" | "client";
+}) {
+  if (channel) {
+    try {
+      const message: SettingsChangeMessage = {
+        type: "settings-change",
+        settings: data.settings,
+        contentSettings: data.contentSettings,
+        source: data.source,
+      };
+
+      console.log("Broadcasting settings change:", message);
+      channel.postMessage(message);
+
+      // Also notify local listeners directly
+      listeners.forEach((listener) => {
+        listener(data);
+      });
+    } catch (error) {
+      console.error("Error broadcasting settings change:", error);
     }
-  });
-  
-  // Dispatch the event
-  window.dispatchEvent(event);
+  } else {
+    console.warn("BroadcastChannel not available, local notification only");
+
+    // Fallback to just local notification
+    listeners.forEach((listener) => {
+      listener(data);
+    });
+  }
 }
 
 /**
  * Performance-optimized hook to listen for settings changes
  */
-export function useSettingsChangeListener(callback: (data: any) => void) {
-  useEffect(() => {
-    // Efficient event handler
-    const handleSettingsChange = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      callback(customEvent.detail);
-    };
-    
-    // Add event listener
-    if (typeof window !== 'undefined') {
-      window.addEventListener(SETTINGS_CHANGED, handleSettingsChange);
+export function useSettingsChangeListener(callback: SettingsChangeListener) {
+  // Register the listener when the component mounts
+  if (typeof window !== "undefined") {
+    // Add listener if it doesn't already exist
+    if (!listeners.includes(callback)) {
+      listeners.push(callback);
     }
-    
-    // Clean up
+
+    // Return cleanup function to remove listener
     return () => {
-      if (typeof window !== 'undefined') {
-        window.removeEventListener(SETTINGS_CHANGED, handleSettingsChange);
+      const index = listeners.indexOf(callback);
+      if (index !== -1) {
+        listeners.splice(index, 1);
       }
     };
-  }, [callback]);
+  }
+
+  // Return no-op cleanup for SSR
+  return () => {};
 }
 
 /**
@@ -60,12 +129,12 @@ export function debounce<T extends (...args: any[]) => any>(
   delay: number
 ): (...args: Parameters<T>) => void {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
-  
-  return function(...args: Parameters<T>) {
+
+  return function (...args: Parameters<T>) {
     if (timeoutId) {
       clearTimeout(timeoutId);
     }
-    
+
     timeoutId = setTimeout(() => {
       func(...args);
       timeoutId = null;
@@ -79,10 +148,19 @@ export function debounce<T extends (...args: any[]) => any>(
  */
 export function useForceRefresh() {
   const [, setForceUpdate] = useState(0);
-  
+
   const forceRefresh = useCallback(() => {
-    setForceUpdate(prev => prev + 1);
+    setForceUpdate((prev) => prev + 1);
   }, []);
-  
+
   return forceRefresh;
-} 
+}
+
+// Close the channel when the page unloads
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeunload", () => {
+    if (channel) {
+      channel.close();
+    }
+  });
+}

@@ -1,5 +1,5 @@
 // Firebase configuration for Eco-Expert Recycling
-import { initializeApp, getApps } from "firebase/app";
+import { initializeApp, getApps, getApp } from "firebase/app";
 import {
   getFirestore,
   collection,
@@ -8,36 +8,27 @@ import {
   onSnapshot,
   getDoc,
   enableIndexedDbPersistence,
+  Timestamp,
 } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
+import type { SiteSettings, ContentSettings } from "./store";
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   // Replace with your actual Firebase config from Firebase Console
-  apiKey:
-    process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyC-ecoexpert-example-key",
-  authDomain:
-    process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ||
-    "eco-expert-recycling.firebaseapp.com",
-  projectId:
-    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "eco-expert-recycling",
-  storageBucket:
-    process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ||
-    "eco-expert-recycling.appspot.com",
-  messagingSenderId:
-    process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "123456789012",
-  appId:
-    process.env.NEXT_PUBLIC_FIREBASE_APP_ID ||
-    "1:123456789012:web:abcdef1234567890abcdef",
-  measurementId:
-    process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-EXAMPLE123",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase only if it hasn't been initialized
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
-
-// Initialize Firestore
-export const db = getFirestore(app);
+// Initialize Firebase
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+const db = getFirestore(app);
+const storage = getStorage(app);
 
 // Enable offline persistence when possible
 if (typeof window !== "undefined") {
@@ -62,35 +53,29 @@ export const contentCollection = collection(db, "content");
 
 // Document references
 export const siteSettingsDoc = doc(settingsCollection, "site");
-export const contentSettingsDoc = doc(contentCollection, "main");
+export const contentSettingsDoc = doc(contentCollection, "site");
+
+// Create a type for the callback function
+export type SettingsCallback = (settings: SiteSettings) => void;
+export type ContentCallback = (content: ContentSettings) => void;
 
 /**
  * Save site settings to Firestore
  */
-export async function saveSettingsToFirestore(settings: any) {
+export async function saveSettingsToFirestore(settings: SiteSettings) {
   try {
-    // First get the current document to merge with new settings
-    const docSnap = await getDoc(siteSettingsDoc);
-    const currentData = docSnap.exists() ? docSnap.data() : {};
+    const settingsRef = doc(db, "settings", "site");
+    const timestamp = Timestamp.now();
 
-    // Get admin email from localStorage (client-side only)
-    const adminEmail =
-      typeof window !== "undefined"
-        ? localStorage.getItem("admin-email") || "unknown"
-        : "unknown";
+    // Log the settings we're about to save
+    console.log("Saving settings to Firestore:", settings);
 
-    // Merge current data with new settings
-    const updatedData = {
-      ...currentData,
+    await setDoc(settingsRef, {
       ...settings,
-      updatedAt: new Date().toISOString(),
-      updatedBy: adminEmail,
-    };
+      updatedAt: timestamp,
+    });
 
-    // Save to Firestore
-    await setDoc(siteSettingsDoc, updatedData, { merge: true });
     console.log("Settings saved to Firestore successfully");
-
     return true;
   } catch (error) {
     console.error("Error saving settings to Firestore:", error);
@@ -101,30 +86,20 @@ export async function saveSettingsToFirestore(settings: any) {
 /**
  * Save content settings to Firestore
  */
-export async function saveContentToFirestore(content: any) {
+export async function saveContentToFirestore(content: ContentSettings) {
   try {
-    // First get the current document to merge with new content
-    const docSnap = await getDoc(contentSettingsDoc);
-    const currentData = docSnap.exists() ? docSnap.data() : {};
+    const contentRef = doc(db, "content", "site");
+    const timestamp = Timestamp.now();
 
-    // Get admin email from localStorage (client-side only)
-    const adminEmail =
-      typeof window !== "undefined"
-        ? localStorage.getItem("admin-email") || "unknown"
-        : "unknown";
+    // Log the content we're about to save
+    console.log("Saving content to Firestore:", content);
 
-    // Merge current data with new content
-    const updatedData = {
-      ...currentData,
+    await setDoc(contentRef, {
       ...content,
-      updatedAt: new Date().toISOString(),
-      updatedBy: adminEmail,
-    };
+      updatedAt: timestamp,
+    });
 
-    // Save to Firestore
-    await setDoc(contentSettingsDoc, updatedData, { merge: true });
     console.log("Content saved to Firestore successfully");
-
     return true;
   } catch (error) {
     console.error("Error saving content to Firestore:", error);
@@ -136,60 +111,83 @@ export async function saveContentToFirestore(content: any) {
  * Watch for settings changes
  * @param callback Function to call when settings change
  */
-export function watchSettings(callback: (data: any) => void) {
-  try {
-    return onSnapshot(
-      siteSettingsDoc,
-      // Success handler
-      (docSnapshot) => {
-        if (docSnapshot.exists()) {
-          const data = docSnapshot.data();
-          console.log(
-            "Settings updated in Firestore:",
-            docSnapshot.metadata.hasPendingWrites ? "Local" : "Server"
-          );
-          callback(data);
-        }
-      },
-      // Error handler
-      (error) => {
-        console.error("Error watching settings:", error);
+export function watchSettings(callback: SettingsCallback) {
+  const settingsRef = doc(db, "settings", "site");
+
+  console.log("Setting up settings watcher on Firestore");
+
+  return onSnapshot(
+    settingsRef,
+    (doc) => {
+      if (doc.exists()) {
+        const data = doc.data() as SiteSettings;
+        console.log("Settings updated in Firestore:", data);
+        callback(data);
+      } else {
+        console.log("No settings document found in Firestore");
       }
-    );
-  } catch (error) {
-    console.error("Error setting up settings watcher:", error);
-    // Return a no-op unsubscribe function
-    return () => {};
-  }
+    },
+    (error) => {
+      console.error("Error watching settings in Firestore:", error);
+    }
+  );
 }
 
 /**
  * Watch for content changes
  * @param callback Function to call when content changes
  */
-export function watchContent(callback: (data: any) => void) {
-  try {
-    return onSnapshot(
-      contentSettingsDoc,
-      // Success handler
-      (docSnapshot) => {
-        if (docSnapshot.exists()) {
-          const data = docSnapshot.data();
-          console.log(
-            "Content updated in Firestore:",
-            docSnapshot.metadata.hasPendingWrites ? "Local" : "Server"
-          );
-          callback(data);
-        }
-      },
-      // Error handler
-      (error) => {
-        console.error("Error watching content:", error);
+export function watchContent(callback: ContentCallback) {
+  const contentRef = doc(db, "content", "site");
+
+  return onSnapshot(
+    contentRef,
+    (doc) => {
+      if (doc.exists()) {
+        const data = doc.data() as ContentSettings;
+        console.log("Content updated in Firestore:", data);
+        callback(data);
+      } else {
+        console.log("No content document found in Firestore");
       }
-    );
+    },
+    (error) => {
+      console.error("Error watching content in Firestore:", error);
+    }
+  );
+}
+
+export { app, db, storage };
+
+// Helper function to check if Firestore is available
+export function isFirestoreAvailable() {
+  return typeof window !== "undefined" && !!getApps().length;
+}
+
+// Initialize Firestore with default data if needed
+export async function initializeFirestoreData(
+  defaultSettings: SiteSettings,
+  defaultContent: ContentSettings
+) {
+  try {
+    const settingsRef = doc(db, "settings", "site");
+    const contentRef = doc(db, "content", "site");
+
+    const settingsDoc = await getDoc(settingsRef);
+    if (!settingsDoc.exists()) {
+      console.log("Initializing default settings in Firestore");
+      await saveSettingsToFirestore(defaultSettings);
+    }
+
+    const contentDoc = await getDoc(contentRef);
+    if (!contentDoc.exists()) {
+      console.log("Initializing default content in Firestore");
+      await saveContentToFirestore(defaultContent);
+    }
+
+    return true;
   } catch (error) {
-    console.error("Error setting up content watcher:", error);
-    // Return a no-op unsubscribe function
-    return () => {};
+    console.error("Error initializing Firestore data:", error);
+    return false;
   }
 }

@@ -1,13 +1,44 @@
 "use client";
 
-import { useState } from "react";
+import { useState, ReactNode, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { motion } from "framer-motion";
 import { FiMail, FiLock, FiAlertCircle } from "@/app/lib/icons";
 import { useAuth } from "@/app/context/AuthContext";
+
+// Client component wrapper
+interface MotionProps {
+  children?: ReactNode;
+  className?: string;
+  initial?: any;
+  animate?: any;
+  transition?: any;
+}
+
+const MotionDiv = ({ children, ...props }: MotionProps) => {
+  const [Component, setComponent] = useState<any>(() => (props: any) => (
+    <div {...props}>{props.children}</div>
+  ));
+
+  useEffect(() => {
+    let isMounted = true;
+    import("framer-motion").then((mod) => {
+      if (isMounted) {
+        setComponent(() => mod.motion.div);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  return <Component {...props}>{children}</Component>;
+};
+
+// Simple fallback
+const DivFallback = () => <div className="opacity-0" />;
 
 // Form validation schema
 const loginSchema = z.object({
@@ -54,7 +85,7 @@ export default function LoginForm() {
   };
 
   return (
-    <motion.div
+    <MotionDiv
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
@@ -69,9 +100,9 @@ export default function LoginForm() {
         </div>
       )}
 
-      <form 
-        onSubmit={handleSubmit(onSubmit)} 
-        className="space-y-6" 
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="space-y-6"
         autoComplete="off"
         data-form-type="login"
       >
@@ -173,6 +204,6 @@ export default function LoginForm() {
           </p>
         </div>
       </form>
-    </motion.div>
+    </MotionDiv>
   );
 }

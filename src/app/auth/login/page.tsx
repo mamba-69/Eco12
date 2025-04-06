@@ -17,30 +17,49 @@ export default function LoginPage() {
   const [loginSuccess, setLoginSuccess] = useState(false);
   const router = useRouter();
   const { signIn, isAdmin } = useAuth();
+  const [checkingSession, setCheckingSession] = useState(true);
 
-  // Auto-login for the admin for testing
+  // Remove auto-login, only check for existing session
   useEffect(() => {
-    // Check if we should auto-login
-    const adminCookie = document.cookie.includes("admin-session=true");
-    const adminLocalStorage = localStorage.getItem("is-admin") === "true";
+    // Don't check immediately to avoid flash
+    const timer = setTimeout(() => {
+      // Only check if we're on the client side
+      if (typeof window !== "undefined") {
+        const adminCookie = document.cookie.includes("admin-session=true");
+        const adminLocalStorage = localStorage.getItem("is-admin") === "true";
+        const storedEmail = localStorage.getItem("admin-email");
 
-    if (adminCookie || adminLocalStorage) {
-      console.log(
-        "Auto-login: Admin session detected, redirecting to admin dashboard"
-      );
-      window.location.href = "/admin-direct/";
-    }
+        // Only show message if there's an existing valid session
+        if ((adminCookie || adminLocalStorage) && storedEmail === ADMIN_EMAIL) {
+          console.log("Existing valid admin session detected");
+          setError(null);
+          setLoginSuccess(true);
+        }
+      }
+      setCheckingSession(false);
+    }, 1000);
 
-    // Remove auto-fill of admin credentials for security
-    // setEmail(ADMIN_EMAIL);
-    // setPassword(ADMIN_PASSWORD);
+    return () => clearTimeout(timer);
   }, []);
+
+  // Handle redirect to admin dashboard manually on button click
+  const handleGoToAdmin = () => {
+    window.location.href = "/admin-direct/";
+  };
 
   // Force redirect to admin dashboard if credentials match
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
+
+    // Validate that both email and password were provided
+    if (!email || !password) {
+      setError("Please enter both email and password");
+      setLoading(false);
+      return;
+    }
+
     console.log("Attempting login with:", email);
 
     try {
@@ -54,9 +73,8 @@ export default function LoginPage() {
           60 * 60 * 24 * 7
         }`;
 
-        setTimeout(() => {
-          window.location.href = "/admin-direct/";
-        }, 500);
+        // Don't auto-redirect
+        setLoading(false);
         return;
       }
 
@@ -64,25 +82,48 @@ export default function LoginPage() {
       await signIn(email, password);
       console.log("Sign in function completed");
       setLoginSuccess(true);
-
-      setTimeout(() => {
-        if (isAdmin) {
-          console.log("Admin login successful, redirecting to admin dashboard");
-          // Use direct URL for admin access instead of router to ensure proper navigation
-          window.location.href = "/admin-direct/";
-        } else {
-          console.log("Regular user login, redirecting to home");
-          router.push("/");
-        }
-      }, 500);
+      setLoading(false);
     } catch (error: any) {
       console.error("Login error:", error);
       setError(error.message || "Failed to sign in");
       setLoginSuccess(false);
-    } finally {
       setLoading(false);
     }
   };
+
+  // Show loading state while checking for session
+  if (checkingSession) {
+    return (
+      <div className="container py-20">
+        <div
+          style={{
+            maxWidth: "400px",
+            margin: "0 auto",
+            padding: "2rem",
+            backgroundColor: "#1F2937",
+            borderRadius: "0.5rem",
+            boxShadow:
+              "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+          }}
+        >
+          <h1
+            style={{
+              fontSize: "1.5rem",
+              fontWeight: "bold",
+              marginBottom: "1.5rem",
+              textAlign: "center",
+              color: "white",
+            }}
+          >
+            Checking Session...
+          </h1>
+          <div className="flex justify-center">
+            <div className="animate-pulse w-10 h-10 rounded-full bg-green-500/20"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container py-20">
@@ -103,6 +144,7 @@ export default function LoginPage() {
             fontWeight: "bold",
             marginBottom: "1.5rem",
             textAlign: "center",
+            color: "white",
           }}
         >
           Log in to Eco-Expert
@@ -119,8 +161,20 @@ export default function LoginPage() {
               textAlign: "center",
             }}
           >
-            Login successful!{" "}
-            {isAdmin ? "Redirecting to admin dashboard..." : "Redirecting..."}
+            <div className="mb-4">Login successful!</div>
+            <button
+              onClick={handleGoToAdmin}
+              style={{
+                backgroundColor: "#059669",
+                color: "white",
+                padding: "0.5rem 1rem",
+                borderRadius: "0.375rem",
+                fontWeight: "500",
+                cursor: "pointer",
+              }}
+            >
+              Go to Admin Dashboard
+            </button>
           </div>
         )}
 
@@ -138,15 +192,21 @@ export default function LoginPage() {
           </div>
         )}
 
-        <form onSubmit={handleLogin} autoComplete="off">
-          <div style={{ marginBottom: "1rem" }}>
+        <form
+          onSubmit={handleLogin}
+          className="space-y-4"
+          autoComplete="off"
+          data-form-type="login"
+        >
+          <div>
             <label
               htmlFor="email"
               style={{
                 display: "block",
-                marginBottom: "0.5rem",
                 fontSize: "0.875rem",
-                fontWeight: 500,
+                fontWeight: "medium",
+                marginBottom: "0.5rem",
+                color: "white",
               }}
             >
               Email
@@ -161,40 +221,29 @@ export default function LoginPage() {
               style={{
                 width: "100%",
                 padding: "0.5rem 0.75rem",
-                backgroundColor: "#111827",
-                border: "1px solid #4B5563",
+                backgroundColor: "#374151",
+                borderWidth: "1px",
+                borderColor: "#4B5563",
                 borderRadius: "0.375rem",
+                color: "white",
               }}
+              placeholder="your.email@example.com"
             />
           </div>
 
-          <div style={{ marginBottom: "1.5rem" }}>
-            <div
+          <div>
+            <label
+              htmlFor="password"
               style={{
-                display: "flex",
-                justifyContent: "space-between",
+                display: "block",
+                fontSize: "0.875rem",
+                fontWeight: "medium",
                 marginBottom: "0.5rem",
+                color: "white",
               }}
             >
-              <label
-                htmlFor="password"
-                style={{
-                  fontSize: "0.875rem",
-                  fontWeight: 500,
-                }}
-              >
-                Password
-              </label>
-              <Link
-                href="/auth/forgot-password"
-                style={{
-                  fontSize: "0.75rem",
-                  color: "#2ECC71",
-                }}
-              >
-                Forgot password?
-              </Link>
-            </div>
+              Password
+            </label>
             <input
               id="password"
               type="password"
@@ -205,45 +254,60 @@ export default function LoginPage() {
               style={{
                 width: "100%",
                 padding: "0.5rem 0.75rem",
-                backgroundColor: "#111827",
-                border: "1px solid #4B5563",
+                backgroundColor: "#374151",
+                borderWidth: "1px",
+                borderColor: "#4B5563",
                 borderRadius: "0.375rem",
+                color: "white",
               }}
+              placeholder="••••••••"
             />
+          </div>
+
+          <div style={{ textAlign: "right" }}>
+            <a
+              href="#"
+              style={{
+                fontSize: "0.875rem",
+                color: "#10B981",
+                textDecoration: "none",
+              }}
+            >
+              Forgot password?
+            </a>
           </div>
 
           <button
             type="submit"
-            disabled={loading || loginSuccess}
-            className="btn btn-primary"
+            disabled={loading}
             style={{
               width: "100%",
-              padding: "0.75rem 1rem",
-              opacity: loading || loginSuccess ? 0.7 : 1,
+              padding: "0.625rem 1.25rem",
+              backgroundColor: "#10B981",
+              color: "white",
+              borderRadius: "0.375rem",
+              fontWeight: "medium",
+              cursor: loading ? "not-allowed" : "pointer",
+              opacity: loading ? 0.7 : 1,
             }}
           >
-            {loading ? "Signing in..." : loginSuccess ? "Signed in" : "Sign in"}
+            {loading ? "Logging in..." : "Log in"}
           </button>
-        </form>
 
-        <div
-          style={{
-            marginTop: "1.5rem",
-            textAlign: "center",
-            fontSize: "0.875rem",
-          }}
-        >
-          Don't have an account?{" "}
-          <Link
-            href="/auth/signup"
+          <div
             style={{
-              color: "#2ECC71",
-              fontWeight: 500,
+              marginTop: "1.5rem",
+              textAlign: "center",
+              fontSize: "0.875rem",
+              color: "#9CA3AF",
             }}
           >
-            Sign up
-          </Link>
-        </div>
+            Don't have an account?{" "}
+            <Link href="/auth/signup" style={{ color: "#10B981" }}>
+              Sign up
+            </Link>
+          </div>
+        </form>
       </div>
     </div>
   );

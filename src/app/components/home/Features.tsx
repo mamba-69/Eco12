@@ -2,7 +2,6 @@
 
 import React, { useRef, useState, useEffect } from "react";
 import Link from "next/link";
-import { motion, useInView } from "framer-motion";
 import {
   FiRefreshCw,
   FiTruck,
@@ -11,6 +10,39 @@ import {
   FiPackage,
   FiCheck,
 } from "@/app/lib/icons";
+import dynamic from "next/dynamic";
+
+// Dynamically import framer-motion components
+const MotionDiv = dynamic(
+  () => import("framer-motion").then((mod) => mod.motion.div),
+  { ssr: false }
+);
+
+// Custom hook to replace useInView
+function useClientInView(ref: React.RefObject<Element>, options = {}) {
+  const [isInView, setIsInView] = useState(false);
+
+  useEffect(() => {
+    if (!ref.current) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsInView(entry.isIntersecting);
+      },
+      { threshold: 0.2, rootMargin: "-100px", ...options }
+    );
+
+    observer.observe(ref.current);
+
+    return () => {
+      if (ref.current) {
+        observer.unobserve(ref.current);
+      }
+    };
+  }, [ref, options]);
+
+  return isInView;
+}
 
 interface ServiceCardProps {
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
@@ -28,19 +60,23 @@ const ServiceCard = ({
   index,
 }: ServiceCardProps) => {
   const cardRef = useRef(null);
+  const isCardInView = useClientInView(cardRef);
 
   return (
-    <motion.div
+    <div
       ref={cardRef}
-      className="group relative bg-card hover:bg-card/80 rounded-xl overflow-hidden shadow-md border border-border/40 transition-all duration-300"
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      viewport={{ once: true, margin: "-100px" }}
-      whileHover={{
-        scale: 1.02,
-        boxShadow:
-          "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+      className={`
+        group relative bg-card hover:bg-card/80 rounded-xl overflow-hidden shadow-md
+        border border-border/40 transition-all duration-500
+        hover:scale-102 hover:shadow-lg
+        ${
+          isCardInView
+            ? "opacity-100 translate-y-0"
+            : "opacity-0 translate-y-20"
+        }
+      `}
+      style={{
+        transitionDelay: `${index * 0.1}s`,
       }}
     >
       {/* Gradient background that animates on hover */}
@@ -82,7 +118,7 @@ const ServiceCard = ({
       <div className="absolute top-0 right-0 w-16 h-16 overflow-hidden">
         <div className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 rotate-45 bg-primary/10 w-8 h-32 group-hover:bg-primary/20 transition-colors duration-300"></div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
@@ -117,24 +153,16 @@ function AnimatedDots() {
   return (
     <>
       {dots.map((dot) => (
-        <motion.div
+        <div
           key={dot.id}
-          className="absolute rounded-full bg-primary/20"
+          className="absolute rounded-full bg-primary/20 animate-float"
           style={{
             width: dot.width,
             height: dot.height,
             top: dot.top,
             left: dot.left,
-          }}
-          animate={{
-            y: [0, -30, 0],
-            opacity: [0.2, 0.5, 0.2],
-          }}
-          transition={{
-            duration: dot.duration,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: dot.id * 0.5,
+            animationDuration: `${dot.duration}s`,
+            animationDelay: `${dot.id * 0.5}s`,
           }}
         />
       ))}
@@ -144,7 +172,7 @@ function AnimatedDots() {
 
 export default function Features() {
   const sectionRef = useRef(null);
-  const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
+  const isInView = useClientInView(sectionRef);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -213,10 +241,12 @@ export default function Features() {
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={isInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.5 }}
+          <div
+            className={`transition-all duration-500 ${
+              isInView
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-20"
+            }`}
           >
             <span className="text-primary font-semibold text-sm uppercase tracking-wider">
               Our Services
@@ -229,7 +259,7 @@ export default function Features() {
               end-to-end solutions for responsible electronic waste management
               and recycling.
             </p>
-          </motion.div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -238,12 +268,11 @@ export default function Features() {
           ))}
         </div>
 
-        <motion.div
-          className="mt-16 text-center"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.6 }}
-          viewport={{ once: true }}
+        <div
+          className={`mt-16 text-center transition-all duration-500 ${
+            isInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-20"
+          }`}
+          style={{ transitionDelay: "0.6s" }}
         >
           <Link
             href="/services"
@@ -251,7 +280,7 @@ export default function Features() {
           >
             View All Services
             <svg
-              className="ml-2 w-4 h-4"
+              className="ml-2 w-5 h-5"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -264,7 +293,41 @@ export default function Features() {
               />
             </svg>
           </Link>
-        </motion.div>
+        </div>
+      </div>
+
+      {/* Call to action section */}
+      <div
+        className={`max-w-4xl mx-auto mt-20 bg-card border border-border rounded-xl p-8 relative z-10 shadow-lg transition-all duration-1000 ${
+          isInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-20"
+        }`}
+        style={{ transitionDelay: "0.4s" }}
+      >
+        <div className="grid md:grid-cols-2 gap-8 items-center">
+          <div>
+            <h3 className="text-2xl font-bold mb-3">
+              Ready to recycle your e-waste?
+            </h3>
+            <p className="text-muted-foreground mb-0">
+              Contact us today for a consultation and let us help you dispose of
+              your electronic waste responsibly.
+            </p>
+          </div>
+          <div className="flex justify-center md:justify-end">
+            <Link
+              href="/contact"
+              className="btn-primary px-8 py-3 text-center whitespace-nowrap"
+            >
+              Get Started
+            </Link>
+            <Link
+              href="/services"
+              className="btn-outline ml-3 px-6 py-3 text-center whitespace-nowrap"
+            >
+              Learn More
+            </Link>
+          </div>
+        </div>
       </div>
     </section>
   );

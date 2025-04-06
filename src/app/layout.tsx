@@ -1,3 +1,5 @@
+"use client";
+
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -6,6 +8,7 @@ import { StoreProvider } from "./components/layout/StoreProvider";
 import FirebaseInit from "./components/layout/FirebaseInit";
 import Navbar from "@/app/components/layout/Navbar";
 import Footer from "@/app/components/layout/Footer";
+import { usePathname } from "next/navigation";
 
 // Configure Inter font with fallback to system fonts
 const inter = Inter({
@@ -27,26 +30,36 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Eco-Expert Recycling - E-Waste Recycling & Eco-Friendly Solutions",
+  title: "Eco-Expert Recycling - Electronic Waste Management Solutions",
   description:
-    "Leading e-waste recycling company with sustainable solutions for a greener future.",
+    "Specialized in electronic waste recycling, data destruction, and IT asset management. Eco-friendly solutions for businesses and organizations.",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
+  const pathname = usePathname();
+  const isAdminPage = pathname?.startsWith("/admin-direct");
+
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={inter.className} suppressHydrationWarning>
-        <ThemeProvider>
+    <html lang="en" className={inter.className}>
+      <body className="min-h-screen flex flex-col">
+        <ThemeProvider defaultTheme="dark" storageKey="theme">
           <StoreProvider>
             <FirebaseInit />
-            <div className="flex min-h-screen flex-col">
-              <Navbar />
-              <main className="flex-1">{children}</main>
-              <Footer />
+            <div className="flex-1 flex flex-col">
+              {!isAdminPage && <Navbar />}
+              <main className="flex-1 isolate relative">{children}</main>
+              {!isAdminPage && (
+                <div className="mt-auto">
+                  <Footer />
+                </div>
+              )}
             </div>
           </StoreProvider>
         </ThemeProvider>
