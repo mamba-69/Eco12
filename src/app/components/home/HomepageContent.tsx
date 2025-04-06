@@ -17,13 +17,13 @@ interface MotionProps {
 }
 
 const MotionSection = ({ children, ...props }: MotionProps) => {
-  const [Component, setComponent] = useState<any>(() => (
-    (props: any) => <section {...props}>{props.children}</section>
+  const [Component, setComponent] = useState<any>(() => (props: any) => (
+    <section {...props}>{props.children}</section>
   ));
 
   useEffect(() => {
     let isMounted = true;
-    import('framer-motion').then((mod) => {
+    import("framer-motion").then((mod) => {
       if (isMounted) {
         setComponent(() => mod.motion.section);
       }
@@ -52,7 +52,7 @@ export const HomepageContent = () => {
 
   // Listen for changes broadcasted from admin panel
   useSettingsChangeListener((data) => {
-    if (data.settings?.contentSettings) {
+    if (data.contentSettings) {
       // Content will update automatically via the store
     }
   });

@@ -201,6 +201,9 @@ export default function DirectMediaManagement() {
   const router = useRouter();
   const [toasts, setToasts] = useState<Toast[]>([]);
 
+  // Since we're removing file uploads, we'll set this to null
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
   // Check admin authentication similar to main admin page
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
@@ -394,6 +397,38 @@ export default function DirectMediaManagement() {
       ))}
     </div>
   );
+
+  // Fix the edit function to use URL instead of local file
+  const saveEditedMedia = () => {
+    setIsEditingMedia(false);
+
+    const updatedMedia: MediaItem = {
+      ...editingMedia,
+      id: editingMedia.id || Date.now().toString(),
+      publicId: editingMedia.publicId || `url_${Date.now()}`,
+      uploadedAt: editingMedia.uploadedAt || new Date().toISOString(),
+      type: (editingMedia.url?.match(/\.(mp4|webm|ogg)$/i)
+        ? "video"
+        : "image") as "video" | "image",
+    };
+
+    // Update the media item in the list
+    const updatedMediaItems: MediaItem[] = mediaItems.map((item) =>
+      item.id === updatedMedia.id ? updatedMedia : item
+    );
+
+    // If it's a new item (doesn't exist in current list), add it
+    if (!mediaItems.find((item) => item.id === updatedMedia.id)) {
+      updatedMediaItems.push(updatedMedia);
+    }
+
+    setMediaItems(updatedMediaItems);
+    updateContentSettings({
+      media: { ...contentSettings.media, images: updatedMediaItems },
+    });
+
+    showToast("Media updated successfully!", "success");
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 overflow-x-hidden">
@@ -662,26 +697,7 @@ export default function DirectMediaManagement() {
                         <button
                           onClick={() => {
                             setIsEditingMedia(false);
-                            setEditingMedia({
-                              ...editingMedia,
-                              id: Date.now().toString(),
-                              publicId: `local_${Date.now()}`,
-                              url: selectedFile
-                                ? URL.createObjectURL(selectedFile)
-                                : "",
-                              name: editingMedia.name,
-                              uploadedAt: new Date().toISOString(),
-                              inMediaSlider: editingMedia.inMediaSlider,
-                              type: selectedFile
-                                ? selectedFile.type.startsWith("video")
-                                  ? "video"
-                                  : "image"
-                                : "image",
-                              description: editingMedia.description,
-                            });
-                            setSelectedFile(null);
-                            setIsUploading(false);
-                            showToast("Media updated successfully!", "success");
+                            saveEditedMedia();
                           }}
                           className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md"
                         >

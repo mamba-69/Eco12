@@ -23,9 +23,10 @@ export default function BlogPosts() {
 
   // Load blog posts from store
   useEffect(() => {
-    if (contentSettings?.blog && contentSettings.blog.length > 0) {
+    const blogData = contentSettings?.blog || [];
+    if (blogData.length > 0) {
       // Only show published posts
-      const publishedPosts = contentSettings.blog.filter(
+      const publishedPosts = blogData.filter(
         (post: BlogPost) => post.status === "Published"
       );
       setBlogPosts(publishedPosts);
@@ -35,8 +36,9 @@ export default function BlogPosts() {
 
   // Listen for content setting changes
   useSettingsChangeListener((data) => {
-    if (data.settings?.contentSettings?.blog) {
-      const publishedPosts = data.settings.contentSettings.blog.filter(
+    if (data.contentSettings?.blog) {
+      const blogData = data.contentSettings.blog || [];
+      const publishedPosts = blogData.filter(
         (post: BlogPost) => post.status === "Published"
       );
       setBlogPosts(publishedPosts);

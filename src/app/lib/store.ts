@@ -35,7 +35,7 @@ export interface SiteSettings {
   }>;
 }
 
-interface ContentSettings {
+export interface ContentSettings {
   hero: {
     heading: string;
     subheading: string;

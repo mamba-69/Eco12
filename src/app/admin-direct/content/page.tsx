@@ -258,12 +258,12 @@ export default function DirectContentManagement() {
 
   // Listen for content setting changes
   useSettingsChangeListener((data) => {
-    if (data.settings?.contentSettings) {
-      if (data.settings.contentSettings.pages) {
-        setPages(data.settings.contentSettings.pages);
+    if (data.contentSettings) {
+      if (data.contentSettings.pages) {
+        setPages(data.contentSettings.pages);
       }
-      if (data.settings.contentSettings.blog) {
-        setBlogPosts(data.settings.contentSettings.blog);
+      if (data.contentSettings.blog) {
+        setBlogPosts(data.contentSettings.blog);
       }
       console.log("Content settings updated from:", data.source);
     }
