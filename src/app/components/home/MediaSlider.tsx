@@ -234,7 +234,7 @@ export function MediaSlider() {
   }
 
   if (mediaItems.length === 0) {
-    return (
+  return (
       <div className="w-full h-[400px] bg-gray-100 dark:bg-gray-800 flex items-center justify-center rounded-lg">
         <div className="text-center px-4">
           <h3 className="text-xl font-bold text-gray-700 dark:text-gray-300 mb-2">
@@ -243,8 +243,8 @@ export function MediaSlider() {
           <p className="text-sm text-gray-500 dark:text-gray-400">
             Add media items to the slider in the admin panel.
           </p>
-        </div>
-      </div>
+                    </div>
+                  </div>
     );
   }
 
@@ -261,13 +261,13 @@ export function MediaSlider() {
       {/* Current slide */}
       <div className="absolute inset-0">
         {isVideo ? (
-          <video
+                    <video
             src={imageUrl}
             className="w-full h-full object-contain"
             autoPlay
             loop
-            muted={isMuted}
-            playsInline
+                      muted={isMuted}
+                      playsInline
             onError={(e) => {
               console.error("Video error:", e);
               const target = e.target as HTMLVideoElement;
@@ -288,9 +288,9 @@ export function MediaSlider() {
                   "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&w=1200&q=80";
               }}
             />
-          </div>
-        )}
-
+                      </div>
+                    )}
+                    
         {/* Overlay for better text contrast - only at bottom */}
         <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/70 to-transparent"></div>
       </div>
@@ -327,10 +327,10 @@ export function MediaSlider() {
               d="M15 19l-7-7 7-7"
             />
           </svg>
-        </button>
-
+                        </button>
+                        
         {/* Next button */}
-        <button
+                        <button 
           onClick={nextSlide}
           className="w-10 h-10 rounded-full bg-green-600 hover:bg-green-700 flex items-center justify-center text-white transition-colors"
           aria-label="Next slide"
@@ -349,13 +349,13 @@ export function MediaSlider() {
               d="M9 5l7 7-7 7"
             />
           </svg>
-        </button>
-      </div>
-
+                        </button>
+                      </div>
+                      
       {/* Bottom controls */}
       <div className="absolute bottom-0 left-0 right-0 flex justify-center mb-6 space-x-1 z-10">
         {mediaItems.map((_, index) => (
-          <button
+                      <button 
             key={index}
             onClick={() => goToSlide(index)}
             className={`w-2.5 h-2.5 rounded-full ${
@@ -366,11 +366,11 @@ export function MediaSlider() {
             aria-label={`Go to slide ${index + 1}`}
           />
         ))}
-      </div>
-
+                  </div>
+            
       {/* Play/Pause and Mute controls (for videos) */}
       <div className="absolute top-4 right-4 space-x-2 flex">
-        <button
+            <button 
           onClick={togglePlay}
           className="w-8 h-8 rounded-full bg-black bg-opacity-50 flex items-center justify-center text-white transition-colors"
           aria-label={isPlaying ? "Pause slideshow" : "Play slideshow"}
@@ -412,7 +412,7 @@ export function MediaSlider() {
               />
             </svg>
           )}
-        </button>
+            </button>
 
         {isVideo && (
           <button

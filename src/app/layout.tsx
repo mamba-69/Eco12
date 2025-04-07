@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "./contexts/AuthContext";
+import { DataProvider } from "./contexts/DataContext";
+import AppwriteInit from "./components/layout/AppwriteInit";
+import Navbar from "./components/layout/Navbar";
+import Footer from "./components/layout/Footer";
 import ThemeProvider from "./components/theme/ThemeProvider";
-import { StoreProvider } from "./components/layout/StoreProvider";
-import FirebaseInit from "./components/layout/FirebaseInit";
-import Navbar from "@/app/components/layout/Navbar";
-import Footer from "@/app/components/layout/Footer";
 
 // Configure Inter font with fallback to system fonts
 const inter = Inter({
@@ -27,9 +28,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Eco-Expert Recycling - Electronic Waste Management Solutions",
-  description:
-    "Specialized in electronic waste recycling, data destruction, and IT asset management. Eco-friendly solutions for businesses and organizations.",
+  title: "E-Waste Recycling",
+  description: "Sustainable e-waste recycling solutions",
   icons: {
     icon: "/favicon.ico",
   },
@@ -37,23 +37,23 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
     <html lang="en" className={inter.className}>
       <body className="min-h-screen flex flex-col">
-        <ThemeProvider defaultTheme="dark" storageKey="theme">
-          <StoreProvider>
-            <FirebaseInit />
-            <div className="flex-1 flex flex-col">
-              <Navbar />
-              <main className="flex-1 isolate relative">{children}</main>
-              <div className="mt-auto">
+        <ThemeProvider>
+          <AuthProvider>
+            <DataProvider>
+              <AppwriteInit />
+              <div className="flex-1 flex flex-col">
+                <Navbar />
+                <main className="flex-1 isolate relative">{children}</main>
                 <Footer />
               </div>
-            </div>
-          </StoreProvider>
+            </DataProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

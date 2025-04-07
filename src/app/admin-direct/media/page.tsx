@@ -22,18 +22,9 @@ import { useStore } from "@/app/lib/store";
 import { useRouter } from "next/navigation";
 import {
   uploadMediaFromUrl,
-  deleteMediaItem as deleteMediaItemFromFirebase,
+  deleteMediaItem as deleteMediaItemFromAppwrite,
   MediaItem,
-} from "@/app/lib/firebase";
-
-// Type definition for the Cloudinary upload result
-interface CloudinaryResult {
-  public_id: string;
-  secure_url: string;
-  original_filename: string;
-  width: number;
-  height: number;
-}
+} from "@/app/lib/appwrite";
 
 // Custom Toast type
 interface Toast {
@@ -55,25 +46,28 @@ const DEFAULT_MEDIA_ITEMS: MediaItem[] = [
     publicId: "earth-graphic",
     uploadedAt: new Date().toISOString(),
     inMediaSlider: true,
-    description: "Beautiful earth view from space",
+    description: "Beautiful image of Earth from space",
+    type: "image",
   },
   {
     id: "2",
-    name: "Recycling Icon",
-    url: "https://images.unsplash.com/photo-1563089145-599997674d42?auto=format&fit=crop&w=1200&q=80",
-    publicId: "recycling-icon",
+    name: "Recycling Bins",
+    url: "https://images.unsplash.com/photo-1582408921715-16067da6a8f9?auto=format&fit=crop&w=1200&q=80",
+    publicId: "recycling-bins",
     uploadedAt: new Date().toISOString(),
     inMediaSlider: true,
-    description: "Green recycling concept",
+    description: "Colorful recycling bins for sorting waste",
+    type: "image",
   },
   {
     id: "3",
-    name: "Company Logo",
-    url: "https://i.postimg.cc/2SW1kwbf/Final.png",
-    publicId: "company-logo",
+    name: "Green Energy",
+    url: "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&w=1200&q=80",
+    publicId: "green-energy",
     uploadedAt: new Date().toISOString(),
-    inMediaSlider: false,
-    description: "Official company logo",
+    inMediaSlider: true,
+    description: "Solar panels powering eco-friendly solutions",
+    type: "image",
   },
 ];
 
@@ -200,6 +194,15 @@ export default function DirectMediaManagement() {
   // Check admin authentication similar to main admin page
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
+  // Function to process media items and ensure they have a type
+  const processMediaItems = (items: any[]): MediaItem[] => {
+    return items.map((item) => ({
+      ...item,
+      // Default to "image" if type is not specified
+      type: item.type || "image",
+    })) as MediaItem[];
+  };
+
   useEffect(() => {
     // Check for admin authentication before showing content
     const checkAdminAuth = () => {
@@ -227,7 +230,7 @@ export default function DirectMediaManagement() {
 
     // Load media from content settings on mount
     if (contentSettings?.media?.images?.length > 0) {
-      setMediaItems(contentSettings.media.images);
+      setMediaItems(processMediaItems(contentSettings.media.images));
     } else {
       // Use our updated default media items
       setMediaItems(DEFAULT_MEDIA_ITEMS);
@@ -250,7 +253,7 @@ export default function DirectMediaManagement() {
     }, 3000);
   };
 
-  // Handle external URL image upload using Firebase
+  // Handle external URL image upload using Appwrite
   const handleExternalImageUpload = async () => {
     if (!externalImageUrl) {
       showToast("Please enter an image URL", "error");
@@ -264,7 +267,7 @@ export default function DirectMediaManagement() {
       const isVideo = /\.(mp4|webm|ogg|mov)$/i.test(externalImageUrl);
       const mediaType = isVideo ? "video" : "image";
 
-      // Use our new Firebase upload function
+      // Use our Appwrite upload function
       const newMediaItem = await uploadMediaFromUrl(
         externalImageUrl,
         externalImageName || `Media ${Date.now()}`,
@@ -287,7 +290,7 @@ export default function DirectMediaManagement() {
       showToast(
         `${
           mediaType === "video" ? "Video" : "Image"
-        } uploaded successfully to Firebase`,
+        } uploaded successfully to Appwrite Storage`,
         "success"
       );
     } catch (error) {
@@ -314,20 +317,20 @@ export default function DirectMediaManagement() {
     );
     setMediaItems(updatedMediaItems);
 
-    // Update in global content settings with Firebase sync
+    // Update in global content settings with Appwrite sync
     updateContentSettings(
       {
         media: {
           images: updatedMediaItems,
         },
       },
-      true // Ensure Firebase sync is triggered
+      true // Ensure sync is triggered
     );
 
     showToast("Media updated successfully and synced to all clients");
   };
 
-  // Handle media deletion using Firebase
+  // Handle media deletion using Appwrite
   const deleteMediaItem = async (id: string) => {
     try {
       const itemToDelete = mediaItems.find((item) => item.id === id);
@@ -341,8 +344,8 @@ export default function DirectMediaManagement() {
       const updatedMediaItems = mediaItems.filter((item) => item.id !== id);
       setMediaItems(updatedMediaItems);
 
-      // Delete from Firebase Storage and update content settings
-      await deleteMediaItemFromFirebase(itemToDelete, contentSettings);
+      // Delete from Appwrite Storage and update content settings
+      await deleteMediaItemFromAppwrite(itemToDelete, contentSettings);
 
       showToast("Media deleted successfully", "success");
     } catch (error) {
@@ -356,13 +359,13 @@ export default function DirectMediaManagement() {
 
       // Reload the media items from contentSettings to restore state
       if (contentSettings?.media?.images) {
-        setMediaItems(contentSettings.media.images);
+        setMediaItems(processMediaItems(contentSettings.media.images));
       }
     }
   };
 
-  // Update the slider toggle to use Firebase updates
-  const setMediaItemToSlider = async (id: string, value: boolean) => {
+  // Update the slider toggle to use Appwrite updates
+  const setMediaItemToSlider = async (id: string, inSlider: boolean) => {
     try {
       // Find the media item to update
       const mediaItem = mediaItems.find((item) => item.id === id);
@@ -374,7 +377,7 @@ export default function DirectMediaManagement() {
       // Update the item in local state for immediate UI feedback
       const updatedMediaItems = mediaItems.map((item) => {
         if (item.id === id) {
-          return { ...item, inMediaSlider: value };
+          return { ...item, inMediaSlider: inSlider };
         }
         return item;
       });
@@ -388,7 +391,7 @@ export default function DirectMediaManagement() {
       // Update the media items in state
       setMediaItems(updatedMediaItems);
 
-      // Update content settings in Firebase
+      // Update content settings in Appwrite
       await updateContentSettings(
         {
           media: {
@@ -398,23 +401,18 @@ export default function DirectMediaManagement() {
         true
       );
 
-      if (value) {
+      if (inSlider) {
         showToast("Added to slider!", "success");
       } else {
         showToast("Removed from slider!", "info");
       }
     } catch (error) {
-      console.error("Error updating media slider status:", error);
-      showToast(
-        `Update failed: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`,
-        "error"
-      );
+      console.error("Error updating media item:", error);
+      showToast("Error updating media item", "error");
 
-      // Reload the media items from contentSettings on error
+      // Reload the media items from contentSettings to restore state
       if (contentSettings?.media?.images) {
-        setMediaItems(contentSettings.media.images);
+        setMediaItems(processMediaItems(contentSettings.media.images));
       }
     }
   };
@@ -447,7 +445,7 @@ export default function DirectMediaManagement() {
     </div>
   );
 
-  // Update the edit function to work with Firebase
+  // Update the edit function to work with Appwrite
   const saveEditedMedia = async () => {
     try {
       // Check if we have the necessary fields
@@ -481,7 +479,7 @@ export default function DirectMediaManagement() {
           return item;
         });
 
-        // Update in state and Firestore
+        // Update in state and Appwrite
         setMediaItems(updatedMediaItems);
         await updateContentSettings(
           {
@@ -491,7 +489,7 @@ export default function DirectMediaManagement() {
             },
           },
           true
-        ); // Ensure sync with Firebase
+        ); // Ensure sync with Appwrite
 
         showToast("Media updated successfully!", "success");
       } else {

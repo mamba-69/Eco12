@@ -61,7 +61,7 @@ const ServiceCard = ({
 }: ServiceCardProps) => {
   const cardRef = useRef(null);
   const isCardInView = useClientInView(cardRef);
-
+  
   return (
     <div
       ref={cardRef}
@@ -81,27 +81,27 @@ const ServiceCard = ({
     >
       {/* Gradient background that animates on hover */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
+      
       <div className="relative z-10 p-6">
         <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors duration-300">
           <Icon className="w-6 h-6 text-primary" />
         </div>
-
+        
         <h3 className="text-xl font-bold mb-3 group-hover:text-primary transition-colors">
           {title}
         </h3>
-
+        
         <p className="text-muted-foreground mb-4">{description}</p>
-
-        <Link
-          href={href}
+        
+        <Link 
+          href={href} 
           className="inline-flex items-center text-primary font-medium hover:underline"
         >
           Learn more
-          <svg
-            className="ml-1 w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-200"
-            fill="none"
-            viewBox="0 0 24 24"
+          <svg 
+            className="ml-1 w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-200" 
+            fill="none" 
+            viewBox="0 0 24 24" 
             stroke="currentColor"
           >
             <path
@@ -113,7 +113,7 @@ const ServiceCard = ({
           </svg>
         </Link>
       </div>
-
+      
       {/* Decorative corner accent */}
       <div className="absolute top-0 right-0 w-16 h-16 overflow-hidden">
         <div className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 rotate-45 bg-primary/10 w-8 h-32 group-hover:bg-primary/20 transition-colors duration-300"></div>
@@ -146,7 +146,7 @@ function AnimatedDots() {
       left: `${15 + i * 18}%`,
       duration: 5 + i * 1.5,
     }));
-
+    
     setDots(newDots);
   }, []);
 
@@ -174,11 +174,11 @@ export default function Features() {
   const sectionRef = useRef(null);
   const isInView = useClientInView(sectionRef);
   const [mounted, setMounted] = useState(false);
-
+  
   useEffect(() => {
     setMounted(true);
   }, []);
-
+  
   const services = [
     {
       icon: FiRefreshCw,
@@ -234,11 +234,11 @@ export default function Features() {
         <div className="absolute -right-40 -top-40 w-96 h-96 rounded-full bg-primary/5 blur-3xl" />
         <div className="absolute -left-20 top-40 w-72 h-72 rounded-full bg-accent/5 blur-3xl" />
         <div className="absolute right-20 bottom-10 w-80 h-80 rounded-full bg-secondary/5 blur-3xl" />
-
+        
         {/* Animated dots pattern - only client-side */}
         {mounted && <AnimatedDots />}
       </div>
-
+      
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <div
@@ -261,28 +261,28 @@ export default function Features() {
             </p>
           </div>
         </div>
-
+        
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {services.map((service, index) => (
             <ServiceCard key={index} {...service} index={index} />
           ))}
         </div>
-
+        
         <div
           className={`mt-16 text-center transition-all duration-500 ${
             isInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-20"
           }`}
           style={{ transitionDelay: "0.6s" }}
         >
-          <Link
-            href="/services"
+          <Link 
+            href="/services" 
             className="btn-primary inline-flex items-center"
           >
             View All Services
-            <svg
+            <svg 
               className="ml-2 w-5 h-5"
-              fill="none"
-              viewBox="0 0 24 24"
+              fill="none" 
+              viewBox="0 0 24 24" 
               stroke="currentColor"
             >
               <path
@@ -331,4 +331,4 @@ export default function Features() {
       </div>
     </section>
   );
-}
+} 

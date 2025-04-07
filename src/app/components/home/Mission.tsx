@@ -108,7 +108,7 @@ export default function Mission() {
       <div className="absolute inset-0 z-0">
         {/* Gradient backdrop */}
         <div className="absolute inset-0 bg-gradient-to-b from-card to-background opacity-80" />
-
+        
         {/* Flowing circles */}
         <div className="absolute top-20 left-10 w-72 h-72 rounded-full bg-primary/5 blur-3xl animate-pulse-slow" />
         <div
@@ -116,7 +116,7 @@ export default function Mission() {
           style={{ animationDelay: "1.5s" }}
         />
       </div>
-
+      
       <div className="container mx-auto px-4 relative z-10" ref={containerRef}>
         {/* Section Header */}
         <div
@@ -163,8 +163,8 @@ export default function Mission() {
                       Devices Recycled
                     </p>
                     <p className="text-xl font-bold">50K+</p>
-                  </div>
-
+              </div>
+              
                   {/* Stats overlay - bottom */}
                   <div className="absolute bottom-5 left-5 p-3 rounded-lg bg-background/90 animate-pulse-slow pointer-events-none">
                     <p className="text-sm font-semibold text-muted-foreground">
@@ -173,7 +173,7 @@ export default function Mission() {
                     <p className="text-xl font-bold">95%</p>
                   </div>
                 </div>
-              </div>
+                </div>
             </div>
           </div>
 
@@ -206,7 +206,7 @@ export default function Mission() {
                     </div>
                   </div>
                 </div>
-
+                
                 {/* Decorative line connecting points */}
                 {index < missionPoints.length - 1 && (
                   <div className="absolute left-6 top-[4.5rem] h-[calc(100%-1rem)] w-0 border-l-2 border-dashed border-primary/20" />
@@ -225,12 +225,12 @@ export default function Mission() {
         >
           {stats.map((stat, index) => (
             <div
-              key={index}
+              key={index} 
               className="text-center p-6 rounded-lg bg-card border border-border/60 shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-300"
             >
-              <CountUpAnimation
-                className="text-3xl md:text-4xl font-bold text-primary mb-2"
-                end={stat.value}
+              <CountUpAnimation 
+                className="text-3xl md:text-4xl font-bold text-primary mb-2" 
+                end={stat.value} 
                 suffix={stat.suffix}
                 isInView={isInView}
               />
@@ -248,10 +248,10 @@ export default function Mission() {
         >
           <button className="btn-primary py-3 px-8 text-lg inline-flex items-center gap-2 shadow-lg hover:scale-105 hover:shadow-xl transition-all duration-300">
             Join Our Mission
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              viewBox="0 0 24 24"
+            <svg 
+              className="w-5 h-5" 
+              fill="none" 
+              viewBox="0 0 24 24" 
               stroke="currentColor"
             >
               <path
@@ -278,10 +278,10 @@ interface CountUpAnimationProps {
 }
 
 // CountUpAnimation component
-function CountUpAnimation({
-  end,
-  className = "",
-  suffix = "",
+function CountUpAnimation({ 
+  end, 
+  className = "", 
+  suffix = "", 
   isInView,
   duration = 2.5,
 }: CountUpAnimationProps) {

@@ -9,7 +9,7 @@ export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const { theme, setTheme } = useTheme();
-
+  
   // Handle scroll events
   useEffect(() => {
     const handleScroll = () => {
@@ -58,8 +58,8 @@ export default function Navbar() {
               </span>
               <span className="text-xs text-gray-400 hidden sm:block">
                 RECYCLING PVT. LTD.
-              </span>
-            </div>
+        </span>
+      </div>
           </Link>
 
           {/* Desktop Navigation */}
@@ -87,7 +87,7 @@ export default function Navbar() {
               className="text-white hover:text-green-400 transition-colors"
             >
               Blog
-            </Link>
+        </Link>
             <Link
               href="/contact"
               className="text-white hover:text-green-400 transition-colors"
@@ -102,9 +102,9 @@ export default function Navbar() {
             <button
               onClick={toggleTheme}
               className="w-9 h-9 rounded-full flex items-center justify-center text-white bg-gray-800 hover:bg-gray-700 transition-colors"
-              aria-label="Toggle theme"
-            >
-              {theme === "dark" ? (
+            aria-label="Toggle theme"
+          >
+            {theme === "dark" ? (
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -153,11 +153,11 @@ export default function Navbar() {
               </Link>
             </div> */}
 
-            {/* Mobile menu button */}
+        {/* Mobile menu button */}
             <button
               onClick={toggleMenu}
               className="md:hidden w-9 h-9 rounded-full flex items-center justify-center text-white bg-gray-800 hover:bg-gray-700 transition-colors"
-              aria-label="Toggle menu"
+          aria-label="Toggle menu"
             >
               {isMenuOpen ? (
                 <svg
@@ -192,10 +192,10 @@ export default function Navbar() {
               )}
             </button>
           </div>
-        </div>
+      </div>
 
         {/* Mobile Navigation Menu */}
-        {isMenuOpen && (
+      {isMenuOpen && (
           <div className="md:hidden pt-4 pb-2 border-t border-gray-800 mt-4">
             <div className="flex flex-col space-y-2">
               <Link
@@ -253,7 +253,7 @@ export default function Navbar() {
             </div>
           </div>
         )}
-      </div>
-    </nav>
+            </div>
+          </nav>
   );
-}
+} 

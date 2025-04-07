@@ -101,144 +101,106 @@ if (typeof window !== "undefined") {
       }
     });
 
-    console.log(
-      "SiteBridge: Initialized fallback communication via localStorage"
-    );
+    console.log("SiteBridge: Fallback to localStorage initialized");
   }
 }
 
 /**
- * Broadcast settings changes efficiently
+ * Broadcast settings changes to all connected components
+ * @param data The settings data to broadcast
  */
-export function broadcastSettingsChange(data: {
-  settings?: Partial<SiteSettings>;
-  contentSettings?: Partial<ContentSettings>;
-  source: "admin" | "client";
-}) {
-  if (typeof window === "undefined") {
-    console.warn("SiteBridge: Cannot broadcast in server environment");
-    return;
-  }
-
-  console.log("SiteBridge: Broadcasting settings change:", data);
-
+export function broadcastSettingsChange(
+  type: "siteSettings" | "contentSettings",
+  data: any
+) {
   const message: SettingsChangeMessage = {
     type: "settings-change",
-    settings: data.settings,
-    contentSettings: data.contentSettings,
-    source: data.source,
+    source: "admin",
   };
 
-  // Try the BroadcastChannel first
+  if (type === "siteSettings") {
+    message.settings = data;
+  } else if (type === "contentSettings") {
+    message.contentSettings = data;
+  }
+
+  // Try to use BroadcastChannel first
   if (channel) {
     try {
       channel.postMessage(message);
-      console.log("SiteBridge: Message sent via BroadcastChannel");
+      console.log("SiteBridge: Settings change broadcast via BroadcastChannel");
+      return;
     } catch (error) {
-      console.error(
-        "SiteBridge: Error broadcasting via BroadcastChannel:",
-        error
-      );
-
-      // Fallback to localStorage
-      try {
-        localStorage.setItem(
-          "eco-expert-settings-bridge",
-          JSON.stringify(message)
-        );
-        console.log("SiteBridge: Message sent via localStorage fallback");
-      } catch (localStorageError) {
-        console.error(
-          "SiteBridge: Error broadcasting via localStorage:",
-          localStorageError
-        );
-      }
+      console.error("SiteBridge: Error using BroadcastChannel:", error);
     }
-  } else {
-    // No BroadcastChannel, use localStorage
+  }
+
+  // Fallback to localStorage
+  if (typeof window !== "undefined") {
     try {
       localStorage.setItem(
         "eco-expert-settings-bridge",
         JSON.stringify(message)
       );
-      console.log("SiteBridge: Message sent via localStorage (primary)");
+      console.log("SiteBridge: Settings change broadcast via localStorage");
     } catch (error) {
-      console.error("SiteBridge: Error broadcasting via localStorage:", error);
+      console.error("SiteBridge: Error using localStorage fallback:", error);
     }
   }
-
-  // Always notify local listeners directly
-  listeners.forEach((listener) => {
-    try {
-      listener(data);
-    } catch (error) {
-      console.error("SiteBridge: Error in local listener notification:", error);
-    }
-  });
 }
 
 /**
- * Performance-optimized hook to listen for settings changes
+ * Hook to listen for settings changes
+ * @param callback Function to call when settings change
  */
 export function useSettingsChangeListener(callback: SettingsChangeListener) {
   useEffect(() => {
-    // Register the listener when the component mounts
-    if (typeof window !== "undefined") {
-      console.log("SiteBridge: Registering new settings change listener");
+    // Add the callback to the listeners array
+    listeners.push(callback);
 
-      // Add listener if it doesn't already exist
-      if (!listeners.includes(callback)) {
-        listeners.push(callback);
+    // Clean up when the component unmounts
+    return () => {
+      const index = listeners.indexOf(callback);
+      if (index !== -1) {
+        listeners.splice(index, 1);
       }
-
-      // Return cleanup function to remove listener
-      return () => {
-        console.log("SiteBridge: Removing settings change listener");
-        const index = listeners.indexOf(callback);
-        if (index !== -1) {
-          listeners.splice(index, 1);
-        }
-      };
-    }
-
-    // Return no-op cleanup for SSR
-    return () => {};
+    };
   }, [callback]);
 }
 
 /**
- * Simple, efficient debounce function
+ * Debounce function to limit how often a function can be called
+ * @param func The function to debounce
+ * @param delay The delay in milliseconds
  */
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
   delay: number
 ): (...args: Parameters<T>) => void {
-  let timeoutId: ReturnType<typeof setTimeout> | null = null;
-
-  return function (...args: Parameters<T>) {
+  let timeoutId: NodeJS.Timeout | null = null;
+  
+  return (...args: Parameters<T>) => {
     if (timeoutId) {
       clearTimeout(timeoutId);
     }
-
+    
     timeoutId = setTimeout(() => {
       func(...args);
-      timeoutId = null;
     }, delay);
   };
 }
 
 /**
- * Force refresh a component
- * This is useful for components that don't naturally react to store updates
+ * Hook to force a refresh of the component
  */
 export function useForceRefresh() {
-  const [, setForceUpdate] = useState(0);
-
-  const forceRefresh = useCallback(() => {
-    setForceUpdate((prev) => prev + 1);
+  const [, setTick] = useState(0);
+  
+  const refresh = useCallback(() => {
+    setTick((tick) => tick + 1);
   }, []);
-
-  return forceRefresh;
+  
+  return refresh;
 }
 
 // Close the channel when the page unloads

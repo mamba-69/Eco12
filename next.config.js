@@ -5,10 +5,10 @@ const nextConfig = {
   images: {
     domains: [
       "placehold.co",
-      "res.cloudinary.com",
       "images.unsplash.com",
       "i.postimg.cc",
       "commondatastorage.googleapis.com",
+      "cloud.appwrite.io",
     ],
     unoptimized: true,
   },

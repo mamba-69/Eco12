@@ -252,7 +252,7 @@ export default function Footer() {
                 </a>
               </li>
             </ul>
-          </div>
+        </div>
 
           {/* Contact */}
           <div>
@@ -291,4 +291,4 @@ export default function Footer() {
       </div>
     </footer>
   );
-}
+} 

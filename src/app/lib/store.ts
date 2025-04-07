@@ -2,13 +2,12 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { broadcastSettingsChange } from "./sitebridge";
 import {
-  saveSettingsToStorage,
-  saveContentToStorage,
-  watchSettings,
-  watchContent,
-  loadSettingsFromStorage,
-  loadContentFromStorage,
-} from "./firebase";
+  getDocument,
+  updateDocument,
+  createDocument,
+  COLLECTIONS,
+  DATABASE_ID,
+} from "./appwrite";
 
 // Define types for our store
 export interface SiteSettings {
@@ -98,288 +97,239 @@ interface SiteStore {
   updateSiteSettings: (
     settings: Partial<SiteSettings>,
     shouldBroadcast?: boolean
-  ) => void;
+  ) => Promise<void>;
   updateContentSettings: (
     settings: Partial<ContentSettings>,
     shouldBroadcast?: boolean
-  ) => void;
+  ) => Promise<void>;
+  loadSettingsFromStorage: () => Promise<void>;
+  loadContentFromStorage: () => Promise<void>;
 }
 
-// Default site settings
-const defaultSettings: SiteSettings = {
+// Default settings
+export const defaultSiteSettings: SiteSettings = {
   siteName: "Eco-Expert Recycling",
-  siteDescription:
-    "Leading e-waste recycling company with sustainable solutions for a greener future.",
-  logoUrl: "https://i.postimg.cc/2SW1kwbf/Final.png",
-  primaryColor: "#2ECC71",
-  footerText:
-    "© " + new Date().getFullYear() + " EcoVerva. All rights reserved.",
-  contactEmail: "experttechnology2016@gmail.com",
-  contactPhone: "91+ 7096444414",
-  contactAddress:
-    "Unit 1116, 1117 & 1119, 11th Floor BPTP Park Centra, Sector 30 NH8, Gurgaon, Haryana 122001",
+  siteDescription: "Sustainable e-waste recycling solutions",
+  logoUrl: "/logo.png",
+  primaryColor: "#10B981",
+  footerText: "© 2023 Eco-Expert Recycling. All rights reserved.",
+  contactEmail: "info@ecoexpert.com",
+  contactPhone: "+1 (555) 123-4567",
+  contactAddress: "123 Recycling Lane, Green City, GC 12345",
   socialLinks: {
-    facebook: "https://facebook.com",
-    twitter: "https://twitter.com",
-    instagram: "https://instagram.com",
-    linkedin: "https://linkedin.com",
+    facebook: "https://facebook.com/ecoexpert",
+    twitter: "https://twitter.com/ecoexpert",
+    instagram: "https://instagram.com/ecoexpert",
+    linkedin: "https://linkedin.com/company/ecoexpert",
   },
-  users: [],
 };
 
-// Default content settings
-const defaultContentSettings: ContentSettings = {
+export const defaultContentSettings: ContentSettings = {
   hero: {
-    heading: "Recycle E-Waste for a Greener Tomorrow",
+    heading: "Sustainable E-Waste Recycling Solutions",
     subheading:
-      "Join our mission to create a sustainable future through responsible electronics recycling",
-    ctaText: "Recycle Now",
-    ctaLink: "/recycle",
+      "Properly dispose of your electronic waste with our eco-friendly recycling services",
+    ctaText: "Get Started",
+    ctaLink: "/contact",
   },
   mission: {
     heading: "Our Mission",
     description:
-      "We are committed to reducing e-waste through responsible recycling practices, education, and community engagement. Our goal is to create a sustainable future where electronics are recycled properly, reducing environmental impact and conserving valuable resources.",
+      "We are committed to reducing electronic waste and promoting sustainable recycling practices.",
     points: [
-      "Reduce environmental pollution from e-waste",
-      "Recover valuable materials from old electronics",
-      "Provide safe disposal of hazardous components",
-      "Educate communities on responsible recycling",
+      "Reduce electronic waste in landfills",
+      "Recover valuable materials from e-waste",
+      "Promote sustainable recycling practices",
+      "Educate communities about e-waste management",
     ],
   },
   achievements: {
     heading: "Our Impact",
     stats: [
-      { value: "50,000+", label: "Devices Recycled" },
-      { value: "500+", label: "Tons of E-Waste Processed" },
-      { value: "5,000+", label: "Trees Saved" },
+      { value: "10,000+", label: "Devices Recycled" },
+      { value: "50+", label: "Tons Processed" },
+      { value: "100+", label: "Trees Saved" },
       { value: "25+", label: "Community Programs" },
     ],
   },
   videos: {
-    heading: "See Our Work in Action",
+    heading: "Our Work in Action",
     videos: [
       {
         title: "Recycling Process",
-        url: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-        thumbnail: "/images/video-thumbnail-1.jpg",
+        url: "https://www.youtube.com/embed/example1",
+        thumbnail: "/videos/process-thumbnail.jpg",
       },
       {
         title: "Community Impact",
-        url: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-        thumbnail: "/images/video-thumbnail-2.jpg",
-      },
-      {
-        title: "Customer Stories",
-        url: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-        thumbnail: "/images/video-thumbnail-3.jpg",
+        url: "https://www.youtube.com/embed/example2",
+        thumbnail: "/videos/impact-thumbnail.jpg",
       },
     ],
   },
   media: {
     images: [],
   },
-  pages: [
-    {
-      id: "1",
-      title: "Home Page",
-      path: "/",
-      content: "Welcome to our eco-friendly recycling service.",
-      lastUpdated: new Date().toISOString(),
-    },
-    {
-      id: "2",
-      title: "About Us",
-      path: "/about",
-      content: "Learn about our mission and values.",
-      lastUpdated: new Date().toISOString(),
-    },
-    {
-      id: "3",
-      title: "Services",
-      path: "/services",
-      content: "Explore our recycling services.",
-      lastUpdated: new Date().toISOString(),
-    },
-    {
-      id: "4",
-      title: "Contact",
-      path: "/contact",
-      content: "Get in touch with our team.",
-      lastUpdated: new Date().toISOString(),
-    },
-  ],
-  blog: [
-    {
-      id: "1",
-      title: "Understanding E-Waste Management",
-      excerpt: "Learn about the importance of proper e-waste disposal.",
-      content: "E-waste management is crucial for our planet's health...",
-      status: "Published",
-      author: "Admin",
-      date: new Date().toISOString(),
-    },
-    {
-      id: "2",
-      title: "The Impact of Recycling Electronics",
-      excerpt: "Discover how recycling electronics can make a difference.",
-      content: "Recycling electronics has a significant positive impact...",
-      status: "Published",
-      author: "Admin",
-      date: new Date().toISOString(),
-    },
-    {
-      id: "3",
-      title: "Corporate Sustainability Programs",
-      excerpt: "How businesses can implement effective recycling programs.",
-      content:
-        "Corporate sustainability is not just good for the environment...",
-      status: "Draft",
-      author: "Admin",
-      date: new Date().toISOString(),
-    },
-  ],
 };
 
-// Create the store with persistence
-const useStore = create<SiteStore>()(
+// Helper functions to serialize/deserialize JSON data
+const serializeJsonFields = (data: any) => {
+  const result = { ...data };
+
+  // Convert JSON objects to strings for Appwrite storage
+  if (result.hero) result.hero = JSON.stringify(result.hero);
+  if (result.mission) result.mission = JSON.stringify(result.mission);
+  if (result.achievements)
+    result.achievements = JSON.stringify(result.achievements);
+  if (result.videos) result.videos = JSON.stringify(result.videos);
+  if (result.media) result.media = JSON.stringify(result.media);
+  if (result.pages) result.pages = JSON.stringify(result.pages);
+  if (result.blog) result.blog = JSON.stringify(result.blog);
+  if (result.socialLinks)
+    result.socialLinks = JSON.stringify(result.socialLinks);
+
+  return result;
+};
+
+const deserializeJsonFields = (data: any): any => {
+  const result = { ...data };
+
+  // Parse JSON strings back to objects
+  try {
+    if (typeof result.hero === "string") result.hero = JSON.parse(result.hero);
+    if (typeof result.mission === "string")
+      result.mission = JSON.parse(result.mission);
+    if (typeof result.achievements === "string")
+      result.achievements = JSON.parse(result.achievements);
+    if (typeof result.videos === "string")
+      result.videos = JSON.parse(result.videos);
+    if (typeof result.media === "string")
+      result.media = JSON.parse(result.media);
+    if (typeof result.pages === "string")
+      result.pages = JSON.parse(result.pages);
+    if (typeof result.blog === "string") result.blog = JSON.parse(result.blog);
+    if (typeof result.socialLinks === "string")
+      result.socialLinks = JSON.parse(result.socialLinks);
+  } catch (error) {
+    console.error("Error parsing JSON fields:", error);
+  }
+
+  return result;
+};
+
+// Create the store
+export const useStore = create<SiteStore>()(
   persist(
     (set, get) => ({
       // Initial state
-      siteSettings: defaultSettings,
+      siteSettings: defaultSiteSettings,
       contentSettings: defaultContentSettings,
 
-      // Update site settings
-      updateSiteSettings: (
-        settings: Partial<SiteSettings>,
-        shouldBroadcast = true
-      ) => {
-        // Important: First update the local state immediately
+      // Actions
+      updateSiteSettings: async (settings, shouldBroadcast = true) => {
         const currentSettings = get().siteSettings;
-        const newSettings = { ...currentSettings, ...settings };
+        const updatedSettings = { ...currentSettings, ...settings };
 
-        // Update local state first for immediate UI feedback
-        set({ siteSettings: newSettings });
+        try {
+          // Serialize JSON fields before sending to Appwrite
+          const serializedSettings = serializeJsonFields(updatedSettings);
 
-        // Log what we're saving
-        console.log("Store: Updating settings:", settings);
-        console.log("Store: New full settings state:", newSettings);
-
-        // Save to Firebase Storage if it's available
-        if (typeof window !== "undefined") {
-          try {
-            console.log(
-              "Store: Attempting to save settings to Firebase Storage"
-            );
-            saveSettingsToStorage(newSettings)
-              .then((success) => {
-                if (success) {
-                  console.log(
-                    "Store: Settings saved to Firebase Storage successfully"
-                  );
-
-                  // Broadcast changes to other components if requested
-                  if (shouldBroadcast) {
-                    console.log(
-                      "Store: Broadcasting settings change to other components"
-                    );
-                    broadcastSettingsChange({
-                      settings,
-                      source: "admin",
-                    });
-                  }
-                } else {
-                  console.error(
-                    "Store: Failed to save settings to Firebase Storage"
-                  );
-                }
-              })
-              .catch((error) => {
-                console.error(
-                  "Store: Error saving settings to Firebase Storage:",
-                  error
-                );
-              });
-          } catch (error) {
-            console.error("Store: Error in store when saving settings:", error);
-          }
-        } else {
-          console.warn(
-            "Store: Window not available, skipping Firebase Storage save"
+          // Update in Appwrite
+          await updateDocument(
+            COLLECTIONS.SETTINGS,
+            "main",
+            serializedSettings
           );
+
+          // Update local state
+          set({ siteSettings: updatedSettings });
+
+          // Broadcast changes if needed
+          if (shouldBroadcast) {
+            broadcastSettingsChange("siteSettings", updatedSettings);
+          }
+        } catch (error) {
+          console.error("Error updating site settings:", error);
+          throw error;
         }
       },
 
-      // Update content settings
-      updateContentSettings: (
-        content: Partial<ContentSettings>,
-        shouldBroadcast = true
-      ) => {
-        // Important: First update the local state immediately
+      updateContentSettings: async (settings, shouldBroadcast = true) => {
         const currentContent = get().contentSettings;
-        const newContent = { ...currentContent, ...content };
+        const updatedContent = { ...currentContent, ...settings };
 
-        // Update local state first for immediate UI feedback
-        set({ contentSettings: newContent });
+        try {
+          // Serialize JSON fields before sending to Appwrite
+          const serializedContent = serializeJsonFields(updatedContent);
 
-        // Log what we're saving
-        console.log("Store: Updating content:", content);
-        console.log("Store: New full content state:", Object.keys(newContent));
+          // Update in Appwrite
+          await updateDocument(COLLECTIONS.CONTENT, "main", serializedContent);
 
-        // Save to Firebase Storage if it's available
-        if (typeof window !== "undefined") {
-          try {
-            console.log(
-              "Store: Attempting to save content to Firebase Storage"
-            );
-            saveContentToStorage(newContent)
-              .then((success) => {
-                if (success) {
-                  console.log(
-                    "Store: Content saved to Firebase Storage successfully"
-                  );
+          // Update local state
+          set({ contentSettings: updatedContent });
 
-                  // Broadcast changes to other components if requested
-                  if (shouldBroadcast) {
-                    console.log(
-                      "Store: Broadcasting content change to other components"
-                    );
-                    broadcastSettingsChange({
-                      contentSettings: content,
-                      source: "admin",
-                    });
-                  }
-                } else {
-                  console.error(
-                    "Store: Failed to save content to Firebase Storage"
-                  );
-                }
-              })
-              .catch((error) => {
-                console.error(
-                  "Store: Error saving content to Firebase Storage:",
-                  error
-                );
-              });
-          } catch (error) {
-            console.error("Store: Error in store when saving content:", error);
+          // Broadcast changes if needed
+          if (shouldBroadcast) {
+            broadcastSettingsChange("contentSettings", updatedContent);
           }
-        } else {
-          console.warn(
-            "Store: Window not available, skipping Firebase Storage save"
-          );
+        } catch (error) {
+          console.error("Error updating content settings:", error);
+          throw error;
+        }
+      },
+
+      loadSettingsFromStorage: async () => {
+        try {
+          const settings = await getDocument(COLLECTIONS.SETTINGS, "main");
+          if (settings) {
+            // Deserialize JSON strings back to objects
+            const deserializedSettings = deserializeJsonFields(settings);
+            set({ siteSettings: deserializedSettings as SiteSettings });
+          }
+        } catch (error) {
+          console.error("Error loading settings:", error);
+          // If document doesn't exist, create it with defaults
+          try {
+            const serializedSettings = serializeJsonFields(defaultSiteSettings);
+            await createDocument(
+              COLLECTIONS.SETTINGS,
+              serializedSettings,
+              "main"
+            );
+          } catch (createError) {
+            console.error("Error creating default settings:", createError);
+          }
+        }
+      },
+
+      loadContentFromStorage: async () => {
+        try {
+          const content = await getDocument(COLLECTIONS.CONTENT, "main");
+          if (content) {
+            // Deserialize JSON strings back to objects
+            const deserializedContent = deserializeJsonFields(content);
+            set({ contentSettings: deserializedContent as ContentSettings });
+          }
+        } catch (error) {
+          console.error("Error loading content:", error);
+          // If document doesn't exist, create it with defaults
+          try {
+            const serializedContent = serializeJsonFields(
+              defaultContentSettings
+            );
+            await createDocument(
+              COLLECTIONS.CONTENT,
+              serializedContent,
+              "main"
+            );
+          } catch (createError) {
+            console.error("Error creating default content:", createError);
+          }
         }
       },
     }),
     {
-      name: "eco-expert-site-storage",
-      // Don't use skipHydration as it's causing issues
-      // Instead we'll handle initialization more carefully
+      name: "site-store",
     }
   )
 );
-
-// Don't initialize Firebase listeners here
-// This is now handled in FirebaseInit component
-
-export { useStore };

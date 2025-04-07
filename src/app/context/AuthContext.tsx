@@ -1,8 +1,35 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect } from "react";
-import { User, Session } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
+import { Models } from "appwrite";
+
+// Define our own User and Session types based on Appwrite models
+type User = {
+  id: string;
+  email: string;
+  user_metadata?: {
+    full_name?: string;
+    role?: string;
+  };
+  app_metadata?: {
+    role?: string;
+  };
+  role?: string;
+  aud?: string;
+  created_at?: string;
+  confirmed_at?: string;
+  last_sign_in_at?: string;
+  updated_at?: string;
+};
+
+type Session = {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  expires_at: number;
+  user: User;
+};
 
 // Simple cookie management functions
 function setCookie(name: string, value: string, days: number) {
