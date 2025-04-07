@@ -27,10 +27,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     null
   );
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
+  // Set mounted flag when component mounts on client
   useEffect(() => {
-    checkAuth();
+    setMounted(true);
   }, []);
+
+  // Check authentication status after component mounts
+  useEffect(() => {
+    if (!mounted) return;
+
+    checkAuth();
+  }, [mounted]);
 
   const checkAuth = async () => {
     try {
@@ -67,7 +76,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     <AuthContext.Provider
       value={{
         user,
-        loading,
+        loading: !mounted || loading, // Consider loading until mounted
         login,
         logout,
         isAuthenticated: !!user,

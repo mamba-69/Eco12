@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { Inter } from "next/font/google";
@@ -35,18 +35,47 @@ export default function AdminClientLayout({
 }) {
   const { isAuthenticated, loading } = useAuth();
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+
+  // Set mounted state after hydration
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
+    if (mounted && !loading && !isAuthenticated) {
       router.push("/admin-direct/login");
     }
-  }, [isAuthenticated, loading, router]);
+  }, [isAuthenticated, loading, router, mounted]);
+
+  // Don't render anything until after hydration to prevent mismatch
+  if (!mounted) {
+    return (
+      <html lang="en" suppressHydrationWarning>
+        <body
+          className={`${inter.className} admin-layout`}
+          suppressHydrationWarning
+        >
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+          </div>
+        </body>
+      </html>
+    );
+  }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
-      </div>
+      <html lang="en" suppressHydrationWarning>
+        <body
+          className={`${inter.className} admin-layout`}
+          suppressHydrationWarning
+        >
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+          </div>
+        </body>
+      </html>
     );
   }
 

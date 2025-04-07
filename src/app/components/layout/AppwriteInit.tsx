@@ -14,22 +14,32 @@ import { useRealtimeUpdates } from "@/app/lib/realtime";
 import { defaultContentSettings, defaultSiteSettings } from "@/app/lib/store";
 
 export default function AppwriteInit() {
+  const [mounted, setMounted] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [collectionsAvailable, setCollectionsAvailable] = useState(false);
   const { loadSettingsFromStorage, loadContentFromStorage } = useStore();
 
-  // Debug appwrite configuration
+  // First, ensure we're only running on client-side
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Debug appwrite configuration only when mounted on client
+  useEffect(() => {
+    if (!mounted) return;
+
     console.log("Appwrite Configuration:");
     console.log("DATABASE_ID:", DATABASE_ID);
     console.log("COLLECTIONS:", COLLECTIONS);
     console.log("Client Configured:", !!client);
-  }, []);
+  }, [mounted]);
 
-  // Check collections first
+  // Check collections after mounting
   useEffect(() => {
+    if (!mounted) return;
+
     const checkCollections = async () => {
       try {
         console.log("Checking collections...");
@@ -54,13 +64,15 @@ export default function AppwriteInit() {
     };
 
     checkCollections();
-  }, []);
+  }, [mounted]);
 
   // Initialize real-time updates with connection status
   const { isConnected } = useRealtimeUpdates();
 
   // Check WebSocket connection
   useEffect(() => {
+    if (!mounted) return;
+
     if (!isConnected && initialized && retryCount < 3) {
       console.log("WebSocket connection failed, retrying...");
       // Wait a bit before retrying
@@ -71,15 +83,14 @@ export default function AppwriteInit() {
 
       return () => clearTimeout(timer);
     }
-  }, [isConnected, initialized, retryCount]);
+  }, [isConnected, initialized, retryCount, mounted]);
 
   useEffect(() => {
-    const initializeData = async () => {
-      if (!collectionsAvailable) {
-        console.log("Collections not available yet. Waiting...");
-        return;
-      }
+    if (!mounted) return;
+    if (!collectionsAvailable) return;
+    if (initialized) return;
 
+    const initializeData = async () => {
       try {
         console.log("Initializing Appwrite data...");
 
@@ -99,14 +110,13 @@ export default function AppwriteInit() {
       }
     };
 
-    if (!initialized && collectionsAvailable) {
-      initializeData();
-    }
+    initializeData();
   }, [
     loadSettingsFromStorage,
     loadContentFromStorage,
     initialized,
     collectionsAvailable,
+    mounted,
   ]);
 
   // Function to force create initial documents
@@ -185,6 +195,9 @@ export default function AppwriteInit() {
       throw error;
     }
   };
+
+  // If not mounted, don't render anything to prevent hydration mismatch
+  if (!mounted) return null;
 
   // Display error message if initialization failed
   if (error) {
