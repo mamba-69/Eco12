@@ -8,15 +8,29 @@ import {
   Role,
 } from "appwrite";
 
-// Initialize Appwrite client
-const client = new Client()
-  .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
-  .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!);
+// Initialize Appwrite client only on the client side
+let client: Client;
+let account: Account;
+let databases: Databases;
+let storage: Storage;
 
-// Initialize Appwrite services
-const account = new Account(client);
-const databases = new Databases(client);
-const storage = new Storage(client);
+// Check if code is running in browser environment
+if (typeof window !== 'undefined') {
+  client = new Client()
+    .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
+    .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!);
+
+  // Initialize Appwrite services
+  account = new Account(client);
+  databases = new Databases(client);
+  storage = new Storage(client);
+} else {
+  // Create dummy instances for server-side that will be replaced on client
+  client = new Client();
+  account = new Account(client);
+  databases = new Databases(client);
+  storage = new Storage(client);
+}
 
 // Database and collection IDs
 const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!;
