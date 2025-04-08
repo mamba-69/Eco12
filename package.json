@@ -2,21 +2,27 @@
   "name": "eco-expert-recycling",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "description": "E-waste recycling platform built with Next.js",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "setup-appwrite": "node scripts/setup-appwrite.js",
+    "init-appwrite": "node scripts/init-appwrite-data.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
     "appwrite": "^17.0.1",
     "cookies-next": "^4.1.0",
+    "dotenv": "^16.4.7",
     "framer-motion": "^12.6.3",
     "gsap": "^3.12.4",
     "next": "^13.4.19",
     "next-themes": "^0.2.1",
+    "node-appwrite": "^15.0.1",
+    "node-fetch": "^3.3.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.49.2",

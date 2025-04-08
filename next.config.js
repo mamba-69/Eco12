@@ -39,4 +39,4 @@ const nextConfig = {
   // Removed standalone output
 };
 
-module.exports = nextConfig;
+export default nextConfig;
