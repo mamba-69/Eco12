@@ -12,12 +12,17 @@ import {
 } from "@/app/lib/appwrite";
 import { useRealtimeUpdates } from "@/app/lib/realtime";
 import { defaultContentSettings, defaultSiteSettings } from "@/app/lib/store";
+import { createCollections } from "@/app/lib/createCollections";
+import { createStorageBucket } from "@/app/lib/createStorageBucket";
 
 export default function AppwriteInit() {
   const [initialized, setInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [collectionsAvailable, setCollectionsAvailable] = useState(false);
+  const [creatingCollections, setCreatingCollections] = useState(false);
+  const [bucketAvailable, setBucketAvailable] = useState(false);
+  const [creatingBucket, setCreatingBucket] = useState(false);
   const { loadSettingsFromStorage, loadContentFromStorage } = useStore();
   const isMounted = useRef(true);
 
@@ -30,10 +35,16 @@ export default function AppwriteInit() {
 
   // Debug appwrite configuration
   useEffect(() => {
+    const endpoint = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT;
+    const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID;
+    const databaseId = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
+    const mediaBucketId = process.env.NEXT_PUBLIC_APPWRITE_MEDIA_BUCKET_ID;
+
     console.log("Appwrite Configuration:");
-    console.log("ENDPOINT:", process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT);
-    console.log("PROJECT_ID:", process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID);
-    console.log("DATABASE_ID:", DATABASE_ID);
+    console.log("ENDPOINT:", endpoint);
+    console.log("PROJECT_ID:", projectId);
+    console.log("DATABASE_ID:", databaseId);
+    console.log("MEDIA_BUCKET_ID:", mediaBucketId);
     console.log("COLLECTIONS:", COLLECTIONS);
     console.log("Client Configured:", !!client);
 
@@ -41,12 +52,14 @@ export default function AppwriteInit() {
     const testConnection = async () => {
       try {
         // Simple ping to Appwrite to test connection
-        console.log("Testing connection to Appwrite...");
-        const response = await fetch(
-          process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT + "/ping"
-        );
-        const data = await response.text();
-        console.log("Appwrite connection test:", data);
+        if (endpoint) {
+          console.log("Testing connection to Appwrite...");
+          const response = await fetch(endpoint + "/ping");
+          const data = await response.text();
+          console.log("Appwrite connection test:", data);
+        } else {
+          console.error("Endpoint not configured");
+        }
       } catch (error) {
         console.error("Failed to connect to Appwrite:", error);
       }
@@ -55,11 +68,59 @@ export default function AppwriteInit() {
     testConnection();
   }, []);
 
-  // Check collections first
+  // First, ensure collections exist
+  useEffect(() => {
+    const setupCollections = async () => {
+      try {
+        if (creatingCollections) return;
+
+        setCreatingCollections(true);
+        console.log("Setting up collections...");
+
+        const endpoint = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT;
+        const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID;
+        const databaseId = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
+
+        if (!endpoint || !projectId || !databaseId) {
+          throw new Error("Missing required Appwrite configuration");
+        }
+
+        const result = await createCollections(endpoint, projectId, databaseId);
+
+        if (isMounted.current) {
+          if (result) {
+            console.log("Collections setup successful");
+            setCollectionsAvailable(true);
+          } else {
+            setError(
+              "Failed to set up collections. Please check Appwrite console."
+            );
+          }
+          setCreatingCollections(false);
+        }
+      } catch (err) {
+        console.error("Error setting up collections:", err);
+        if (isMounted.current) {
+          setError(
+            "Failed to set up collections. Please check your Appwrite configuration."
+          );
+          setCreatingCollections(false);
+        }
+      }
+    };
+
+    if (!collectionsAvailable && !creatingCollections) {
+      setupCollections();
+    }
+  }, [collectionsAvailable, creatingCollections]);
+
+  // Check collections secondarily
   useEffect(() => {
     const checkCollections = async () => {
+      if (collectionsAvailable) return;
+
       try {
-        console.log("Checking collections...");
+        console.log("Double-checking collections...");
         const settingsCollection = await ensureCollection(COLLECTIONS.SETTINGS);
         const contentCollection = await ensureCollection(COLLECTIONS.CONTENT);
         const mediaCollection = await ensureCollection(COLLECTIONS.MEDIA);
@@ -84,8 +145,10 @@ export default function AppwriteInit() {
       }
     };
 
-    checkCollections();
-  }, []);
+    if (!collectionsAvailable && !creatingCollections) {
+      checkCollections();
+    }
+  }, [collectionsAvailable, creatingCollections]);
 
   // Initialize real-time updates with connection status
   const { isConnected } = useRealtimeUpdates();
@@ -106,10 +169,59 @@ export default function AppwriteInit() {
     }
   }, [isConnected, initialized, retryCount]);
 
+  // Setup storage bucket
+  useEffect(() => {
+    const setupStorageBucket = async () => {
+      try {
+        if (creatingBucket) return;
+
+        setCreatingBucket(true);
+        console.log("Setting up storage bucket...");
+
+        const endpoint = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT;
+        const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID;
+        const bucketId = process.env.NEXT_PUBLIC_APPWRITE_MEDIA_BUCKET_ID;
+
+        if (!endpoint || !projectId || !bucketId) {
+          throw new Error(
+            "Missing required Appwrite configuration for storage bucket"
+          );
+        }
+
+        const result = await createStorageBucket(endpoint, projectId, bucketId);
+
+        if (isMounted.current) {
+          if (result) {
+            console.log("Storage bucket setup successful");
+            setBucketAvailable(true);
+          } else {
+            setError(
+              "Failed to set up storage bucket. Please check Appwrite console."
+            );
+          }
+          setCreatingBucket(false);
+        }
+      } catch (err) {
+        console.error("Error setting up storage bucket:", err);
+        if (isMounted.current) {
+          setError(
+            "Failed to set up storage bucket. Please check your Appwrite configuration."
+          );
+          setCreatingBucket(false);
+        }
+      }
+    };
+
+    if (!bucketAvailable && !creatingBucket) {
+      setupStorageBucket();
+    }
+  }, [bucketAvailable, creatingBucket]);
+
+  // Initialize data only when both collections and bucket are available
   useEffect(() => {
     const initializeData = async () => {
-      if (!collectionsAvailable) {
-        console.log("Collections not available yet. Waiting...");
+      if (!collectionsAvailable || !bucketAvailable) {
+        console.log("Collections or bucket not available yet. Waiting...");
         return;
       }
 
@@ -136,7 +248,7 @@ export default function AppwriteInit() {
       }
     };
 
-    if (!initialized && collectionsAvailable) {
+    if (!initialized && collectionsAvailable && bucketAvailable) {
       initializeData();
     }
   }, [
@@ -144,6 +256,7 @@ export default function AppwriteInit() {
     loadContentFromStorage,
     initialized,
     collectionsAvailable,
+    bucketAvailable,
   ]);
 
   // Function to force create initial documents
@@ -239,7 +352,14 @@ export default function AppwriteInit() {
             <ul className="text-xs text-yellow-700 mt-1 list-disc pl-4">
               <li>Database ID: {DATABASE_ID || "Not set"}</li>
               <li>
+                Bucket ID:{" "}
+                {process.env.NEXT_PUBLIC_APPWRITE_MEDIA_BUCKET_ID || "Not set"}
+              </li>
+              <li>
                 Collections Available: {collectionsAvailable ? "Yes" : "No"}
+              </li>
+              <li>
+                Storage Bucket Available: {bucketAvailable ? "Yes" : "No"}
               </li>
               <li>WebSocket Connected: {isConnected ? "Yes" : "No"}</li>
               <li>Retry Count: {retryCount}</li>
@@ -252,6 +372,9 @@ export default function AppwriteInit() {
                 setInitialized(false);
                 setRetryCount(0);
                 setCollectionsAvailable(false);
+                setCreatingCollections(false);
+                setCreatingBucket(false);
+                setBucketAvailable(false);
                 window.location.reload();
               }
             }}
@@ -271,8 +394,14 @@ export default function AppwriteInit() {
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full text-center">
           <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
-            {!collectionsAvailable
+            {creatingCollections
+              ? "Creating Appwrite collections..."
+              : creatingBucket
+              ? "Creating Appwrite storage bucket..."
+              : !collectionsAvailable
               ? "Checking Appwrite collections..."
+              : !bucketAvailable
+              ? "Checking Appwrite storage bucket..."
               : retryCount > 0
               ? `Initializing data... (Attempt ${retryCount + 1})`
               : "Initializing data..."}
