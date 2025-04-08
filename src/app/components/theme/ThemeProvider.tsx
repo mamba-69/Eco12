@@ -6,6 +6,7 @@ import {
   useEffect,
   useState,
   ReactNode,
+  useRef,
 } from "react";
 
 type Theme = "light" | "dark" | "system";
@@ -36,55 +37,94 @@ export default function ThemeProvider({
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(defaultTheme);
   const [mounted, setMounted] = useState(false);
+  const isMounted = useRef(true);
 
   // Initialize theme from localStorage on client side only
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      // Set mounted state to true
-      setMounted(true);
+    setMounted(true);
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
+  useEffect(() => {
+    if (!mounted) return;
+
+    try {
       // Get saved theme from localStorage
       const savedTheme = localStorage.getItem(storageKey) as Theme | null;
 
       if (savedTheme) {
-        setTheme(savedTheme);
+        if (isMounted.current) {
+          setTheme(savedTheme);
+        }
       } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
         // Check system preference if no saved theme
-        setTheme("dark");
+        if (isMounted.current) {
+          setTheme("dark");
+        }
       }
+
+      // Listen for system theme changes
+      const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+      const handleChange = () => {
+        if (theme === "system" && isMounted.current) {
+          setTheme("system"); // This will trigger the effect below
+        }
+      };
+
+      mediaQuery.addEventListener("change", handleChange);
+      return () => mediaQuery.removeEventListener("change", handleChange);
+    } catch (error) {
+      console.error("Error initializing theme:", error);
     }
-  }, [storageKey]);
+  }, [mounted, storageKey, theme]);
 
   // Update the class on the html element
   useEffect(() => {
     if (!mounted) return;
 
-    const root = window.document.documentElement;
+    try {
+      const root = window.document.documentElement;
 
-    root.classList.remove("light", "dark");
+      root.classList.remove("light", "dark");
 
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-        .matches
-        ? "dark"
-        : "light";
+      if (theme === "system") {
+        const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+          .matches
+          ? "dark"
+          : "light";
 
-      root.classList.add(systemTheme);
-      return;
+        root.classList.add(systemTheme);
+        return;
+      }
+
+      root.classList.add(theme);
+    } catch (error) {
+      console.error("Error updating theme class:", error);
     }
-
-    root.classList.add(theme);
   }, [theme, mounted]);
 
   const value = {
     theme,
     setTheme: (newTheme: Theme) => {
-      if (typeof window !== "undefined") {
-        localStorage.setItem(storageKey, newTheme);
+      try {
+        if (typeof window !== "undefined") {
+          localStorage.setItem(storageKey, newTheme);
+        }
+        if (isMounted.current) {
+          setTheme(newTheme);
+        }
+      } catch (error) {
+        console.error("Error setting theme:", error);
       }
-      setTheme(newTheme);
     },
   };
+
+  // Don't render anything until mounted (to prevent hydration mismatch)
+  if (!mounted) {
+    return <>{children}</>;
+  }
 
   return (
     <ThemeProviderContext.Provider {...props} value={value}>

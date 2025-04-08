@@ -110,11 +110,11 @@ interface SiteStore {
 export const defaultSiteSettings: SiteSettings = {
   siteName: "Eco-Expert Recycling",
   siteDescription: "Sustainable e-waste recycling solutions",
-  logoUrl: "/logo.png",
+  logoUrl: "https://i.postimg.cc/2SW1kwbf/Final.png",
   primaryColor: "#10B981",
-  footerText: "© 2023 Eco-Expert Recycling. All rights reserved.",
-  contactEmail: "info@ecoexpert.com",
-  contactPhone: "+1 (555) 123-4567",
+  footerText: "© 2025 Eco-Expert Recycling. All rights reserved.",
+  contactEmail: "experttechnology@gmail.com",
+  contactPhone: "+91 70964 44414",
   contactAddress: "123 Recycling Lane, Green City, GC 12345",
   socialLinks: {
     facebook: "https://facebook.com/ecoexpert",
@@ -172,8 +172,20 @@ export const defaultContentSettings: ContentSettings = {
   },
 };
 
+// Helper function to safely parse JSON strings
+const safeJsonParse = (jsonString: string, fallback: any = null) => {
+  try {
+    return JSON.parse(jsonString);
+  } catch (error) {
+    console.error("Error parsing JSON:", error);
+    return fallback;
+  }
+};
+
 // Helper functions to serialize/deserialize JSON data
 const serializeJsonFields = (data: any) => {
+  if (!data) return {};
+
   const result = { ...data };
 
   // Convert JSON objects to strings for Appwrite storage
@@ -192,26 +204,80 @@ const serializeJsonFields = (data: any) => {
 };
 
 const deserializeJsonFields = (data: any): any => {
+  if (!data) return {};
+
   const result = { ...data };
 
   // Parse JSON strings back to objects
   try {
-    if (typeof result.hero === "string") result.hero = JSON.parse(result.hero);
-    if (typeof result.mission === "string")
-      result.mission = JSON.parse(result.mission);
-    if (typeof result.achievements === "string")
-      result.achievements = JSON.parse(result.achievements);
-    if (typeof result.videos === "string")
-      result.videos = JSON.parse(result.videos);
-    if (typeof result.media === "string")
-      result.media = JSON.parse(result.media);
-    if (typeof result.pages === "string")
-      result.pages = JSON.parse(result.pages);
-    if (typeof result.blog === "string") result.blog = JSON.parse(result.blog);
-    if (typeof result.socialLinks === "string")
-      result.socialLinks = JSON.parse(result.socialLinks);
+    if (typeof result.hero === "string") {
+      result.hero = safeJsonParse(result.hero, {
+        heading: "Default Heading",
+        subheading: "Default Subheading",
+        ctaText: "Get Started",
+        ctaLink: "/contact",
+      });
+    }
+
+    if (typeof result.mission === "string") {
+      result.mission = safeJsonParse(result.mission, {
+        heading: "Our Mission",
+        description:
+          "We are committed to reducing electronic waste and promoting sustainable recycling practices.",
+        points: ["Reduce electronic waste in landfills"],
+      });
+    }
+
+    if (typeof result.achievements === "string") {
+      result.achievements = safeJsonParse(result.achievements, {
+        heading: "Our Impact",
+        stats: [{ value: "0", label: "Devices Recycled" }],
+      });
+    }
+
+    if (typeof result.videos === "string") {
+      result.videos = safeJsonParse(result.videos, {
+        heading: "Our Work in Action",
+        videos: [],
+      });
+    }
+
+    if (typeof result.media === "string") {
+      result.media = safeJsonParse(result.media, {
+        images: [],
+      });
+    }
+
+    if (typeof result.pages === "string") {
+      result.pages = safeJsonParse(result.pages, []);
+    }
+
+    if (typeof result.blog === "string") {
+      result.blog = safeJsonParse(result.blog, []);
+    }
+
+    if (typeof result.socialLinks === "string") {
+      result.socialLinks = safeJsonParse(result.socialLinks, {
+        facebook: "",
+        twitter: "",
+        instagram: "",
+        linkedin: "",
+      });
+    }
+
+    // Handle potential nested string fields (for Appwrite's string fields for JSON)
+    if (result.media && typeof result.media.images === "string") {
+      result.media.images = safeJsonParse(result.media.images, []);
+    }
+
+    // Add fallback for media.images if it doesn't exist
+    if (result.media && !result.media.images) {
+      result.media.images = [];
+    }
   } catch (error) {
     console.error("Error parsing JSON fields:", error);
+    // Return default values if parsing fails completely
+    return defaultContentSettings;
   }
 
   return result;
@@ -233,6 +299,8 @@ export const useStore = create<SiteStore>()(
         try {
           // Serialize JSON fields before sending to Appwrite
           const serializedSettings = serializeJsonFields(updatedSettings);
+
+          console.log("Updating settings in Appwrite:", serializedSettings);
 
           // Update in Appwrite
           await updateDocument(
@@ -262,6 +330,8 @@ export const useStore = create<SiteStore>()(
           // Serialize JSON fields before sending to Appwrite
           const serializedContent = serializeJsonFields(updatedContent);
 
+          console.log("Updating content in Appwrite:", serializedContent);
+
           // Update in Appwrite
           await updateDocument(COLLECTIONS.CONTENT, "main", serializedContent);
 
@@ -280,16 +350,21 @@ export const useStore = create<SiteStore>()(
 
       loadSettingsFromStorage: async () => {
         try {
+          console.log("Loading settings from Appwrite storage");
           const settings = await getDocument(COLLECTIONS.SETTINGS, "main");
+          console.log("Raw settings from Appwrite:", settings);
+
           if (settings) {
             // Deserialize JSON strings back to objects
             const deserializedSettings = deserializeJsonFields(settings);
+            console.log("Deserialized settings:", deserializedSettings);
             set({ siteSettings: deserializedSettings as SiteSettings });
           }
         } catch (error) {
           console.error("Error loading settings:", error);
           // If document doesn't exist, create it with defaults
           try {
+            console.log("Creating default settings in Appwrite");
             const serializedSettings = serializeJsonFields(defaultSiteSettings);
             await createDocument(
               COLLECTIONS.SETTINGS,
@@ -304,16 +379,21 @@ export const useStore = create<SiteStore>()(
 
       loadContentFromStorage: async () => {
         try {
+          console.log("Loading content from Appwrite storage");
           const content = await getDocument(COLLECTIONS.CONTENT, "main");
+          console.log("Raw content from Appwrite:", content);
+
           if (content) {
             // Deserialize JSON strings back to objects
             const deserializedContent = deserializeJsonFields(content);
+            console.log("Deserialized content:", deserializedContent);
             set({ contentSettings: deserializedContent as ContentSettings });
           }
         } catch (error) {
           console.error("Error loading content:", error);
           // If document doesn't exist, create it with defaults
           try {
+            console.log("Creating default content in Appwrite");
             const serializedContent = serializeJsonFields(
               defaultContentSettings
             );

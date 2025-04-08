@@ -34,7 +34,7 @@ type Session = {
 // Simple cookie management functions
 function setCookie(name: string, value: string, days: number) {
   if (typeof document === "undefined") return;
-
+  
   const expires = new Date();
   expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
   document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Strict`;
@@ -142,13 +142,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log("Auth context - User metadata:", user?.user_metadata);
     console.log("Auth context - App metadata:", user?.app_metadata);
   }, [user, isAdmin]);
-
+  
   // Set auth cookies when user or isAdmin changes
   useEffect(() => {
     if (user) {
       // Set auth session cookie for general authentication
       setCookie("auth-session", "true", 1); // 1 day
-
+      
       // Set admin session cookie if user is admin
       if (isAdmin) {
         setCookie("admin-session", "true", 1); // 1 day
@@ -193,7 +193,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           user: mockAdminUser,
           expires_at: Math.floor(Date.now() / 1000) + 3600,
         } as Session;
-
+        
         // Set both session and user together
         setSession(mockSession);
         setUser(mockAdminUser);
@@ -222,7 +222,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error("Invalid credentials format");
         throw new Error("Invalid email or password");
       }
-
+      
       // Create a mock user based on the email
       const userRecord = createMockUser(
         "user-" + Date.now(),
@@ -246,7 +246,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       // In development, just log the registration
       console.log("Registered user:", { email, fullName });
-
+      
       setTimeout(() => {
         setIsLoading(false);
       }, 1000);
@@ -262,11 +262,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setUser(null);
       setSession(null);
-
+      
       // Clear auth cookies
       deleteCookie("auth-session");
       deleteCookie("admin-session");
-
+      
       console.log("Signed out");
       router.push("/");
     } catch (error) {
@@ -305,4 +305,4 @@ export const useAuth = () => {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
-};
+}; 

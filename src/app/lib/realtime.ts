@@ -1,77 +1,134 @@
 "use client";
 
 import { client, databases, COLLECTIONS, DATABASE_ID } from "./appwrite";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useStore } from "./store";
 import { Models } from "appwrite";
 
 export function useRealtimeUpdates() {
-  const [isConnected, setIsConnected] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const { loadSettingsFromStorage, loadContentFromStorage } = useStore();
+  const [isConnected, setIsConnected] = useState(false);
+  const isMounted = useRef(true);
 
   useEffect(() => {
-    setMounted(true);
+    // Cleanup function to prevent state updates on unmounted component
+    return () => {
+      isMounted.current = false;
+    };
   }, []);
 
   useEffect(() => {
-    // Only run subscriptions on client-side
-    if (!mounted) return;
-    
-    let settingsUnsubscribe: (() => void) | null = null;
-    let contentUnsubscribe: (() => void) | null = null;
-    let mediaUnsubscribe: (() => void) | null = null;
-    
-    try {
-      // Subscribe to changes in settings
-      settingsUnsubscribe = client.subscribe(`databases.${DATABASE_ID}.collections.${COLLECTIONS.SETTINGS}.documents`, (response) => {
-        console.log("Realtime settings update:", response);
-        setIsConnected(true);
+    let settingsUnsubscribe: (() => void) | undefined;
+    let contentUnsubscribe: (() => void) | undefined;
+    let mediaUnsubscribe: (() => void) | undefined;
+
+    const setupSubscriptions = () => {
+      try {
+        console.log("Setting up Appwrite realtime subscriptions...");
         
-        // Reload settings data when it changes
-        if (response.events.includes("databases.*.collections.*.documents.*.update") || 
-            response.events.includes("databases.*.collections.*.documents.*.create")) {
-          loadSettingsFromStorage();
+        // Subscribe to settings changes
+        settingsUnsubscribe = client.subscribe(
+          `databases.${DATABASE_ID}.collections.${COLLECTIONS.SETTINGS}.documents`,
+          (response) => {
+            console.log("Received settings update:", response.events);
+            if (
+              response.events.includes(
+                "databases.*.collections.*.documents.*.update"
+              )
+            ) {
+              if (isMounted.current) {
+                loadSettingsFromStorage();
+              }
+            }
+          }
+        );
+
+        // Subscribe to content changes
+        contentUnsubscribe = client.subscribe(
+          `databases.${DATABASE_ID}.collections.${COLLECTIONS.CONTENT}.documents`,
+          (response) => {
+            console.log("Received content update:", response.events);
+            if (
+              response.events.includes(
+                "databases.*.collections.*.documents.*.update"
+              )
+            ) {
+              if (isMounted.current) {
+                loadContentFromStorage();
+              }
+            }
+          }
+        );
+
+        // Subscribe to media changes
+        mediaUnsubscribe = client.subscribe(
+          `databases.${DATABASE_ID}.collections.${COLLECTIONS.MEDIA}.documents`,
+          (response) => {
+            console.log("Received media update:", response.events);
+            if (
+              response.events.includes(
+                "databases.*.collections.*.documents.*.create"
+              ) ||
+              response.events.includes(
+                "databases.*.collections.*.documents.*.update"
+              ) ||
+              response.events.includes(
+                "databases.*.collections.*.documents.*.delete"
+              )
+            ) {
+              if (isMounted.current) {
+                loadContentFromStorage();
+              }
+            }
+          }
+        );
+
+        // Wait a bit and then check if we're connected
+        setTimeout(() => {
+          if (isMounted.current) {
+            setIsConnected(true);
+            console.log("Realtime subscriptions initialized successfully");
+          }
+        }, 1000);
+      } catch (error) {
+        console.error("Error setting up realtime subscriptions:", error);
+        if (isMounted.current) {
+          setIsConnected(false);
         }
-      });
-
-      // Subscribe to changes in content
-      contentUnsubscribe = client.subscribe(`databases.${DATABASE_ID}.collections.${COLLECTIONS.CONTENT}.documents`, (response) => {
-        console.log("Realtime content update:", response);
-        setIsConnected(true);
-        
-        // Reload content data when it changes
-        if (response.events.includes("databases.*.collections.*.documents.*.update") || 
-            response.events.includes("databases.*.collections.*.documents.*.create")) {
-          loadContentFromStorage();
-        }
-      });
-
-      // Subscribe to changes in media
-      mediaUnsubscribe = client.subscribe(`databases.${DATABASE_ID}.collections.${COLLECTIONS.MEDIA}.documents`, (response) => {
-        console.log("Realtime media update:", response);
-        setIsConnected(true);
-        
-        // Reload content data when media changes (since media is stored in content)
-        if (response.events.includes("databases.*.collections.*.documents.*.update") || 
-            response.events.includes("databases.*.collections.*.documents.*.create")) {
-          loadContentFromStorage();
-        }
-      });
-
-      setIsConnected(true);
-    } catch (error) {
-      console.error("Error setting up realtime subscriptions:", error);
-      setIsConnected(false);
-    }
-
-    // Cleanup function to unsubscribe from all channels
-    return () => {
-      if (settingsUnsubscribe) settingsUnsubscribe();
-      if (contentUnsubscribe) contentUnsubscribe();
-      if (mediaUnsubscribe) mediaUnsubscribe();
+      }
     };
-  }, [loadSettingsFromStorage, loadContentFromStorage, mounted]);
+
+    // Initial setup
+    setupSubscriptions();
+
+    // Cleanup subscriptions
+    return () => {
+      console.log("Cleaning up realtime subscriptions");
+      if (settingsUnsubscribe) {
+        try {
+          settingsUnsubscribe();
+        } catch (error) {
+          console.error("Error unsubscribing from settings:", error);
+        }
+      }
+      
+      if (contentUnsubscribe) {
+        try {
+          contentUnsubscribe();
+        } catch (error) {
+          console.error("Error unsubscribing from content:", error);
+        }
+      }
+      
+      if (mediaUnsubscribe) {
+        try {
+          mediaUnsubscribe();
+        } catch (error) {
+          console.error("Error unsubscribing from media:", error);
+        }
+      }
+    };
+  }, [loadSettingsFromStorage, loadContentFromStorage]);
 
   return { isConnected };
 }
