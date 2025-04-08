@@ -187,12 +187,21 @@ export default function DirectMediaManagement() {
   const [animatingItemId, setAnimatingItemId] = useState<string | null>(null);
   const router = useRouter();
   const [toasts, setToasts] = useState<Toast[]>([]);
+  // Add isMounted ref to track component mount state
+  const isMounted = useRef(true);
 
   // Since we're removing file uploads, we'll set this to null
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // Check admin authentication similar to main admin page
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+
+  // Add cleanup effect to set isMounted to false when component unmounts
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   // Function to process media items and ensure they have a type
   const processMediaItems = (items: any[]): MediaItem[] => {
@@ -230,12 +239,19 @@ export default function DirectMediaManagement() {
 
     // Load media from content settings on mount
     if (contentSettings?.media?.images?.length > 0) {
-      setMediaItems(processMediaItems(contentSettings.media.images));
+      if (isMounted.current) {
+        setMediaItems(processMediaItems(contentSettings.media.images));
+      }
     } else {
       // Use our updated default media items
-      setMediaItems(DEFAULT_MEDIA_ITEMS);
+      if (isMounted.current) {
+        setMediaItems(DEFAULT_MEDIA_ITEMS);
+      }
     }
-    setLoading(false);
+
+    if (isMounted.current) {
+      setLoading(false);
+    }
   }, [contentSettings, router]);
 
   // Custom toast notification
@@ -245,11 +261,15 @@ export default function DirectMediaManagement() {
   ) => {
     const id = Math.random().toString(36).substring(2, 9);
     // Create a toast and add it to state
-    setToasts((prev) => [...prev, { id, message, type }]);
+    if (isMounted.current) {
+      setToasts((prev) => [...prev, { id, message, type }]);
+    }
 
     // Remove the toast after 3 seconds
     setTimeout(() => {
-      setToasts((prev) => prev.filter((toast) => toast.id !== id));
+      if (isMounted.current) {
+        setToasts((prev) => prev.filter((toast) => toast.id !== id));
+      }
     }, 3000);
   };
 
@@ -260,7 +280,9 @@ export default function DirectMediaManagement() {
       return;
     }
 
-    setIsUploading(true);
+    if (isMounted.current) {
+      setIsUploading(true);
+    }
 
     try {
       // Determine if the URL is for an image or video based on extension
@@ -278,31 +300,37 @@ export default function DirectMediaManagement() {
       );
 
       // Add to local state for immediate UI update
-      const updatedItems = [...mediaItems, newMediaItem];
-      setMediaItems(updatedItems);
+      if (isMounted.current) {
+        const updatedItems = [...mediaItems, newMediaItem];
+        setMediaItems(updatedItems);
 
-      // Clear form
-      setExternalImageUrl("");
-      setExternalImageName("");
-      setExternalImageDescription("");
+        // Clear form
+        setExternalImageUrl("");
+        setExternalImageName("");
+        setExternalImageDescription("");
 
-      // Show success message
-      showToast(
-        `${
-          mediaType === "video" ? "Video" : "Image"
-        } uploaded successfully to Appwrite Storage`,
-        "success"
-      );
+        // Show success message
+        showToast(
+          `${
+            mediaType === "video" ? "Video" : "Image"
+          } uploaded successfully to Appwrite Storage`,
+          "success"
+        );
+      }
     } catch (error) {
       console.error("Error uploading media:", error);
-      showToast(
-        `Upload failed: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`,
-        "error"
-      );
+      if (isMounted.current) {
+        showToast(
+          `Upload failed: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`,
+          "error"
+        );
+      }
     } finally {
-      setIsUploading(false);
+      if (isMounted.current) {
+        setIsUploading(false);
+      }
     }
   };
 
@@ -341,25 +369,31 @@ export default function DirectMediaManagement() {
       }
 
       // Remove from local state first for immediate UI feedback
-      const updatedMediaItems = mediaItems.filter((item) => item.id !== id);
-      setMediaItems(updatedMediaItems);
+      if (isMounted.current) {
+        const updatedMediaItems = mediaItems.filter((item) => item.id !== id);
+        setMediaItems(updatedMediaItems);
+      }
 
       // Delete from Appwrite Storage and update content settings
       await deleteMediaItemFromAppwrite(itemToDelete, contentSettings);
 
-      showToast("Media deleted successfully", "success");
+      if (isMounted.current) {
+        showToast("Media deleted successfully", "success");
+      }
     } catch (error) {
       console.error("Error deleting media:", error);
-      showToast(
-        `Deletion failed: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`,
-        "error"
-      );
+      if (isMounted.current) {
+        showToast(
+          `Deletion failed: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`,
+          "error"
+        );
 
-      // Reload the media items from contentSettings to restore state
-      if (contentSettings?.media?.images) {
-        setMediaItems(processMediaItems(contentSettings.media.images));
+        // Reload the media items from contentSettings to restore state
+        if (contentSettings?.media?.images) {
+          setMediaItems(processMediaItems(contentSettings.media.images));
+        }
       }
     }
   };
@@ -383,13 +417,20 @@ export default function DirectMediaManagement() {
       });
 
       // Set animating ID for visual feedback
-      setAnimatingItemId(id);
+      if (isMounted.current) {
+        setAnimatingItemId(id);
+      }
+
       setTimeout(() => {
-        setAnimatingItemId(null);
+        if (isMounted.current) {
+          setAnimatingItemId(null);
+        }
       }, 1000);
 
       // Update the media items in state
-      setMediaItems(updatedMediaItems);
+      if (isMounted.current) {
+        setMediaItems(updatedMediaItems);
+      }
 
       // Update content settings in Appwrite
       await updateContentSettings(
@@ -411,7 +452,7 @@ export default function DirectMediaManagement() {
       showToast("Error updating media item", "error");
 
       // Reload the media items from contentSettings to restore state
-      if (contentSettings?.media?.images) {
+      if (contentSettings?.media?.images && isMounted.current) {
         setMediaItems(processMediaItems(contentSettings.media.images));
       }
     }
@@ -454,7 +495,9 @@ export default function DirectMediaManagement() {
         return;
       }
 
-      setIsEditingMedia(false);
+      if (isMounted.current) {
+        setIsEditingMedia(false);
+      }
 
       // Determine if it's a video or image based on URL
       const isVideo = /\.(mp4|webm|ogg|mov)$/i.test(editingMedia.url);
@@ -480,7 +523,10 @@ export default function DirectMediaManagement() {
         });
 
         // Update in state and Appwrite
-        setMediaItems(updatedMediaItems);
+        if (isMounted.current) {
+          setMediaItems(updatedMediaItems);
+        }
+
         await updateContentSettings(
           {
             media: {
@@ -491,7 +537,9 @@ export default function DirectMediaManagement() {
           true
         ); // Ensure sync with Appwrite
 
-        showToast("Media updated successfully!", "success");
+        if (isMounted.current) {
+          showToast("Media updated successfully!", "success");
+        }
       } else {
         // This is a new media item being added via the edit form
         // Use our upload function to handle it
@@ -505,31 +553,36 @@ export default function DirectMediaManagement() {
         );
 
         // Add to local state
-        const updatedMediaItems = [...mediaItems, newMediaItem];
-        setMediaItems(updatedMediaItems);
-
-        showToast("New media added successfully!", "success");
+        if (isMounted.current) {
+          const updatedMediaItems = [...mediaItems, newMediaItem];
+          setMediaItems(updatedMediaItems);
+          showToast("New media added successfully!", "success");
+        }
       }
 
       // Reset the editing state
-      setEditingMedia({
-        id: "",
-        publicId: "",
-        url: "",
-        name: "",
-        uploadedAt: "",
-        inMediaSlider: false,
-        type: "image",
-        description: "",
-      });
+      if (isMounted.current) {
+        setEditingMedia({
+          id: "",
+          publicId: "",
+          url: "",
+          name: "",
+          uploadedAt: "",
+          inMediaSlider: false,
+          type: "image",
+          description: "",
+        });
+      }
     } catch (error) {
       console.error("Error saving media:", error);
-      showToast(
-        `Save failed: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`,
-        "error"
-      );
+      if (isMounted.current) {
+        showToast(
+          `Save failed: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`,
+          "error"
+        );
+      }
     }
   };
 

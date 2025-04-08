@@ -174,10 +174,44 @@ export const defaultContentSettings: ContentSettings = {
 
 // Helper function to safely parse JSON strings
 const safeJsonParse = (jsonString: string, fallback: any = null) => {
+  if (!jsonString) {
+    console.warn(
+      "Attempted to parse empty or null JSON string, using fallback value"
+    );
+    return fallback;
+  }
+
   try {
-    return JSON.parse(jsonString);
+    // Trim the string to avoid whitespace issues
+    const trimmed = jsonString.trim();
+
+    // Quick validation check
+    if (
+      (!trimmed.startsWith("{") && !trimmed.startsWith("[")) ||
+      (!trimmed.endsWith("}") && !trimmed.endsWith("]"))
+    ) {
+      console.warn(
+        "JSON string doesn't appear to be valid JSON format:",
+        trimmed.length > 50 ? `${trimmed.substring(0, 50)}...` : trimmed
+      );
+      return fallback;
+    }
+
+    return JSON.parse(trimmed);
   } catch (error) {
-    console.error("Error parsing JSON:", error);
+    if (error instanceof Error) {
+      console.error(`Error parsing JSON: ${error.message}`);
+      if (jsonString.length < 100) {
+        console.error("Invalid JSON string:", jsonString);
+      } else {
+        console.error(
+          "Invalid JSON string (truncated):",
+          jsonString.substring(0, 100) + "..."
+        );
+      }
+    } else {
+      console.error("Unknown error parsing JSON:", error);
+    }
     return fallback;
   }
 };

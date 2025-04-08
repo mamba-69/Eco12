@@ -15,15 +15,43 @@ let databases: Databases;
 let storage: Storage;
 
 // Check if code is running in browser environment
-if (typeof window !== 'undefined') {
-  client = new Client()
-    .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
-    .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!);
+if (typeof window !== "undefined") {
+  try {
+    // Add debug logging
+    console.log("Initializing Appwrite client with:", {
+      endpoint: process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT
+        ? "configured"
+        : "missing",
+      projectId: process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID
+        ? "configured"
+        : "missing",
+      databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
+        ? "configured"
+        : "missing",
+      bucketId: process.env.NEXT_PUBLIC_APPWRITE_MEDIA_BUCKET_ID
+        ? "configured"
+        : "missing",
+    });
 
-  // Initialize Appwrite services
-  account = new Account(client);
-  databases = new Databases(client);
-  storage = new Storage(client);
+    client = new Client()
+      .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
+      .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!);
+
+    // Initialize Appwrite services
+    account = new Account(client);
+    databases = new Databases(client);
+    storage = new Storage(client);
+
+    console.log("Appwrite client initialized successfully");
+  } catch (error) {
+    console.error("Failed to initialize Appwrite client:", error);
+
+    // Create dummy/fallback instances that will show errors when used
+    client = new Client();
+    account = new Account(client);
+    databases = new Databases(client);
+    storage = new Storage(client);
+  }
 } else {
   // Create dummy instances for server-side that will be replaced on client
   client = new Client();
@@ -62,15 +90,51 @@ export interface MediaItem {
 // A function to check or create database collections if needed
 export const ensureCollection = async (collectionId: string) => {
   try {
+    console.log(`Checking collection ${collectionId}...`);
+
+    // Validate database ID
+    if (!DATABASE_ID) {
+      console.error("Database ID is missing in environment configuration");
+      return false;
+    }
+
     // First, let's see if we can list documents in the collection
     // This will throw an error if the collection doesn't exist
-    await databases.listDocuments(DATABASE_ID, collectionId);
+    const documents = await databases.listDocuments(DATABASE_ID, collectionId);
+
     console.log(`Collection ${collectionId} exists and is accessible`);
+    console.log(`Found ${documents.total} documents`);
     return true;
   } catch (error) {
-    console.error(`Error accessing collection ${collectionId}:`, error);
+    if (error instanceof Error) {
+      console.error(
+        `Error accessing collection ${collectionId}:`,
+        error.message
+      );
+
+      // Provide more specific error information based on error type
+      if (error.message.includes("not found")) {
+        console.error(
+          `Collection '${collectionId}' does not exist in database '${DATABASE_ID}'`
+        );
+      } else if (error.message.includes("permission")) {
+        console.error(
+          `Permission denied for collection '${collectionId}'. Check your Appwrite permissions.`
+        );
+      } else if (error.message.includes("Network")) {
+        console.error(
+          "Network error accessing Appwrite. Check your internet connection."
+        );
+      }
+    } else {
+      console.error(
+        `Unknown error accessing collection ${collectionId}:`,
+        error
+      );
+    }
+
     console.log(
-      `Make sure collection ${collectionId} exists in the Appwrite console`
+      `Make sure collection ${collectionId} exists in the Appwrite console with "any" permissions for document operations.`
     );
     return false;
   }
@@ -163,14 +227,13 @@ export const deleteMediaItem = async (
 };
 
 // Authentication functions
-export const createUserAccount = async (email: string, password: string, name: string) => {
+export const createUserAccount = async (
+  email: string,
+  password: string,
+  name: string
+) => {
   try {
-    const newAccount = await account.create(
-      ID.unique(),
-      email,
-      password,
-      name
-    );
+    const newAccount = await account.create(ID.unique(), email, password, name);
 
     if (!newAccount) throw Error;
 
