@@ -45,6 +45,20 @@ export default function AppwriteInit() {
     console.log("PROJECT_ID:", projectId);
     console.log("DATABASE_ID:", databaseId);
     console.log("MEDIA_BUCKET_ID:", mediaBucketId);
+
+    // Check if all required environment variables are set
+    if (!endpoint || !projectId || !databaseId || !mediaBucketId) {
+      console.error("Missing required Appwrite environment variables!");
+      setError(`Missing required Appwrite environment variables:
+        ${!endpoint ? "- NEXT_PUBLIC_APPWRITE_ENDPOINT" : ""}
+        ${!projectId ? "- NEXT_PUBLIC_APPWRITE_PROJECT_ID" : ""}
+        ${!databaseId ? "- NEXT_PUBLIC_APPWRITE_DATABASE_ID" : ""}
+        ${!mediaBucketId ? "- NEXT_PUBLIC_APPWRITE_MEDIA_BUCKET_ID" : ""}
+        
+        Please check your .env.local file and make sure all variables are correctly set.`);
+      return;
+    }
+
     console.log("COLLECTIONS:", COLLECTIONS);
     console.log("Client Configured:", !!client);
 

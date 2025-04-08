@@ -129,11 +129,11 @@ export default function LoginPage() {
     <div className="container py-20">
       <div
         style={{
-          maxWidth: "400px",
-          margin: "0 auto",
-          padding: "2rem",
-          backgroundColor: "#1F2937",
-          borderRadius: "0.5rem",
+        maxWidth: "400px", 
+        margin: "0 auto", 
+        padding: "2rem", 
+        backgroundColor: "#1F2937", 
+        borderRadius: "0.5rem",
           boxShadow:
             "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
         }}
@@ -181,10 +181,10 @@ export default function LoginPage() {
         {error && (
           <div
             style={{
-              backgroundColor: "#FEE2E2",
-              color: "#B91C1C",
-              padding: "0.75rem",
-              borderRadius: "0.375rem",
+            backgroundColor: "#FEE2E2", 
+            color: "#B91C1C", 
+            padding: "0.75rem", 
+            borderRadius: "0.375rem", 
               marginBottom: "1rem",
             }}
           >
@@ -199,13 +199,13 @@ export default function LoginPage() {
           data-form-type="login"
         >
           <div>
-            <label
-              htmlFor="email"
-              style={{
-                display: "block",
+            <label 
+              htmlFor="email" 
+              style={{ 
+                display: "block", 
                 fontSize: "0.875rem",
                 fontWeight: "medium",
-                marginBottom: "0.5rem",
+                marginBottom: "0.5rem", 
                 color: "white",
               }}
             >
@@ -218,9 +218,9 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="off"
-              style={{
-                width: "100%",
-                padding: "0.5rem 0.75rem",
+              style={{ 
+                width: "100%", 
+                padding: "0.5rem 0.75rem", 
                 backgroundColor: "#374151",
                 borderWidth: "1px",
                 borderColor: "#4B5563",
@@ -232,18 +232,18 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label
-              htmlFor="password"
-              style={{
+              <label 
+                htmlFor="password" 
+                style={{ 
                 display: "block",
-                fontSize: "0.875rem",
+                  fontSize: "0.875rem", 
                 fontWeight: "medium",
                 marginBottom: "0.5rem",
                 color: "white",
-              }}
-            >
-              Password
-            </label>
+                }}
+              >
+                Password
+              </label>
             <input
               id="password"
               type="password"
@@ -251,9 +251,9 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="new-password"
-              style={{
-                width: "100%",
-                padding: "0.5rem 0.75rem",
+              style={{ 
+                width: "100%", 
+                padding: "0.5rem 0.75rem", 
                 backgroundColor: "#374151",
                 borderWidth: "1px",
                 borderColor: "#4B5563",
@@ -280,8 +280,8 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            style={{
-              width: "100%",
+            style={{ 
+              width: "100%", 
               padding: "0.625rem 1.25rem",
               backgroundColor: "#10B981",
               color: "white",
@@ -296,19 +296,19 @@ export default function LoginPage() {
 
           <div
             style={{
-              marginTop: "1.5rem",
-              textAlign: "center",
+          marginTop: "1.5rem", 
+          textAlign: "center", 
               fontSize: "0.875rem",
               color: "#9CA3AF",
             }}
           >
             Don't have an account?{" "}
             <Link href="/auth/signup" style={{ color: "#10B981" }}>
-              Sign up
-            </Link>
-          </div>
+            Sign up
+          </Link>
+        </div>
         </form>
       </div>
     </div>
   );
-}
+} 

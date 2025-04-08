@@ -8,6 +8,24 @@ import {
   Role,
 } from "appwrite";
 
+// Ensure that environment variables are defined
+const ENDPOINT = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || "";
+const PROJECT_ID = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID || "";
+export const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || "";
+const MEDIA_BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_MEDIA_BUCKET_ID || "";
+
+// Check environment variables early
+if (typeof window !== "undefined") {
+  if (!ENDPOINT || !PROJECT_ID || !DATABASE_ID || !MEDIA_BUCKET_ID) {
+    console.error("Appwrite environment variables missing:", {
+      endpoint: !ENDPOINT ? "missing" : "set",
+      projectId: !PROJECT_ID ? "missing" : "set",
+      databaseId: !DATABASE_ID ? "missing" : "set",
+      mediaBucketId: !MEDIA_BUCKET_ID ? "missing" : "set",
+    });
+  }
+}
+
 // Initialize Appwrite client only on the client side
 let client: Client;
 let account: Account;
@@ -19,23 +37,13 @@ if (typeof window !== "undefined") {
   try {
     // Add debug logging
     console.log("Initializing Appwrite client with:", {
-      endpoint: process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT
-        ? "configured"
-        : "missing",
-      projectId: process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID
-        ? "configured"
-        : "missing",
-      databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID
-        ? "configured"
-        : "missing",
-      bucketId: process.env.NEXT_PUBLIC_APPWRITE_MEDIA_BUCKET_ID
-        ? "configured"
-        : "missing",
+      endpoint: ENDPOINT ? "configured" : "missing",
+      projectId: PROJECT_ID ? "configured" : "missing",
+      databaseId: DATABASE_ID ? "configured" : "missing",
+      bucketId: MEDIA_BUCKET_ID ? "configured" : "missing",
     });
 
-    client = new Client()
-      .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
-      .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!);
+    client = new Client().setEndpoint(ENDPOINT).setProject(PROJECT_ID);
 
     // Initialize Appwrite services
     account = new Account(client);
@@ -61,7 +69,6 @@ if (typeof window !== "undefined") {
 }
 
 // Database and collection IDs
-const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!;
 const COLLECTIONS = {
   SETTINGS: "settings",
   CONTENT: "content",
@@ -72,7 +79,7 @@ const COLLECTIONS = {
 
 // Storage bucket IDs
 const BUCKETS = {
-  MEDIA: process.env.NEXT_PUBLIC_APPWRITE_MEDIA_BUCKET_ID!,
+  MEDIA: MEDIA_BUCKET_ID,
 };
 
 // MediaItem type definition
@@ -361,7 +368,6 @@ export {
   account,
   databases,
   storage,
-  DATABASE_ID,
   COLLECTIONS,
   BUCKETS,
 };
