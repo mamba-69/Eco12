@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useStore } from "@/app/lib/store";
+import { usePathname } from "next/navigation";
 import {
   databases,
   COLLECTIONS,
@@ -25,6 +26,10 @@ export default function AppwriteInit() {
   const [creatingBucket, setCreatingBucket] = useState(false);
   const { loadSettingsFromStorage, loadContentFromStorage } = useStore();
   const isMounted = useRef(true);
+  const pathname = usePathname();
+
+  // Don't show initialization UI on login page
+  const shouldShowUI = !pathname?.includes("/admin-direct/login");
 
   // Cleanup function to prevent updates on unmounted component
   useEffect(() => {
@@ -353,7 +358,7 @@ export default function AppwriteInit() {
   };
 
   // Display error message if initialization failed
-  if (error) {
+  if (error && shouldShowUI) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full">
@@ -402,7 +407,7 @@ export default function AppwriteInit() {
   }
 
   // Display loading message during initialization
-  if (!initialized) {
+  if (!initialized && shouldShowUI) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full text-center">

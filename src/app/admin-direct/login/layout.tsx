@@ -3,6 +3,7 @@
 import { Inter } from "next/font/google";
 import "../../globals.css";
 import ThemeProvider from "../../components/theme/ThemeProvider";
+import { AuthProvider } from "@/app/contexts/AuthContext";
 
 // Configure Inter font
 const inter = Inter({
@@ -31,8 +32,10 @@ export default function LoginLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className}`} suppressHydrationWarning>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
-} 
+}
