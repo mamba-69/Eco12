@@ -331,17 +331,39 @@ async function createStorageBucket() {
   // Check if bucket exists
   const checkResult = await appwriteRequest(`/storage/buckets/${BUCKET_ID}`);
 
-  if (checkResult.success) {
+  if (checkResult.success || checkResult.exists) {
     console.log(`✅ Storage bucket '${BUCKET_ID}' already exists`);
+
+    // Update bucket permissions even if it exists
+    const updateResult = await appwriteRequest(
+      `/storage/buckets/${BUCKET_ID}`,
+      "PUT",
+      {
+        name: "Media Storage",
+        permissions: [
+          'read("any")',
+          'create("any")',
+          'update("any")',
+          'delete("any")',
+        ],
+        fileSecurity: false,
+        enabled: true,
+        maximumFileSize: 30000000, // 30MB
+        allowedFileExtensions: ["jpg", "jpeg", "png", "gif", "webp", "svg"],
+      }
+    );
+
+    if (updateResult.error) {
+      console.error(
+        `❌ Failed to update storage bucket permissions: ${updateResult.error}`
+      );
+      return false;
+    }
+
     return true;
   }
 
-  if (checkResult.exists) {
-    console.log(`✅ Storage bucket '${BUCKET_ID}' already exists`);
-    return true;
-  }
-
-  // Create bucket
+  // Create bucket with comprehensive settings
   const createResult = await appwriteRequest("/storage/buckets", "POST", {
     bucketId: BUCKET_ID,
     name: "Media Storage",
@@ -351,8 +373,10 @@ async function createStorageBucket() {
       'update("any")',
       'delete("any")',
     ],
-    fileSecurity: true,
+    fileSecurity: false,
     enabled: true,
+    maximumFileSize: 30000000, // 30MB
+    allowedFileExtensions: ["jpg", "jpeg", "png", "gif", "webp", "svg"],
   });
 
   if (createResult.error) {
@@ -364,40 +388,71 @@ async function createStorageBucket() {
   return true;
 }
 
-async function initializeDefaultData(client, databaseId) {
-  try {
-    const databases = client.databases;
+async function initializeDefaultData() {
+  console.log("📝 Initializing default data...");
 
+  try {
     // Initialize settings with default values
-    await databases.createDocument(databaseId, "settings", ID.unique(), {
-      theme: "light",
-      siteTitle: "My Site",
-      siteDescription: "Site Description",
-      navigation: JSON.stringify([]),
-      footer: JSON.stringify({}),
-      logo: "",
-      favicon: "",
-      scripts: "",
-    });
+    const settingsResult = await appwriteRequest(
+      `/databases/${DATABASE_ID}/collections/settings/documents`,
+      "POST",
+      {
+        documentId: "default",
+        data: {
+          theme: "light",
+          siteTitle: "My Site",
+          siteDescription: "Site Description",
+          navigation: JSON.stringify([]),
+          footer: JSON.stringify({}),
+          logo: "",
+          favicon: "",
+          scripts: "",
+          language: "en",
+          updatedAt: new Date().toISOString(),
+          sitename: "My Site",
+          contactEmail: "contact@example.com",
+          contactPhone: "+1234567890",
+          createdAt: new Date().toISOString(),
+        },
+      }
+    );
+
+    if (settingsResult.error && !settingsResult.exists) {
+      console.error("❌ Failed to initialize settings:", settingsResult.error);
+    } else {
+      console.log("✅ Settings initialized successfully");
+    }
 
     // Initialize content with default values
-    await databases.createDocument(databaseId, "content", ID.unique(), {
-      hero: JSON.stringify({}),
-      mission: JSON.stringify({}),
-      achievements: JSON.stringify({}),
-      videos: JSON.stringify([]),
-      media: JSON.stringify([]),
-      pages: JSON.stringify([]),
-      blog: JSON.stringify([]),
-    });
+    const contentResult = await appwriteRequest(
+      `/databases/${DATABASE_ID}/collections/content/documents`,
+      "POST",
+      {
+        documentId: "default",
+        data: {
+          hero: JSON.stringify({}),
+          mission: JSON.stringify({}),
+          achievements: JSON.stringify({}),
+          videos: JSON.stringify([]),
+          media: JSON.stringify([]),
+          pages: JSON.stringify([]),
+          blog: JSON.stringify([]),
+          updatedAt: new Date().toISOString(),
+          language: "en",
+          createdAt: new Date().toISOString(),
+        },
+      }
+    );
 
-    console.log("Default data initialized successfully");
-  } catch (error) {
-    if (error.code === 409) {
-      console.log("Default data already exists, skipping initialization");
-      return;
+    if (contentResult.error && !contentResult.exists) {
+      console.error("❌ Failed to initialize content:", contentResult.error);
+    } else {
+      console.log("✅ Content initialized successfully");
     }
-    console.error("Error initializing default data:", error);
+
+    console.log("✅ Default data initialization completed");
+  } catch (error) {
+    console.error("❌ Error initializing default data:", error);
     throw error;
   }
 }
@@ -423,8 +478,8 @@ async function setup() {
     process.exit(1);
   }
 
-  // After creating collections, initialize default data
-  await initializeDefaultData(client, databaseId);
+  // Initialize default data
+  await initializeDefaultData();
 
   console.log("✨ Appwrite setup completed successfully!");
   console.log("");
