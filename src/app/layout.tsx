@@ -1,3 +1,5 @@
+"use client";
+
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -7,6 +9,7 @@ import AppwriteInit from "./components/layout/AppwriteInit";
 import Navbar from "./components/layout/Navbar";
 import Footer from "./components/layout/Footer";
 import ThemeProvider from "./components/theme/ThemeProvider";
+import { usePathname } from "next/navigation";
 
 // Configure Inter font with fallback to system fonts
 const inter = Inter({
@@ -40,17 +43,20 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const pathname = usePathname();
+  const isLoginPage = pathname?.includes("/admin-direct/login");
+
   return (
     <html lang="en" className={inter.className}>
       <body className="min-h-screen flex flex-col">
         <ThemeProvider>
           <AuthProvider>
             <DataProvider>
-              <AppwriteInit />
+              {!isLoginPage && <AppwriteInit />}
               <div className="flex-1 flex flex-col">
-                <Navbar />
+                {!isLoginPage && <Navbar />}
                 <main className="flex-1 isolate relative">{children}</main>
-                <Footer />
+                {!isLoginPage && <Footer />}
               </div>
             </DataProvider>
           </AuthProvider>
