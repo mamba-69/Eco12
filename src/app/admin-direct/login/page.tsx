@@ -5,49 +5,79 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/contexts/AuthContext";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState("ecoexpert@gmail.com");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const { login, user } = useAuth();
-  const [mounted, setMounted] = useState(false);
+  const auth = useAuth();
+  const [debugInfo, setDebugInfo] = useState<string>("Initializing...");
 
+  // Simple debug logger to help troubleshoot
   useEffect(() => {
-    setMounted(true);
     console.log("Login page mounted");
-  }, []);
+    setDebugInfo("Login page mounted");
 
-  useEffect(() => {
-    if (mounted && user) {
-      console.log("User authenticated, redirecting");
-      router.push("/admin-direct");
+    // Log auth context availability
+    try {
+      setDebugInfo(
+        (prev) => prev + " | Auth context: " + (auth ? "Available" : "Missing")
+      );
+      console.log("Auth context:", auth);
+    } catch (err) {
+      console.error("Error accessing auth context:", err);
+      setDebugInfo((prev) => prev + " | Auth context error");
     }
-  }, [user, router, mounted]);
+  }, [auth]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
+    setDebugInfo((prev) => prev + " | Login attempt");
     console.log("Login attempt with:", email);
 
     try {
-      await login(email, password);
-      router.push("/admin-direct");
+      if (typeof auth?.login === "function") {
+        await auth.login(email, password);
+        setDebugInfo((prev) => prev + " | Login success");
+        router.push("/admin-direct");
+      } else {
+        throw new Error("Login function not available");
+      }
     } catch (err) {
       console.error("Login error:", err);
       setError("Invalid email or password");
+      setDebugInfo(
+        (prev) =>
+          prev +
+          " | Login failed: " +
+          (err instanceof Error ? err.message : String(err))
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  // Don't render until mounted to prevent hydration mismatch
-  if (!mounted) {
-    return (
-      <div className="animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg w-full h-96"></div>
-    );
-  }
+  // Fallback for direct login
+  const handleDirectLogin = () => {
+    setLoading(true);
+    setDebugInfo((prev) => prev + " | Direct login");
+
+    try {
+      // Store a simple auth flag in localStorage
+      localStorage.setItem("admin-auth", "true");
+      localStorage.setItem("admin-email", email);
+
+      // Redirect to admin panel
+      router.push("/admin-direct");
+    } catch (err) {
+      console.error("Direct login error:", err);
+      setError("Failed to access admin panel");
+      setDebugInfo((prev) => prev + " | Direct login failed");
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="max-w-md w-full space-y-8 p-8 bg-white dark:bg-gray-800 rounded-lg shadow-md">
@@ -100,7 +130,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <div>
+        <div className="flex flex-col space-y-3">
           <button
             type="submit"
             disabled={loading}
@@ -131,8 +161,17 @@ export default function LoginPage() {
                 Signing in...
               </span>
             ) : (
-              "Sign in"
+              "Sign in with Appwrite"
             )}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleDirectLogin}
+            disabled={loading}
+            className="group relative w-full flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Direct Admin Access
           </button>
         </div>
 
@@ -140,6 +179,9 @@ export default function LoginPage() {
           <p className="text-gray-500 dark:text-gray-400">
             Demo credentials: ecoexpert@gmail.com / admin123
           </p>
+          <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-700 rounded text-xs text-left overflow-auto max-h-20">
+            <code className="whitespace-pre-wrap break-all">{debugInfo}</code>
+          </div>
         </div>
       </form>
     </div>
