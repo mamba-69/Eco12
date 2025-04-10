@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+} from "react";
 import { account } from "../lib/appwrite";
 import { Models } from "appwrite";
 
@@ -28,6 +34,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   );
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const isMounted = useRef(true);
+
+  // Set up cleanup function to prevent memory leaks
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   // Set mounted flag when component mounts on client
   useEffect(() => {
@@ -38,22 +53,49 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (!mounted) return;
 
-    checkAuth();
+    const checkAuthAsync = async () => {
+      try {
+        console.log("Checking auth status...");
+        const currentUser = await account.get();
+        if (isMounted.current) {
+          setUser(currentUser);
+        }
+      } catch (error) {
+        console.error("Auth check error:", error);
+        if (isMounted.current) {
+          setUser(null);
+        }
+      } finally {
+        if (isMounted.current) {
+          setLoading(false);
+        }
+      }
+    };
+
+    checkAuthAsync();
   }, [mounted]);
 
   const checkAuth = async () => {
     try {
       const currentUser = await account.get();
-      setUser(currentUser);
+      if (isMounted.current) {
+        setUser(currentUser);
+      }
     } catch (error) {
-      setUser(null);
+      console.error("Auth check error:", error);
+      if (isMounted.current) {
+        setUser(null);
+      }
     } finally {
-      setLoading(false);
+      if (isMounted.current) {
+        setLoading(false);
+      }
     }
   };
 
   const login = async (email: string, password: string) => {
     try {
+      console.log("Attempting login with:", email);
       await account.createSession(email, password);
       await checkAuth();
     } catch (error) {
@@ -65,7 +107,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const logout = async () => {
     try {
       await account.deleteSession("current");
-      setUser(null);
+      if (isMounted.current) {
+        setUser(null);
+      }
     } catch (error) {
       console.error("Logout error:", error);
       throw error;

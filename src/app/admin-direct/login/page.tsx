@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/contexts/AuthContext";
 
@@ -11,27 +11,45 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const auth = useAuth();
-  const [debugInfo, setDebugInfo] = useState<string>("Initializing...");
+  const [debugInfo, setDebugInfo] = useState("Initializing...");
+  const isMounted = useRef(true);
+
+  // Set isMounted ref for cleanup
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   // Simple debug logger to help troubleshoot
   useEffect(() => {
     console.log("Login page mounted");
-    setDebugInfo("Login page mounted");
+    if (isMounted.current) {
+      setDebugInfo("Login page mounted");
+    }
 
     // Log auth context availability
     try {
-      setDebugInfo(
-        (prev) => prev + " | Auth context: " + (auth ? "Available" : "Missing")
-      );
+      if (isMounted.current) {
+        setDebugInfo(
+          (prev) =>
+            prev + " | Auth context: " + (auth ? "Available" : "Missing")
+        );
+      }
       console.log("Auth context:", auth);
     } catch (err) {
       console.error("Error accessing auth context:", err);
-      setDebugInfo((prev) => prev + " | Auth context error");
+      if (isMounted.current) {
+        setDebugInfo((prev) => prev + " | Auth context error");
+      }
     }
   }, [auth]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isMounted.current) return;
+
     setError("");
     setLoading(true);
     setDebugInfo((prev) => prev + " | Login attempt");
@@ -40,42 +58,54 @@ export default function LoginPage() {
     try {
       if (typeof auth?.login === "function") {
         await auth.login(email, password);
-        setDebugInfo((prev) => prev + " | Login success");
-        router.push("/admin-direct");
+        if (isMounted.current) {
+          setDebugInfo((prev) => prev + " | Login success");
+          router.push("/admin-direct");
+        }
       } else {
         throw new Error("Login function not available");
       }
     } catch (err) {
       console.error("Login error:", err);
-      setError("Invalid email or password");
-      setDebugInfo(
-        (prev) =>
-          prev +
-          " | Login failed: " +
-          (err instanceof Error ? err.message : String(err))
-      );
+      if (isMounted.current) {
+        setError("Invalid email or password");
+        setDebugInfo(
+          (prev) =>
+            prev +
+            " | Login failed: " +
+            (err instanceof Error ? err.message : String(err))
+        );
+      }
     } finally {
-      setLoading(false);
+      if (isMounted.current) {
+        setLoading(false);
+      }
     }
   };
 
   // Fallback for direct login
   const handleDirectLogin = () => {
+    if (!isMounted.current) return;
+
     setLoading(true);
     setDebugInfo((prev) => prev + " | Direct login");
 
     try {
       // Store a simple auth flag in localStorage
-      localStorage.setItem("admin-auth", "true");
-      localStorage.setItem("admin-email", email);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("admin-auth", "true");
+        localStorage.setItem("admin-email", email);
+      }
 
       // Redirect to admin panel
       router.push("/admin-direct");
     } catch (err) {
       console.error("Direct login error:", err);
-      setError("Failed to access admin panel");
-      setDebugInfo((prev) => prev + " | Direct login failed");
-      setLoading(false);
+      if (isMounted.current) {
+        setError("Failed to access admin panel");
+        setDebugInfo((prev) => prev + " | Direct login failed");
+        setLoading(false);
+      }
     }
   };
 
