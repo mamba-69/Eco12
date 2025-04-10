@@ -28,9 +28,6 @@ export default function AppwriteInit() {
   const isMounted = useRef(true);
   const pathname = usePathname();
 
-  // Don't show initialization UI on login page
-  const shouldShowUI = !pathname?.includes("/admin-direct/login");
-
   // Cleanup function to prevent updates on unmounted component
   useEffect(() => {
     return () => {
@@ -38,7 +35,7 @@ export default function AppwriteInit() {
     };
   }, []);
 
-  // Debug appwrite configuration
+  // Debug appwrite configuration - silently log to console only
   useEffect(() => {
     const endpoint = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT;
     const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID;
@@ -54,13 +51,7 @@ export default function AppwriteInit() {
     // Check if all required environment variables are set
     if (!endpoint || !projectId || !databaseId || !mediaBucketId) {
       console.error("Missing required Appwrite environment variables!");
-      setError(`Missing required Appwrite environment variables:
-        ${!endpoint ? "- NEXT_PUBLIC_APPWRITE_ENDPOINT" : ""}
-        ${!projectId ? "- NEXT_PUBLIC_APPWRITE_PROJECT_ID" : ""}
-        ${!databaseId ? "- NEXT_PUBLIC_APPWRITE_DATABASE_ID" : ""}
-        ${!mediaBucketId ? "- NEXT_PUBLIC_APPWRITE_MEDIA_BUCKET_ID" : ""}
-        
-        Please check your .env.local file and make sure all variables are correctly set.`);
+      setError(`Missing required Appwrite environment variables.`);
       return;
     }
 
@@ -150,7 +141,7 @@ export default function AppwriteInit() {
             setCollectionsAvailable(true);
           } else {
             setError(
-              "Some collections are missing. Please check the Appwrite console and make sure the collections are created."
+              "Some collections are missing. Please check the Appwrite console."
             );
           }
         }
@@ -357,81 +348,28 @@ export default function AppwriteInit() {
     }
   };
 
-  // Display error message if initialization failed
-  if (error && shouldShowUI) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full">
-          <h2 className="text-lg font-bold text-red-600 mb-4">
-            Appwrite Error
-          </h2>
-          <p className="mb-4 text-gray-700 dark:text-gray-300">{error}</p>
-          <div className="bg-yellow-50 p-3 rounded border border-yellow-200 mb-4">
-            <p className="text-sm text-yellow-800">Debug Info:</p>
-            <ul className="text-xs text-yellow-700 mt-1 list-disc pl-4">
-              <li>Database ID: {DATABASE_ID || "Not set"}</li>
-              <li>
-                Bucket ID:{" "}
-                {process.env.NEXT_PUBLIC_APPWRITE_MEDIA_BUCKET_ID || "Not set"}
-              </li>
-              <li>
-                Collections Available: {collectionsAvailable ? "Yes" : "No"}
-              </li>
-              <li>
-                Storage Bucket Available: {bucketAvailable ? "Yes" : "No"}
-              </li>
-              <li>WebSocket Connected: {isConnected ? "Yes" : "No"}</li>
-              <li>Retry Count: {retryCount}</li>
-            </ul>
-          </div>
-          <button
-            onClick={() => {
-              if (isMounted.current) {
-                setError(null);
-                setInitialized(false);
-                setRetryCount(0);
-                setCollectionsAvailable(false);
-                setCreatingCollections(false);
-                setCreatingBucket(false);
-                setBucketAvailable(false);
-                window.location.reload();
-              }
-            }}
-            className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded"
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // Handle retry manually without showing any UI
+  useEffect(() => {
+    if (error) {
+      console.error("AppwriteInit error:", error);
+      // Attempt silent retry after 3 seconds
+      const timer = setTimeout(() => {
+        if (isMounted.current) {
+          console.log("Attempting silent retry...");
+          setError(null);
+          setInitialized(false);
+          setRetryCount((prev) => prev + 1);
+          setCollectionsAvailable(false);
+          setCreatingCollections(false);
+          setCreatingBucket(false);
+          setBucketAvailable(false);
+        }
+      }, 3000);
 
-  // Display loading message during initialization
-  if (!initialized && shouldShowUI) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full text-center">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
-            {creatingCollections
-              ? "Creating Appwrite collections..."
-              : creatingBucket
-              ? "Creating Appwrite storage bucket..."
-              : !collectionsAvailable
-              ? "Checking Appwrite collections..."
-              : !bucketAvailable
-              ? "Checking Appwrite storage bucket..."
-              : retryCount > 0
-              ? `Initializing data... (Attempt ${retryCount + 1})`
-              : "Initializing data..."}
-          </p>
-          <p className="text-sm text-gray-500 mt-2">
-            This may take a few moments
-          </p>
-        </div>
-      </div>
-    );
-  }
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
 
+  // No visible UI - everything happens invisibly
   return null;
 }

@@ -42,7 +42,7 @@ export default function RootLayoutClient({
         <ThemeProvider>
           <AuthProvider>
             <DataProvider>
-              {!isLoginPage && <AppwriteInit />}
+              <AppwriteInit />
               <div className="flex-1 flex flex-col">
                 {!isLoginPage && <Navbar />}
                 <main className="flex-1 isolate relative">{children}</main>
