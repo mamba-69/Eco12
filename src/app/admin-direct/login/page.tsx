@@ -1,111 +1,71 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/app/contexts/AuthContext";
 
+// Simplified standalone login page that doesn't rely on contexts
 export default function LoginPage() {
   const [email, setEmail] = useState("ecoexpert@gmail.com");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState("Loading page...");
   const router = useRouter();
-  const auth = useAuth();
-  const [debugInfo, setDebugInfo] = useState("Initializing...");
-  const isMounted = useRef(true);
 
-  // Set isMounted ref for cleanup
+  // Simple effect to indicate the page is loaded
   useEffect(() => {
-    isMounted.current = true;
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
+    console.log("Login page mounted - standalone version");
+    setStatus("Login page ready");
 
-  // Simple debug logger to help troubleshoot
-  useEffect(() => {
-    console.log("Login page mounted");
-    if (isMounted.current) {
-      setDebugInfo("Login page mounted");
-    }
-
-    // Log auth context availability
+    // Check if already logged in via localStorage
     try {
-      if (isMounted.current) {
-        setDebugInfo(
-          (prev) =>
-            prev + " | Auth context: " + (auth ? "Available" : "Missing")
-        );
-      }
-      console.log("Auth context:", auth);
-    } catch (err) {
-      console.error("Error accessing auth context:", err);
-      if (isMounted.current) {
-        setDebugInfo((prev) => prev + " | Auth context error");
-      }
-    }
-  }, [auth]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isMounted.current) return;
-
-    setError("");
-    setLoading(true);
-    setDebugInfo((prev) => prev + " | Login attempt");
-    console.log("Login attempt with:", email);
-
-    try {
-      if (typeof auth?.login === "function") {
-        await auth.login(email, password);
-        if (isMounted.current) {
-          setDebugInfo((prev) => prev + " | Login success");
-          router.push("/admin-direct");
-        }
-      } else {
-        throw new Error("Login function not available");
-      }
-    } catch (err) {
-      console.error("Login error:", err);
-      if (isMounted.current) {
-        setError("Invalid email or password");
-        setDebugInfo(
-          (prev) =>
-            prev +
-            " | Login failed: " +
-            (err instanceof Error ? err.message : String(err))
-        );
-      }
-    } finally {
-      if (isMounted.current) {
-        setLoading(false);
-      }
-    }
-  };
-
-  // Fallback for direct login
-  const handleDirectLogin = () => {
-    if (!isMounted.current) return;
-
-    setLoading(true);
-    setDebugInfo((prev) => prev + " | Direct login");
-
-    try {
-      // Store a simple auth flag in localStorage
       if (typeof window !== "undefined") {
-        localStorage.setItem("admin-auth", "true");
-        localStorage.setItem("admin-email", email);
-      }
+        const isAdmin = localStorage.getItem("admin-auth") === "true";
+        if (isAdmin) {
+          console.log("Admin auth found in localStorage");
+          setStatus("Already authenticated, redirecting...");
 
-      // Redirect to admin panel
-      router.push("/admin-direct");
+          // Short delay to allow for state update before redirect
+          const timer = setTimeout(() => {
+            router.push("/admin-direct");
+          }, 1000);
+
+          return () => clearTimeout(timer);
+        }
+      }
     } catch (err) {
-      console.error("Direct login error:", err);
-      if (isMounted.current) {
+      console.error("Error checking localStorage:", err);
+    }
+  }, [router]);
+
+  // Direct login that bypasses Appwrite
+  const handleDirectLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setStatus("Processing login...");
+
+    // For demo purposes, check hardcoded credentials
+    if (email === "ecoexpert@gmail.com" && password === "admin123") {
+      try {
+        if (typeof window !== "undefined") {
+          localStorage.setItem("admin-auth", "true");
+          localStorage.setItem("admin-email", email);
+        }
+
+        setStatus("Login successful, redirecting...");
+        setTimeout(() => {
+          router.push("/admin-direct");
+        }, 500);
+      } catch (err) {
+        console.error("Login error:", err);
         setError("Failed to access admin panel");
-        setDebugInfo((prev) => prev + " | Direct login failed");
+        setStatus("Login failed");
         setLoading(false);
       }
+    } else {
+      setError("Invalid email or password");
+      setStatus("Login failed - invalid credentials");
+      setLoading(false);
     }
   };
 
@@ -119,7 +79,7 @@ export default function LoginPage() {
           Sign in to access the admin dashboard
         </p>
       </div>
-      <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+      <form className="mt-8 space-y-6" onSubmit={handleDirectLogin}>
         {error && (
           <div className="bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-200 px-4 py-3 rounded">
             {error}
@@ -191,17 +151,8 @@ export default function LoginPage() {
                 Signing in...
               </span>
             ) : (
-              "Sign in with Appwrite"
+              "Login to Admin Panel"
             )}
-          </button>
-
-          <button
-            type="button"
-            onClick={handleDirectLogin}
-            disabled={loading}
-            className="group relative w-full flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Direct Admin Access
           </button>
         </div>
 
@@ -210,7 +161,7 @@ export default function LoginPage() {
             Demo credentials: ecoexpert@gmail.com / admin123
           </p>
           <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-700 rounded text-xs text-left overflow-auto max-h-20">
-            <code className="whitespace-pre-wrap break-all">{debugInfo}</code>
+            <code className="whitespace-pre-wrap break-all">{status}</code>
           </div>
         </div>
       </form>
