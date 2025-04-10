@@ -15,10 +15,12 @@ export default function LoginPage() {
 
   useEffect(() => {
     setMounted(true);
+    console.log("Login page mounted");
   }, []);
 
   useEffect(() => {
     if (mounted && user) {
+      console.log("User authenticated, redirecting");
       router.push("/admin-direct");
     }
   }, [user, router, mounted]);
@@ -27,6 +29,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
+    console.log("Login attempt with:", email);
 
     try {
       await login(email, password);
@@ -41,7 +44,9 @@ export default function LoginPage() {
 
   // Don't render until mounted to prevent hydration mismatch
   if (!mounted) {
-    return null;
+    return (
+      <div className="animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg w-full h-96"></div>
+    );
   }
 
   return (
@@ -50,6 +55,9 @@ export default function LoginPage() {
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
           Admin Login
         </h2>
+        <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+          Sign in to access the admin dashboard
+        </p>
       </div>
       <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
         {error && (
@@ -126,6 +134,12 @@ export default function LoginPage() {
               "Sign in"
             )}
           </button>
+        </div>
+
+        <div className="text-sm text-center mt-4">
+          <p className="text-gray-500 dark:text-gray-400">
+            Demo credentials: ecoexpert@gmail.com / admin123
+          </p>
         </div>
       </form>
     </div>

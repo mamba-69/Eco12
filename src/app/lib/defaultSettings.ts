@@ -13,8 +13,8 @@ export const defaultSettings: SiteSettings = {
     "© " +
     new Date().getFullYear() +
     " Eco-Expert Recycling. All rights reserved.",
-  contactEmail: "info@ecoexpertrecycling.com",
-  contactPhone: "+1 (234) 567-8900",
+  contactEmail: "experttechnology2016@gmail.com",
+  contactPhone: "+91 70964 44414",
   contactAddress: "123 Recycling Way, Green City, 12345",
   socialLinks: {
     facebook: "https://facebook.com/ecoexpertrecycling",

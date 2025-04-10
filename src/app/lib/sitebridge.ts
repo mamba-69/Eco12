@@ -9,6 +9,9 @@ import type { SiteSettings, ContentSettings } from "./store";
 // Custom event name
 const SETTINGS_CHANGED = "site-settings-changed";
 
+
+
+
 // Define the types for messages sent over the channel
 interface SettingsChangeMessage {
   type: "settings-change";

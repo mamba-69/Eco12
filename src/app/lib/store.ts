@@ -57,11 +57,11 @@ export interface ContentSettings {
     videos: Array<{ title: string; url: string; thumbnail: string }>;
   };
   media: {
-    images: Array<{ 
-      id: string; 
-      url: string; 
-      publicId: string; 
-      name: string; 
+    images: Array<{
+      id: string;
+      url: string;
+      publicId: string;
+      name: string;
       uploadedAt: string;
       inMediaSlider?: boolean;
       type?: "image" | "video";
@@ -89,10 +89,10 @@ export interface ContentSettings {
 interface SiteStore {
   // Site settings (can be modified by admin)
   siteSettings: SiteSettings;
-  
+
   // Content settings
   contentSettings: ContentSettings;
-  
+
   // Actions
   updateSiteSettings: (
     settings: Partial<SiteSettings>,
@@ -113,7 +113,7 @@ export const defaultSiteSettings: SiteSettings = {
   logoUrl: "https://i.postimg.cc/2SW1kwbf/Final.png",
   primaryColor: "#10B981",
   footerText: "© 2025 Eco-Expert Recycling. All rights reserved.",
-  contactEmail: "experttechnology@gmail.com",
+  contactEmail: "experttechnology2016@gmail.com",
   contactPhone: "+91 70964 44414",
   contactAddress: "123 Recycling Lane, Green City, GC 12345",
   socialLinks: {
@@ -324,7 +324,7 @@ export const useStore = create<SiteStore>()(
       // Initial state
       siteSettings: defaultSiteSettings,
       contentSettings: defaultContentSettings,
-      
+
       // Actions
       updateSiteSettings: async (settings, shouldBroadcast = true) => {
         const currentSettings = get().siteSettings;

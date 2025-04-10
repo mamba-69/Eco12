@@ -32,7 +32,11 @@ export default function LoginLayout({
 }) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
-      {children}
+      <ThemeProvider>
+        <AuthProvider>
+          <DataProvider>{children}</DataProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </div>
   );
 }
