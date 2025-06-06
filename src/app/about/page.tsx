@@ -62,7 +62,7 @@ export default function AboutPage() {
             <h2 className="text-3xl font-bold mb-6 text-center">Our Story</h2>
             <div className="space-y-6">
               <p>
-                Founded in 2013, Eco-Expert was born from a simple observation:
+                Founded in 2025, Eco-Expert was born from a simple observation:
                 the growing mountain of electronic waste was becoming one of our
                 planet's most pressing environmental concerns.
               </p>
