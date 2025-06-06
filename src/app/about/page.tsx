@@ -193,29 +193,59 @@ export default function AboutPage() {
           <h2 className="text-3xl font-bold mb-10 text-center">
             Our Leadership Team
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {["CEO", "COO", "CTO", "Sustainability Director"].map(
-              (role, index) => (
-                <motion.div
-                  key={role}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.4, delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                  className="text-center"
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+              className="bg-card p-6 rounded-lg shadow-sm text-center"
+            >
+              <div className="w-24 h-24 rounded-full bg-primary/10 mx-auto mb-4 flex items-center justify-center text-primary text-xl font-bold">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-12 w-12"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                 >
-                  <div className="rounded-full overflow-hidden w-40 h-40 mx-auto mb-4">
-                    <img
-                      src={`https://placehold.co/300x300/10B981/FFFFFF?text=${role}`}
-                      alt={role}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <h3 className="text-xl font-bold">John Doe</h3>
-                  <p className="text-primary font-medium">{role}</p>
-                </motion.div>
-              )
-            )}
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-1.04-8.755-2.745M10 19l2-2 2 2M5 7.5V4a1 1 0 011-1h12a1 1 0 011 1v3.5m-3 0h-6M12 10a3 3 0 11-6 0 3 3 0 016 0zm-6 0a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold mb-1">Pankaj Patidar</h3>
+              <p className="text-muted-foreground">Founder</p>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              viewport={{ once: true }}
+              className="bg-card p-6 rounded-lg shadow-sm text-center"
+            >
+              <div className="w-24 h-24 rounded-full bg-accent/10 mx-auto mb-4 flex items-center justify-center text-accent text-xl font-bold">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-12 w-12"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold mb-1">Pushkar Patidar</h3>
+              <p className="text-muted-foreground">Co-founder</p>
+            </motion.div>
           </div>
         </section>
       </div>
