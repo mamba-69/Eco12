@@ -201,7 +201,7 @@ export function MediaSlider() {
       title: "Sustainable Future",
       description: "Building a sustainable future together",
       src: "https://images.unsplash.com/photo-1504237110-b7b7b7b7b7b7?auto=format&fit=crop&w=1200&q=80",
-      url: "https://images.unsplash.com/photo-1504237110-b7b7b7b7b7b7?auto=format&fit=crop&w=1200&q=80",
+      url: "https://unsplash.com/photos/a-pile-of-assorted-electronic-components-sitting-on-top-of-each-other-G09BIFdUAGU?auto=format&fit=crop&w=1200&q=80",
       name: "Sustainable Future",
       id: "7",
       inMediaSlider: true,
