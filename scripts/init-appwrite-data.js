@@ -120,7 +120,7 @@ const defaultSettings = {
   theme: "light",
   language: "en",
   sitename: "Eco Expert Recycling",
-  contactEmail: "experttechnology@gmail.com",
+  contactEmail: "Ecoexpertrecycling@gmail.com",
   contactPhone: "+91 70964 44414",
   navigation: JSON.stringify([
     { label: "Home", path: "/" },
@@ -131,13 +131,13 @@ const defaultSettings = {
   ]),
   footer: JSON.stringify({
     company: "Eco Expert Recycling",
-    address: "123 Green Street, Eco City, EC 12345",
+    address: "Survey No. 209/1/2, Ward No. 08, Ambedkar Ward, Neemuch City, Neemuch-458441, Madhya Pradesh.",
     phone: "+91 70964 44414",
-    email: "experttechnology@gmail.com",
+    email: "Ecoexpertrecycling@gmail.com",
     social: {
-      facebook: "https://facebook.com/ecoexpert",
-      twitter: "https://twitter.com/ecoexpert",
-      linkedin: "https://linkedin.com/company/ecoexpert",
+      facebook: "https://facebook.com/",
+      twitter: "https://twitter.com/",
+      linkedin: "https://linkedin.com/company/",
     },
   }),
   updatedAt: new Date().toISOString(),

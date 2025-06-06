@@ -72,7 +72,7 @@ interface Particle {
 
 function FloatingParticles() {
   const [particles, setParticles] = useState<Particle[]>([]);
-  
+
   useEffect(() => {
     // Only generate random values on client-side
     const newParticles: Particle[] = Array.from({ length: 20 }).map((_, i) => ({
@@ -82,10 +82,10 @@ function FloatingParticles() {
       animationDuration: 3 + Math.random() * 5,
       animationDelay: Math.random() * 2,
     }));
-    
+
     setParticles(newParticles);
   }, []);
-  
+
   return (
     <>
       {particles.map((particle) => (
@@ -115,10 +115,10 @@ function FloatingParticles() {
 export default function Hero() {
   const earthRef = useRef(null);
   const [mounted, setMounted] = useState(false);
-  
+
   useEffect(() => {
     setMounted(true);
-    
+
     // Only import GSAP on the client side
     if (typeof window !== "undefined") {
       // Safe import of GSAP
@@ -128,16 +128,16 @@ export default function Hero() {
 
           // Rotating Earth animation with error handling
           try {
-    const earthRotation = gsap.to(earthRef.current, {
-      rotation: 360,
-      duration: 60,
-      repeat: -1,
+            const earthRotation = gsap.to(earthRef.current, {
+              rotation: 360,
+              duration: 60,
+              repeat: -1,
               ease: "linear",
-    });
-    
-    return () => {
-      earthRotation.kill();
-    };
+            });
+
+            return () => {
+              earthRotation.kill();
+            };
           } catch (error) {
             console.error("Error creating GSAP animation:", error);
           }
@@ -152,12 +152,12 @@ export default function Hero() {
     <div className="relative min-h-screen overflow-hidden">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-card via-card to-background" />
-      
+
       {/* Floating particles - only rendered client-side */}
       <div className="absolute inset-0 overflow-hidden">
         {mounted && <FloatingParticles />}
       </div>
-      
+
       {/* Content grid */}
       <div className="container relative z-10 mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 h-screen items-center pt-20 lg:pt-0">
         {/* Left side - Text content */}
@@ -165,70 +165,48 @@ export default function Hero() {
           {mounted ? (
             <>
               <MotionDiv
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          >
-            <div className="inline-block bg-primary text-white py-1.5 px-4 mb-6 text-sm font-medium rounded-full animate-pulse">
-              Leading E-Waste Recycling in India
-            </div>
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+              >
+                <div className="inline-block bg-primary text-white py-1.5 px-4 mb-6 text-sm font-medium rounded-full animate-pulse">
+                  Leading E-Waste Recycling in India
+                </div>
               </MotionDiv>
-          
+
               <MotionH1
-            className="text-4xl md:text-6xl font-bold mb-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-          >
-            <span>Eco-Expert Solutions</span> <br />
-            <span className="text-primary">for a Greener Future</span>
+                className="text-4xl md:text-6xl font-bold mb-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.4 }}
+              >
+                <span>Eco-Expert Solutions</span> <br />
+                <span className="text-primary">for a Greener Future</span>
               </MotionH1>
-          
+
               <MotionP
-            className="text-lg mb-8 text-foreground/80 max-w-lg"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-          >
+                className="text-lg mb-8 text-foreground/80 max-w-lg"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.6 }}
+              >
                 We transform electronic waste into valuable resources through
                 innovative recycling solutions. Join us in our mission to create
                 a sustainable, circular economy for electronics.
               </MotionP>
 
               <MotionDiv
-            className="flex flex-col sm:flex-row gap-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.8 }}
-          >
+                className="flex flex-col sm:flex-row gap-4"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.8 }}
+              >
                 <Link href="/contact" className="btn-primary text-center">
-              Get Started Today
-            </Link>
+                  Get Started Today
+                </Link>
                 <Link href="/services" className="btn-outline text-center">
-              Explore Services
-            </Link>
-              </MotionDiv>
-          
-              <MotionDiv
-            className="mt-16"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 1.2 }}
-          >
-                <p className="text-sm text-muted-foreground mb-4">
-                  Trusted by Industry Leaders:
-                </p>
-            <div className="flex gap-6 items-center">
-              <div className="w-24 h-12 bg-card rounded-md shadow-sm flex items-center justify-center">
-                <div className="text-primary font-bold">TechCorp</div>
-              </div>
-              <div className="w-24 h-12 bg-card rounded-md shadow-sm flex items-center justify-center">
-                <div className="text-accent font-bold">EcoTech</div>
-              </div>
-              <div className="w-24 h-12 bg-card rounded-md shadow-sm flex items-center justify-center">
-                <div className="text-secondary font-bold">GreenIT</div>
-              </div>
-            </div>
+                  Explore Services
+                </Link>
               </MotionDiv>
             </>
           ) : (
@@ -249,7 +227,7 @@ export default function Hero() {
             </div>
           )}
         </div>
-        
+
         {/* Right side - Earth graphic & 3D elements - only render when mounted */}
         {mounted && (
           <div className="relative hidden lg:flex items-center justify-center">
@@ -259,7 +237,7 @@ export default function Hero() {
               className="absolute w-[400px] h-[400px] rounded-full bg-primary/10 animate-pulse-slow"
               style={{ animationDelay: "1s" }}
             />
-            
+
             {/* Rotating earth image */}
             <div
               ref={earthRef}
@@ -273,26 +251,12 @@ export default function Hero() {
                 />
               </div>
 
-              {/* Stats overlay - upper right */}
-              <div className="absolute top-0 right-0 p-3 rounded-lg bg-background/80 animate-pulse-slow pointer-events-none">
-                <p className="text-xs font-semibold text-muted-foreground">
-                  E-Waste Recycled
-                </p>
-                <p className="text-lg font-bold">500,000+ Devices</p>
-              </div>
-
-              {/* Stats overlay - lower left */}
-              <div className="absolute bottom-0 left-0 p-3 rounded-lg bg-background/80 animate-pulse-slow pointer-events-none">
-                <p className="text-xs font-semibold text-muted-foreground">
-                  CO₂ Reduced
-                </p>
-                <p className="text-lg font-bold">1,200+ Tons</p>
-              </div>
+              {/* Stats overlays removed as requested */}
             </div>
           </div>
         )}
       </div>
-      
+
       {/* Scroll indicator */}
       <MotionDiv
         className="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex flex-col items-center"
@@ -315,4 +279,4 @@ export default function Hero() {
       </MotionDiv>
     </div>
   );
-} 
+}

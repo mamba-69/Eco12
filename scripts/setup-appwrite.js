@@ -12,6 +12,8 @@
  * - APPWRITE_API_KEY
  */
 
+// import boolen start mosbwe usnmer 
+// bedhueb hifen - = im port 'next'
 import { config } from "dotenv";
 import fetch from "node-fetch";
 import { fileURLToPath } from "url";
@@ -30,7 +32,7 @@ if (Object.keys(process.env).length === 0) {
 const APPWRITE_ENDPOINT = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT;
 const PROJECT_ID = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID;
 const API_KEY = process.env.APPWRITE_API_KEY;
-const BUCKET_ID = "media-bucket";
+const BUCKET_ID = 'media-bucket';
 
 if (!APPWRITE_ENDPOINT || !PROJECT_ID || !API_KEY) {
   console.error(
@@ -326,66 +328,49 @@ async function createCollections() {
 
 // Create storage bucket
 async function createStorageBucket() {
-  console.log(`🗂️ Checking storage bucket '${BUCKET_ID}'...`);
-
-  // Check if bucket exists
-  const checkResult = await appwriteRequest(`/storage/buckets/${BUCKET_ID}`);
-
-  if (checkResult.success || checkResult.exists) {
-    console.log(`✅ Storage bucket '${BUCKET_ID}' already exists`);
-
-    // Update bucket permissions even if it exists
-    const updateResult = await appwriteRequest(
-      `/storage/buckets/${BUCKET_ID}`,
-      "PUT",
-      {
-        name: "Media Storage",
-        permissions: [
-          'read("any")',
-          'create("any")',
-          'update("any")',
-          'delete("any")',
-        ],
-        fileSecurity: false,
-        enabled: true,
-        maximumFileSize: 30000000, // 30MB
-        allowedFileExtensions: ["jpg", "jpeg", "png", "gif", "webp", "svg"],
+  try {
+    console.log('Setting up storage bucket...');
+    let bucket;
+    
+    try {
+      // Try to get the existing bucket first
+      bucket = await storage.getBucket(BUCKET_ID);
+      console.log('Found existing bucket:', BUCKET_ID);
+    } catch (error) {
+      if (error.code === 404) {
+        // Bucket doesn't exist, create it
+        console.log('Creating new bucket:', BUCKET_ID);
+        bucket = await storage.createBucket(BUCKET_ID, BUCKET_ID, [
+          Permission.read(Role.any()),
+          Permission.write(Role.any()),
+          Permission.update(Role.any()),
+          Permission.delete(Role.any())
+        ]);
+      } else {
+        throw error;
       }
-    );
-
-    if (updateResult.error) {
-      console.error(
-        `❌ Failed to update storage bucket permissions: ${updateResult.error}`
-      );
-      return false;
     }
 
+    // Update bucket settings
+    await storage.updateBucket(BUCKET_ID, BUCKET_ID, {
+      enabled: true,
+      maximumFileSize: 30000000, // 30MB
+      allowedFileExtensions: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'mp4', 'webm', 'mov'],
+      fileSecurity: false,
+      permissions: [
+        Permission.read(Role.any()),
+        Permission.write(Role.any()),
+        Permission.update(Role.any()),
+        Permission.delete(Role.any())
+      ]
+    });
+
+    console.log('Storage bucket setup complete');
     return true;
-  }
-
-  // Create bucket with comprehensive settings
-  const createResult = await appwriteRequest("/storage/buckets", "POST", {
-    bucketId: BUCKET_ID,
-    name: "Media Storage",
-    permissions: [
-      'read("any")',
-      'create("any")',
-      'update("any")',
-      'delete("any")',
-    ],
-    fileSecurity: false,
-    enabled: true,
-    maximumFileSize: 30000000, // 30MB
-    allowedFileExtensions: ["jpg", "jpeg", "png", "gif", "webp", "svg"],
-  });
-
-  if (createResult.error) {
-    console.error(`❌ Failed to create storage bucket: ${createResult.error}`);
+  } catch (error) {
+    console.error('Failed to setup storage bucket:', error);
     return false;
   }
-
-  console.log(`✅ Created storage bucket '${BUCKET_ID}'`);
-  return true;
 }
 
 async function initializeDefaultData() {

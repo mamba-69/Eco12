@@ -1,6 +1,6 @@
 "use client";
 
-import { Inter } from "next/font/google";
+// Use system font stack instead of Google Fonts to avoid download issues
 import { AuthProvider } from "@/app/contexts/AuthContext";
 import { DataProvider } from "@/app/contexts/DataContext";
 import AppwriteInit from "./AppwriteInit";
@@ -9,24 +9,7 @@ import Footer from "./Footer";
 import ThemeProvider from "../theme/ThemeProvider";
 import { usePathname } from "next/navigation";
 
-// Configure Inter font with fallback to system fonts
-const inter = Inter({
-  subsets: ["latin"],
-  display: "swap",
-  fallback: [
-    "-apple-system",
-    "BlinkMacSystemFont",
-    "Segoe UI",
-    "Roboto",
-    "Oxygen",
-    "Ubuntu",
-    "Cantarell",
-    "Fira Sans",
-    "Droid Sans",
-    "Helvetica Neue",
-    "sans-serif",
-  ],
-});
+// No font configuration - use system fonts directly
 
 export default function RootLayoutClient({
   children,
@@ -37,7 +20,7 @@ export default function RootLayoutClient({
   const isLoginPage = pathname?.includes("/admin-direct/login");
 
   return (
-    <html lang="en" className={inter.className}>
+    <html lang="en" className="font-sans" suppressHydrationWarning>
       <body className="min-h-screen flex flex-col">
         <ThemeProvider>
           <AuthProvider>

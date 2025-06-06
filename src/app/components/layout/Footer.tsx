@@ -26,11 +26,11 @@ export default function Footer() {
     `© ${new Date().getFullYear()} EcoExpert. All rights reserved.`
   );
   const [contactEmail, setContactEmail] = useState<string>(
-    "experttechnology2016@gmail.com"
+    "Ecoexpertrecyling@gmail.com"
   );
   const [contactPhone, setContactPhone] = useState<string>("91+ 7096444414");
   const [contactAddress, setContactAddress] = useState<string>(
-    "Unit 1116, 1117 & 1119, 11th Floor BPTP Park Centra, Sector 30 NH8, Gurgaon, Haryana 122001"
+    "Survey No. 209/1/2, Ward No. 08, Ambedkar Ward, Neemuch City, Neemuch-458441, Madhya Pradesh."
   );
   const [socialLinks, setSocialLinks] = useState({
     facebook: "https://facebook.com",
@@ -47,12 +47,12 @@ export default function Footer() {
           `© ${new Date().getFullYear()} EcoExpert. All rights reserved.`
       );
       setContactEmail(
-        siteSettings.contactEmail || "experttechnology2016@gmail.com"
+        siteSettings.contactEmail || "Ecoexpertrecycling@gmail.com"
       );
       setContactPhone(siteSettings.contactPhone || "91+ 7096444414");
       setContactAddress(
         siteSettings.contactAddress ||
-          "Unit 1116, 1117 & 1119, 11th Floor BPTP Park Centra, Sector 30 NH8, Gurgaon, Haryana 122001"
+          "Survey No. 209/1/2, Ward No. 08, Ambedkar Ward, Neemuch City, Neemuch-458441, Madhya Pradesh."
       );
       setSocialLinks(
         siteSettings.socialLinks || {
@@ -252,7 +252,7 @@ export default function Footer() {
                 </a>
               </li>
             </ul>
-        </div>
+          </div>
 
           {/* Contact */}
           <div>
@@ -291,4 +291,4 @@ export default function Footer() {
       </div>
     </footer>
   );
-} 
+}

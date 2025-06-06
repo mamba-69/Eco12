@@ -8,12 +8,12 @@ export default function NotFound() {
       <p className="text-gray-600 dark:text-gray-400 mb-8 text-center max-w-md">
         The page you are looking for doesn't exist or has been moved.
       </p>
-      <a
+      <Link
         href="/"
         className="px-6 py-3 rounded-md bg-green-600 text-white hover:bg-green-700 transition-colors"
       >
         Return Home
-      </a>
+      </Link>
     </div>
   );
 }

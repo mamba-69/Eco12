@@ -15,7 +15,7 @@ export default function ContactPage() {
       <div className="mb-6">
         <h2 className="text-xl font-semibold mb-2">Contact Information</h2>
         <p>Phone: 91+ 7096444414</p>
-        <p>Email: experttechnology2016@gmail.com</p>
+        <p>Email: Ecoexpertrecycling@gmail.com</p>
       </div>
     </div>
   );

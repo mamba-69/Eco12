@@ -113,14 +113,14 @@ export const defaultSiteSettings: SiteSettings = {
   logoUrl: "https://i.postimg.cc/2SW1kwbf/Final.png",
   primaryColor: "#10B981",
   footerText: "© 2025 Eco-Expert Recycling. All rights reserved.",
-  contactEmail: "experttechnology2016@gmail.com",
+  contactEmail: "Ecoexpertrecycling@gmail.com",
   contactPhone: "+91 70964 44414",
-  contactAddress: "123 Recycling Lane, Green City, GC 12345",
+  contactAddress: "Survey No. 209/1/2, Ward No. 08, Ambedkar Ward, Neemuch City, Neemuch-458441, Madhya Pradesh.",
   socialLinks: {
-    facebook: "https://facebook.com/ecoexpert",
-    twitter: "https://twitter.com/ecoexpert",
-    instagram: "https://instagram.com/ecoexpert",
-    linkedin: "https://linkedin.com/company/ecoexpert",
+    facebook: "https://facebook.com/",
+    twitter: "https://twitter.com/",
+    instagram: "https://instagram.com/",
+    linkedin: "https://linkedin.com/company/",
   },
 };
 
