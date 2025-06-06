@@ -24,16 +24,7 @@ export default function AboutPage() {
                 innovative, sustainable solutions that protect our planet for
                 future generations.
               </p>
-              <div className="flex flex-wrap gap-4">
-                <div className="bg-card p-3 rounded-lg shadow-sm text-center flex-1 min-w-[150px]">
-                  <h3 className="font-bold text-2xl text-primary">10+</h3>
-                  <p className="text-muted-foreground">Years Experience</p>
-                </div>
-                <div className="bg-card p-3 rounded-lg shadow-sm text-center flex-1 min-w-[150px]">
-                  <h3 className="font-bold text-2xl text-accent">500K+</h3>
-                  <p className="text-muted-foreground">Devices Recycled</p>
-                </div>
-              </div>
+              <div className="flex flex-wrap gap-4"></div>
             </motion.div>
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
@@ -113,7 +104,7 @@ export default function AboutPage() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
+                    d="M12 11c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm-7 9v-1c0-2.209 1.791-4 4-4h6c2.209 0 4 1.791 4 4v1H5z"
                   />
                 </svg>
               </div>

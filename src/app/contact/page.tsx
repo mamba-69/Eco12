@@ -8,8 +8,7 @@ export default function ContactPage() {
       <div className="mb-6">
         <h2 className="text-xl font-semibold mb-2">Our Address</h2>
         <p>
-          Unit 1116, 1117 & 1119, 11th Floor BPTP Park Centra,<br />
-          Sector 30 NH8, Gurgaon, Haryana 122001
+        Survey No. 209/1/2, Ward No. 08, Ambedkar Ward, Neemuch City, Neemuch-458441, Madhya Pradesh.
         </p>
       </div>
       <div className="mb-6">
