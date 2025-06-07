@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <!-- Background Circle -->
+  <circle cx="400" cy="400" r="380" fill="#f0f9f0" stroke="#22c55e" stroke-width="2" />
+  
+  <!-- Process Steps (Positioned in a circle) -->
+  <!-- Step 1: Collection -->
+  <g transform="translate(400, 120)">
+    <circle cx="0" cy="0" r="60" fill="white" stroke="#22c55e" stroke-width="3" />
+    <text x="0" y="-15" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#22c55e" text-anchor="middle">Collection</text>
+    <text x="0" y="15" font-family="Arial, sans-serif" font-size="12" fill="#333" text-anchor="middle">Gathering e-waste</text>
+    <text x="0" y="35" font-family="Arial, sans-serif" font-size="10" fill="#333" text-anchor="middle">from various sources</text>
+  </g>
+  <line x1="400" y1="180" x2="400" y2="320" stroke="#22c55e" stroke-width="3" stroke-dasharray="5,5" />
+  
+  <!-- Step 2: Sorting -->
+  <g transform="translate(680, 280)">
+    <circle cx="0" cy="0" r="60" fill="white" stroke="#22c55e" stroke-width="3" />
+    <text x="0" y="-15" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#22c55e" text-anchor="middle">Sorting</text>
+    <text x="0" y="15" font-family="Arial, sans-serif" font-size="12" fill="#333" text-anchor="middle">Categorizing by</text>
+    <text x="0" y="35" font-family="Arial, sans-serif" font-size="10" fill="#333" text-anchor="middle">type and material</text>
+  </g>
+  <line x1="620" y1="320" x2="480" y2="380" stroke="#22c55e" stroke-width="3" stroke-dasharray="5,5" />
+  
+  <!-- Step 3: Dismantling -->
+  <g transform="translate(680, 520)">
+    <circle cx="0" cy="0" r="60" fill="white" stroke="#22c55e" stroke-width="3" />
+    <text x="0" y="-15" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#22c55e" text-anchor="middle">Dismantling</text>
+    <text x="0" y="15" font-family="Arial, sans-serif" font-size="12" fill="#333" text-anchor="middle">Breaking down into</text>
+    <text x="0" y="35" font-family="Arial, sans-serif" font-size="10" fill="#333" text-anchor="middle">component parts</text>
+  </g>
+  <line x1="620" y1="480" x2="480" y2="420" stroke="#22c55e" stroke-width="3" stroke-dasharray="5,5" />
+  
+  <!-- Step 4: Material Recovery -->
+  <g transform="translate(400, 680)">
+    <circle cx="0" cy="0" r="60" fill="white" stroke="#22c55e" stroke-width="3" />
+    <text x="0" y="-15" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#22c55e" text-anchor="middle">Recovery</text>
+    <text x="0" y="15" font-family="Arial, sans-serif" font-size="12" fill="#333" text-anchor="middle">Extracting valuable</text>
+    <text x="0" y="35" font-family="Arial, sans-serif" font-size="10" fill="#333" text-anchor="middle">metals and materials</text>
+  </g>
+  <line x1="400" y1="620" x2="400" y2="480" stroke="#22c55e" stroke-width="3" stroke-dasharray="5,5" />
+  
+  <!-- Step 5: Processing -->
+  <g transform="translate(120, 520)">
+    <circle cx="0" cy="0" r="60" fill="white" stroke="#22c55e" stroke-width="3" />
+    <text x="0" y="-15" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#22c55e" text-anchor="middle">Processing</text>
+    <text x="0" y="15" font-family="Arial, sans-serif" font-size="12" fill="#333" text-anchor="middle">Refining and</text>
+    <text x="0" y="35" font-family="Arial, sans-serif" font-size="10" fill="#333" text-anchor="middle">preparing materials</text>
+  </g>
+  <line x1="180" y1="480" x2="320" y2="420" stroke="#22c55e" stroke-width="3" stroke-dasharray="5,5" />
+  
+  <!-- Step 6: Manufacturing -->
+  <g transform="translate(120, 280)">
+    <circle cx="0" cy="0" r="60" fill="white" stroke="#22c55e" stroke-width="3" />
+    <text x="0" y="-15" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#22c55e" text-anchor="middle">Manufacturing</text>
+    <text x="0" y="15" font-family="Arial, sans-serif" font-size="12" fill="#333" text-anchor="middle">Creating new</text>
+    <text x="0" y="35" font-family="Arial, sans-serif" font-size="10" fill="#333" text-anchor="middle">products</text>
+  </g>
+  <line x1="180" y1="320" x2="320" y2="380" stroke="#22c55e" stroke-width="3" stroke-dasharray="5,5" />
+  
+  <!-- Connecting lines to center -->
+  <line x1="400" y1="320" x2="400" y2="400" stroke="#22c55e" stroke-width="3" />
+  <line x1="480" y1="380" x2="400" y2="400" stroke="#22c55e" stroke-width="3" />
+  <line x1="480" y1="420" x2="400" y2="400" stroke="#22c55e" stroke-width="3" />
+  <line x1="400" y1="480" x2="400" y2="400" stroke="#22c55e" stroke-width="3" />
+  <line x1="320" y1="420" x2="400" y2="400" stroke="#22c55e" stroke-width="3" />
+  <line x1="320" y1="380" x2="400" y2="400" stroke="#22c55e" stroke-width="3" />
+  
+  <!-- Center Hub (moved after lines so it appears on top) -->
+  <circle cx="400" cy="400" r="80" fill="#22c55e" />
+  
+  <!-- E-Waste Recycling text with better visibility (moved after lines so it appears on top) -->
+  <text x="400" y="390" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#000000" text-anchor="middle" dominant-baseline="middle">E-Waste</text>
+  <text x="400" y="415" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#000000" text-anchor="middle" dominant-baseline="middle">Recycling</text>
+</svg>

@@ -212,44 +212,52 @@ export default function Footer() {
             <h3 className="text-xl font-bold mb-4">Services</h3>
             <ul className="space-y-2">
               <li>
-                <a
-                  href="/services"
+                <Link
+                  href="/services/e-waste-recycling"
                   className="text-muted-foreground hover:text-primary"
                 >
-                  E-Waste Collection
-                </a>
+                  E-Waste Recycling
+                </Link>
               </li>
               <li>
-                <a
-                  href="/services"
+                <Link
+                  href="/services/data-destruction"
                   className="text-muted-foreground hover:text-primary"
                 >
                   Data Destruction
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="/services"
+                <Link
+                  href="/services/collection-services"
                   className="text-muted-foreground hover:text-primary"
                 >
-                  IT Asset Disposition
-                </a>
+                  Collection Services
+                </Link>
               </li>
               <li>
-                <a
-                  href="/services"
+                <Link
+                  href="/services/compliance-certification"
                   className="text-muted-foreground hover:text-primary"
                 >
-                  Corporate Recycling
-                </a>
+                  Compliance Certification
+                </Link>
               </li>
               <li>
-                <a
-                  href="/services"
+                <Link
+                  href="/services/asset-recovery"
                   className="text-muted-foreground hover:text-primary"
                 >
-                  E-Waste Compliance
-                </a>
+                  Asset Recovery
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/services/it-equipment-disposal"
+                  className="text-muted-foreground hover:text-primary"
+                >
+                  IT Equipment Disposal
+                </Link>
               </li>
             </ul>
           </div>

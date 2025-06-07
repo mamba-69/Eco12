@@ -3,14 +3,6 @@
 import React, { useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  FiRefreshCw,
-  FiShield,
-  FiHardDrive,
-  FiTruck,
-  FiFileText,
-  FiPackage,
-} from "react-icons/fi";
 
 // Custom hook to check if element is in view
 function useClientInView(ref: React.RefObject<Element>) {
@@ -41,17 +33,15 @@ function useClientInView(ref: React.RefObject<Element>) {
 const ServiceCard = ({
   title,
   description,
-
+  icon,
   index,
   slug,
-  IconComponent,
 }: {
   title: string;
   description: string;
-
+  icon: string;
   index: number;
   slug: string;
-  IconComponent?: React.ComponentType<React.SVGProps<SVGSVGElement>>;
 }) => {
   const cardRef = useRef(null);
   const isCardInView = useClientInView(cardRef);
@@ -79,7 +69,7 @@ const ServiceCard = ({
         {/* Icon */}
         <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors duration-300">
           <div className="w-8 h-8 text-primary">
-            {IconComponent ? <IconComponent className="w-8 h-8" /> : null}
+            <Image src={icon} alt={title} width={32} height={32} />
           </div>
         </div>
 
@@ -118,7 +108,7 @@ const ServiceCard = ({
   );
 };
 
-export default function ServicesPage() {
+export default function Services() {
   const sectionRef = useRef(null);
   const isInView = useClientInView(sectionRef);
 
@@ -127,42 +117,21 @@ export default function ServicesPage() {
       title: "E-Waste Recycling",
       description:
         "Comprehensive recycling services for all types of electronic waste and devices, ensuring proper disposal and resource recovery.",
-      IconComponent: FiRefreshCw,
+      icon: "/images/service-epr.svg",
       slug: "e-waste-recycling",
     },
     {
       title: "Data Destruction",
       description:
         "Secure data destruction services ensuring your sensitive information is completely erased from all devices before recycling.",
-      IconComponent: FiHardDrive,
+      icon: "/images/service-logistics.svg",
       slug: "data-destruction",
-    },
-    {
-      title: "IT Equipment Disposal",
-      description:
-        "Professional disposal services for outdated or broken IT equipment and electronics with environmentally responsible methods.",
-      IconComponent: FiShield,
-      slug: "it-equipment-disposal",
-    },
-    {
-      title: "Asset Recovery",
-      description:
-        "Maximize the value of your end-of-life IT equipment through our comprehensive asset recovery services.",
-      IconComponent: FiPackage,
-      slug: "asset-recovery",
-    },
-    {
-      title: "Compliance Certification",
-      description:
-        "Ensuring your business meets all regulatory requirements for e-waste disposal with our comprehensive compliance certification.",
-      IconComponent: FiFileText,
-      slug: "compliance-certification",
     },
     {
       title: "Collection Services",
       description:
         "Convenient collection solutions for businesses and organizations with large volumes of e-waste, including scheduled pickups.",
-      IconComponent: FiTruck,
+      icon: "/images/service-it.svg",
       slug: "collection-services",
     },
   ];
@@ -187,23 +156,26 @@ export default function ServicesPage() {
                 : "opacity-0 translate-y-20"
             }`}
           >
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">
+            <span className="text-primary font-semibold text-sm uppercase tracking-wider">
+              What We Offer
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold mt-2 mb-4">
               Our Services
-            </h1>
-            <p className="text-lg text-muted-foreground mb-8">
-              We offer a comprehensive range of eco-friendly services to help
-              you manage e-waste responsibly and comply with all regulations.
+            </h2>
+            <p className="text-muted-foreground">
+              We provide comprehensive solutions for responsible e-waste
+              management and recycling to protect our environment.
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {services.map((service, index) => (
             <ServiceCard
               key={index}
               title={service.title}
               description={service.description}
-              IconComponent={service.IconComponent}
+              icon={service.icon}
               index={index}
               slug={service.slug}
             />
@@ -217,10 +189,10 @@ export default function ServicesPage() {
           style={{ transitionDelay: "0.6s" }}
         >
           <Link
-            href="/contact"
+            href="/services"
             className="btn-primary inline-flex items-center"
           >
-            Contact Us For More Information
+            View All Services
             <svg
               className="ml-2 w-5 h-5"
               fill="none"

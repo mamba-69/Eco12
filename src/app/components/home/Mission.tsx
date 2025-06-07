@@ -132,7 +132,7 @@ export default function Mission() {
 
         {/* Main content with earth image */}
         <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left side image with 3D effect */}
+          {/* Left side image with informative e-waste recycling graphic */}
           <div
             ref={imageRef}
             className={`w-full transition-all duration-1000 ${
@@ -142,16 +142,23 @@ export default function Mission() {
             }`}
           >
             <div className="relative hover:scale-105 transition-transform duration-300">
-              <div className="relative w-full max-w-[450px] h-[450px] mx-auto">
+              <div className="relative w-full max-w-[500px] h-[500px] mx-auto">
                 <div className="w-full h-full pointer-events-none">
-                  <img
-                    src="https://i.postimg.cc/J4hR6v1V/earth-graphics.png"
-                    alt="Earth with plants graphic"
-                    className="w-full h-full object-contain rounded-xl pointer-events-none"
-                  />
-                  {/* Stats overlay - top removed as requested */}
-
-                  {/* Stats overlay - bottom removed as requested */}
+                  <div className="relative w-full h-full">
+                    <Image
+                      src="/images/ewaste-recycling-process.svg"
+                      alt="E-waste recycling process diagram"
+                      fill
+                      className="object-contain"
+                      priority
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center mt-[220px]">
+                        <h3 className="text-lg font-bold text-primary">Circular Economy</h3>
+                        <p className="text-sm text-muted-foreground">Transforming waste into resources</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

@@ -1,77 +1,10 @@
 "use client";
 
-import { useState, useRef, useEffect, ReactNode } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import {
-  FiChevronLeft,
-  FiChevronRight,
-  FiPlay,
-  FiPause,
-  FiVolume2,
-  FiVolumeX,
-  FiMaximize,
-} from "react-icons/fi";
 import { useStore } from "@/app/lib/store";
-
-// Client component wrapper
-interface MotionProps {
-  children?: ReactNode;
-  className?: string;
-  initial?: any;
-  animate?: any;
-  variants?: any;
-  transition?: any;
-  ref?: React.RefObject<any>;
-  style?: any;
-  onMouseEnter?: () => void;
-  onMouseLeave?: () => void;
-}
-
-const MotionDiv = ({ children, ...props }: MotionProps) => {
-  const [Component, setComponent] = useState<any>(() => (props: any) => (
-    <div {...props}>{props.children}</div>
-  ));
-
-  useEffect(() => {
-    let isMounted = true;
-    import("framer-motion").then((mod) => {
-      if (isMounted) {
-        setComponent(() => mod.motion.div);
-      }
-    });
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  return <Component {...props}>{children}</Component>;
-};
-
-// Custom hook to replace useInView
-function useClientInView(ref: React.RefObject<Element>, options = {}) {
-  const [isInView, setIsInView] = useState(false);
-
-  useEffect(() => {
-    if (!ref.current) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsInView(entry.isIntersecting);
-      },
-      { threshold: 0.2, rootMargin: "-100px" }
-    );
-
-    observer.observe(ref.current);
-
-    return () => {
-      if (ref.current) {
-        observer.unobserve(ref.current);
-      }
-    };
-  }, [ref]);
-
-  return isInView;
-}
+import { FiChevronLeft, FiChevronRight, FiMaximize } from "react-icons/fi";
+import { motion, AnimatePresence } from "framer-motion";
 
 // Define the type for media items
 interface MediaItem {
@@ -88,58 +21,25 @@ interface MediaItem {
   inMediaSlider?: boolean;
 }
 
-// Define props interface for the component
-interface MediaSliderProps {
-  autoPlay?: boolean;
-  autoPlaySpeed?: number;
-  isPaused?: boolean;
-}
-
-// Define the default media items
-const DEFAULT_MEDIA_ITEMS: MediaItem[] = [
-  {
-    type: "image",
-    title: "Environmental Sustainability",
-    description: "Working together for a greener future",
-    src: "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&w=1200&q=80",
-    thumbnail:
-      "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&w=320&h=180&q=80",
-  },
-  {
-    type: "image",
-    title: "Recycling Initiative",
-    description: "Making a difference through proper waste management",
-    src: "https://images.unsplash.com/photo-1563089145-599997674d42?auto=format&fit=crop&w=1200&q=80",
-    thumbnail:
-      "https://images.unsplash.com/photo-1563089145-599997674d42?auto=format&fit=crop&w=320&h=180&q=80",
-  },
-  {
-    type: "image",
-    title: "E-Waste Management",
-    description: "Proper disposal and recycling of electronic waste",
-    src: "https://images.unsplash.com/photo-1605600659873-d808a13e4d29?auto=format&fit=crop&w=1200&q=80",
-    thumbnail:
-      "https://images.unsplash.com/photo-1605600659873-d808a13e4d29?auto=format&fit=crop&w=320&h=180&q=80",
-  },
-];
-
 export function MediaSlider() {
   // Get media items from store
   const { contentSettings } = useStore();
 
   // States for slider functionality
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [isMuted, setIsMuted] = useState(true);
   const [loading, setLoading] = useState(true);
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [currentX, setCurrentX] = useState(0);
+  const [rotation, setRotation] = useState(0);
+  const sliderRef = useRef<HTMLDivElement>(null);
 
   // Default media items to use if none in store
   const FALLBACK_MEDIA_ITEMS: MediaItem[] = [
     {
       type: "image",
       title: "E-waste mountains",
-      description: "Vast landscapes of discarded electronics, highlighting the scale of the e-waste problem.",
       src: "https://iili.io/F20DHfp.md.jpg",
       url: "https://iili.io/F20DHfp.md.jpg",
       name: "E-waste mountains",
@@ -149,7 +49,6 @@ export function MediaSlider() {
     {
       type: "image",
       title: "Toxic components",
-      description: "Close-up of hazardous materials within e-waste, such as circuit boards and batteries, emphasizing environmental and health risks.",
       src: "https://iili.io/F20ti0B.md.jpg",
       url: "https://iili.io/F20ti0B.md.jpg",
       name: "Toxic components",
@@ -159,7 +58,6 @@ export function MediaSlider() {
     {
       type: "image",
       title: "Informal recycling dangers",
-      description: "Scenes of unsafe e-waste dismantling practices in developing countries, showing open burning or acid baths.",
       src: "https://iili.io/F20tZ5F.md.jpg",
       url: "https://iili.io/F20tZ5F.md.jpg",
       name: "Informal recycling dangers",
@@ -169,7 +67,6 @@ export function MediaSlider() {
     {
       type: "image",
       title: "Child labor in e-waste",
-      description: "Depiction of children involved in hazardous e-waste scavenging, highlighting social injustices.",
       src: "https://iili.io/F20tDba.md.jpg",
       url: "https://iili.io/F20tDba.md.jpg",
       name: "Child labor in e-waste",
@@ -179,7 +76,6 @@ export function MediaSlider() {
     {
       type: "image",
       title: "Resource depletion",
-      description: "Visuals of mining operations for rare earth metals, connecting e-waste to the broader issue of finite resources.",
       src: "https://iili.io/F20DRee.md.jpg",
       url: "https://iili.io/F20DRee.md.jpg",
       name: "Resource depletion",
@@ -189,7 +85,6 @@ export function MediaSlider() {
     {
       type: "image",
       title: "Certified recycling facility",
-      description: "Modern, clean, and organized e-waste recycling plant, showcasing responsible processing.",
       src: "https://iili.io/F20D11V.md.jpg",
       url: "https://iili.io/F20D11V.md.jpg",
       name: "Certified recycling facility",
@@ -199,7 +94,6 @@ export function MediaSlider() {
     {
       type: "image",
       title: "Automated sorting",
-      description: "Advanced machinery sorting e-waste components, illustrating efficient and safe practices.",
       src: "https://iili.io/F20D0qQ.md.jpg",
       url: "https://iili.io/F20D0qQ.md.jpg",
       name: "Automated sorting",
@@ -209,7 +103,6 @@ export function MediaSlider() {
     {
       type: "image",
       title: "Material recovery",
-      description: "Piles of recovered raw materials (e.g., copper, aluminum, plastics) ready for reuse.",
       src: "https://iili.io/F20DMdP.md.jpg",
       url: "https://iili.io/F20DMdP.md.jpg",
       name: "Material recovery",
@@ -219,7 +112,6 @@ export function MediaSlider() {
     {
       type: "image",
       title: "Refurbished electronics",
-      description: "Before-and-after shots of electronics being repaired and prepared for resale, promoting circular economy.",
       src: "https://iili.io/F20DV71.md.jpg",
       url: "https://iili.io/F20DV71.md.jpg",
       name: "Refurbished electronics",
@@ -229,7 +121,6 @@ export function MediaSlider() {
     {
       type: "image",
       title: "Community drop-off point",
-      description: "People responsibly dropping off their old electronics at a designated collection center.",
       src: "https://iili.io/F20DwhJ.md.jpg",
       url: "https://iili.io/F20DwhJ.md.jpg",
       name: "Community drop-off point",
@@ -239,7 +130,6 @@ export function MediaSlider() {
     {
       type: "image",
       title: "Sustainable product design",
-      description: "Engineers designing electronics with recycling and longevity in mind, showcasing upstream solutions.",
       src: "https://iili.io/F20DXmg.md.jpg",
       url: "https://iili.io/F20DXmg.md.jpg",
       name: "Sustainable product design",
@@ -248,7 +138,7 @@ export function MediaSlider() {
     },
   ];
 
-  // Initialize media items and set up auto-advance timer
+  // Initialize media items and set up auto-rotation
   useEffect(() => {
     // Set loading state
     setLoading(true);
@@ -261,28 +151,29 @@ export function MediaSlider() {
       );
 
       if (sliderItems.length > 0) {
-        console.log("Using media items from store:", sliderItems);
         setMediaItems(sliderItems);
       } else {
-        console.log("No slider items found in store, using defaults");
         setMediaItems(FALLBACK_MEDIA_ITEMS);
       }
     } else {
-      console.log("No media items in store, using defaults");
       setMediaItems(FALLBACK_MEDIA_ITEMS);
     }
 
     setLoading(false);
 
-    // Auto advance slides when playing is true
+    // Auto rotate the 3D slider
     const interval = setInterval(() => {
-      if (isPlaying) {
-        nextSlide();
+      if (!isDragging) {
+        setRotation((prev) => prev - 36); // Rotate 36 degrees (360 / 10 items)
       }
-    }, 5000);
+    }, 3000);
 
     return () => clearInterval(interval);
-  }, [contentSettings, isPlaying]);
+  }, [contentSettings, isDragging]);
+
+  // State for fullscreen preview
+  const [showFullscreen, setShowFullscreen] = useState(false);
+  const [fullscreenIndex, setFullscreenIndex] = useState(0);
 
   // Function to go to next slide
   const nextSlide = () => {
@@ -300,19 +191,27 @@ export function MediaSlider() {
     );
   };
 
-  // Toggle play/pause
-  const togglePlay = () => {
-    setIsPlaying(!isPlaying);
+  // Auto-advance slides
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!isDragging && !showFullscreen) {
+        nextSlide();
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [isDragging, mediaItems.length, showFullscreen]);
+
+  // Handle fullscreen preview
+  const openFullscreen = (index: number) => {
+    setFullscreenIndex(index);
+    setShowFullscreen(true);
+    document.body.style.overflow = "hidden";
   };
 
-  // Toggle mute for videos
-  const toggleMute = () => {
-    setIsMuted(!isMuted);
-  };
-
-  // Go to a specific slide
-  const goToSlide = (index: number) => {
-    setCurrentIndex(index);
+  const closeFullscreen = () => {
+    setShowFullscreen(false);
+    document.body.style.overflow = "";
   };
 
   if (loading) {
@@ -338,219 +237,212 @@ export function MediaSlider() {
     );
   }
 
-  const currentItem = mediaItems[currentIndex];
-  const isVideo =
-    currentItem?.url?.match(/\.(mp4|webm|ogg)$/i) ||
-    currentItem?.src?.match(/\.(mp4|webm|ogg)$/i);
-  const imageUrl = currentItem?.url || currentItem?.src;
-  const itemTitle = currentItem?.name || currentItem?.title;
-  const itemDescription = currentItem?.description;
-
   return (
-    <div className="relative w-full aspect-video overflow-hidden bg-black rounded-lg shadow-lg">
-      {/* Current slide */}
-      <div className="absolute inset-0">
-        {isVideo ? (
-          <video
-            src={imageUrl}
-            className="w-full h-full object-contain"
-            autoPlay
-            loop
-            muted={isMuted}
-            playsInline
-            onError={(e) => {
-              console.error("Video error:", e);
-              const target = e.target as HTMLVideoElement;
-              target.style.display = "none";
-            }}
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-black">
-            <img
-              src={imageUrl}
-              alt={itemTitle || "Slide image"}
-              className="max-h-full max-w-full object-contain"
-              onError={(e) => {
-                console.error("Image error:", imageUrl);
-                const target = e.target as HTMLImageElement;
-                target.onerror = null;
-                target.src =
-                  "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&w=1200&q=80";
-              }}
-            />
-          </div>
-        )}
-
-        {/* Overlay for better text contrast - only at bottom */}
-        <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/70 to-transparent"></div>
-      </div>
-
-      {/* Caption */}
-      <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-        <h2 className="text-2xl font-bold mb-2 text-shadow-sm">
-          {itemTitle || "Eco-Expert Initiative"}
-        </h2>
-        <p className="text-shadow-sm max-w-2xl">
-          {itemDescription || "Transforming waste into valuable resources"}
-        </p>
-      </div>
-
-      {/* Controls */}
-      <div className="absolute top-1/2 left-0 right-0 flex justify-between items-center px-4 transform -translate-y-1/2">
-        {/* Previous button */}
-        <button
-          onClick={prevSlide}
-          className="w-10 h-10 rounded-full bg-green-600 hover:bg-green-700 flex items-center justify-center text-white transition-colors"
-          aria-label="Previous slide"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+    <div className="relative w-full h-[500px] md:h-[600px] overflow-hidden bg-gradient-to-b from-gray-900 to-black rounded-xl shadow-2xl border border-gray-800">
+      {/* Main Slider */}
+      <div ref={sliderRef} className="relative w-full h-full">
+        <AnimatePresence initial={false} mode="wait">
+          <motion.div
+            key={currentIndex}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.05 }}
+            transition={{ duration: 0.5, ease: "easeInOut" }}
+            className="absolute inset-0 w-full h-full"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-        </button>
-
-        {/* Next button */}
-        <button
-          onClick={nextSlide}
-          className="w-10 h-10 rounded-full bg-green-600 hover:bg-green-700 flex items-center justify-center text-white transition-colors"
-          aria-label="Next slide"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-        </button>
-      </div>
-
-      {/* Bottom controls */}
-      <div className="absolute bottom-0 left-0 right-0 flex justify-center mb-6 space-x-1 z-10">
-        {mediaItems.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => goToSlide(index)}
-            className={`w-2.5 h-2.5 rounded-full ${
-              index === currentIndex
-                ? "bg-green-500"
-                : "bg-white bg-opacity-50 hover:bg-opacity-75"
-            }`}
-            aria-label={`Go to slide ${index + 1}`}
-          />
-        ))}
-      </div>
-
-      {/* Play/Pause and Mute controls (for videos) */}
-      <div className="absolute top-4 right-4 space-x-2 flex">
-        <button
-          onClick={togglePlay}
-          className="w-8 h-8 rounded-full bg-black bg-opacity-50 flex items-center justify-center text-white transition-colors"
-          aria-label={isPlaying ? "Pause slideshow" : "Play slideshow"}
-        >
-          {isPlaying ? (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          ) : (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          )}
-        </button>
-
-        {isVideo && (
-          <button
-            onClick={toggleMute}
-            className="w-8 h-8 rounded-full bg-black bg-opacity-50 flex items-center justify-center text-white transition-colors"
-            aria-label={isMuted ? "Unmute video" : "Mute video"}
-          >
-            {isMuted ? (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-                  clipRule="evenodd"
+            {mediaItems[currentIndex]?.type === "video" ? (
+              <div className="relative w-full h-full">
+                <video
+                  src={
+                    mediaItems[currentIndex].url || mediaItems[currentIndex].src
+                  }
+                  className="w-full h-full object-cover"
+                  controls
+                  playsInline
                 />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"
-                />
-              </svg>
+                <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black to-transparent">
+                  <h3 className="text-white text-xl md:text-2xl font-bold">
+                    {mediaItems[currentIndex].name ||
+                      mediaItems[currentIndex].title}
+                  </h3>
+                </div>
+              </div>
             ) : (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+              <div
+                className="relative w-full h-full group cursor-pointer"
+                onClick={() => openFullscreen(currentIndex)}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-                />
-              </svg>
+                {mediaItems[currentIndex]?.url && (
+                  <Image
+                    src={mediaItems[currentIndex].url}
+                    alt={mediaItems[currentIndex].name || "Media item"}
+                    fill
+                    className="object-cover transition-transform duration-700 group-hover:scale-105"
+                    priority
+                  />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="absolute top-4 right-4">
+                    <FiMaximize className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black to-transparent">
+                  <h3 className="text-white text-xl md:text-2xl font-bold">
+                    {mediaItems[currentIndex].name ||
+                      mediaItems[currentIndex].title}
+                  </h3>
+                </div>
+              </div>
             )}
-          </button>
-        )}
+          </motion.div>
+        </AnimatePresence>
       </div>
+
+      {/* Decorative elements */}
+      <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-primary/10 to-transparent opacity-50"></div>
+      <div className="absolute bottom-0 left-0 w-full h-20 bg-gradient-to-t from-primary/10 to-transparent opacity-50"></div>
+
+      {/* Navigation Controls */}
+      <button
+        onClick={prevSlide}
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-primary bg-opacity-80 hover:bg-opacity-100 text-white p-3 rounded-full transition-all transform hover:scale-110 hover:-translate-x-1 shadow-lg"
+        aria-label="Previous slide"
+      >
+        <FiChevronLeft className="w-6 h-6" />
+      </button>
+      <button
+        onClick={nextSlide}
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-primary bg-opacity-80 hover:bg-opacity-100 text-white p-3 rounded-full transition-all transform hover:scale-110 hover:translate-x-1 shadow-lg"
+        aria-label="Next slide"
+      >
+        <FiChevronRight className="w-6 h-6" />
+      </button>
+
+      {/* Thumbnail Navigation */}
+      <div className="absolute bottom-6 left-0 right-0 px-8 z-10">
+        <div className="flex justify-center gap-2 overflow-x-auto py-2 scrollbar-hide">
+          {mediaItems.map((item, index) => (
+            <button
+              key={item.id || index}
+              className={`relative flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-md overflow-hidden transition-all duration-300 ${
+                index === currentIndex
+                  ? "ring-2 ring-primary scale-105"
+                  : "ring-1 ring-white/30 hover:ring-white/70"
+              }`}
+              onClick={() => setCurrentIndex(index)}
+              aria-label={`Go to slide ${index + 1}`}
+            >
+              {item.type === "video" ? (
+                <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+              ) : (
+                item.url && (
+                  <Image
+                    src={item.url}
+                    alt={item.name || "Thumbnail"}
+                    fill
+                    className="object-cover"
+                  />
+                )
+              )}
+              {index === currentIndex && (
+                <div className="absolute inset-0 bg-primary/20"></div>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Fullscreen Preview */}
+      {showFullscreen && (
+        <div
+          className="fixed inset-0 z-50 bg-black flex items-center justify-center"
+          onClick={closeFullscreen}
+        >
+          <button
+            className="absolute top-4 right-4 z-10 text-white bg-black/50 p-2 rounded-full"
+            onClick={closeFullscreen}
+            aria-label="Close fullscreen"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+          <div className="relative w-[90vw] h-[90vh]">
+            {mediaItems[fullscreenIndex]?.url && (
+              <Image
+                src={mediaItems[fullscreenIndex].url}
+                alt={mediaItems[fullscreenIndex].name || "Media item"}
+                fill
+                className="object-contain"
+              />
+            )}
+          </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setFullscreenIndex((prev) =>
+                prev === 0 ? mediaItems.length - 1 : prev - 1
+              );
+            }}
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full"
+            aria-label="Previous image"
+          >
+            <FiChevronLeft className="w-6 h-6" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setFullscreenIndex((prev) =>
+                prev === mediaItems.length - 1 ? 0 : prev + 1
+              );
+            }}
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full"
+            aria-label="Next image"
+          >
+            <FiChevronRight className="w-6 h-6" />
+          </button>
+        </div>
+      )}
+
+      <style jsx>{`
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </div>
   );
 }

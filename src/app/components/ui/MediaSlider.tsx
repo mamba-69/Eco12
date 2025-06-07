@@ -1,21 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Swiper, SwiperSlide } from "swiper/react";
-// Import modules separately
-import { Pagination } from "swiper/modules";
-import { Navigation } from "swiper/modules";
-import { Autoplay } from "swiper/modules";
-// Import Swiper core and required types
-import type { Swiper as SwiperType } from "swiper";
+import Image from "next/image";
 import { useStore } from "@/app/lib/store";
-
-// Import Swiper styles
-import "swiper/css";
-import "swiper/css/pagination";
-import "swiper/css/navigation";
-
-// Custom styles for MediaSlider
 import "./MediaSlider.css";
 
 interface MediaItem {
@@ -31,9 +18,11 @@ export default function MediaSlider() {
   const { contentSettings } = useStore();
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const videoRefs = useRef<Record<string, HTMLVideoElement>>({});
-  const swiperRef = useRef<SwiperType | null>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [rotationDegree, setRotationDegree] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (contentSettings?.media?.images) {
@@ -51,7 +40,6 @@ export default function MediaSlider() {
             id: "1",
             url: "https://i.postimg.cc/J4hR6v1V/earth-graphics.png",
             name: "Environmental Sustainability",
-            description: "Working together for a greener future",
             type: "image",
             inMediaSlider: true,
           },
@@ -59,7 +47,20 @@ export default function MediaSlider() {
             id: "2",
             url: "https://i.postimg.cc/QM5P5Pb3/recycling.png",
             name: "Recycling Initiative",
-            description: "Making a difference through proper waste management",
+            type: "image",
+            inMediaSlider: true,
+          },
+          {
+            id: "3",
+            url: "https://i.postimg.cc/J4hR6v1V/earth-graphics.png",
+            name: "Eco-Friendly Solutions",
+            type: "image",
+            inMediaSlider: true,
+          },
+          {
+            id: "4",
+            url: "https://i.postimg.cc/QM5P5Pb3/recycling.png",
+            name: "Sustainable Practices",
             type: "image",
             inMediaSlider: true,
           },
@@ -69,112 +70,150 @@ export default function MediaSlider() {
     setLoading(false);
   }, [contentSettings]);
 
-  // Setup event handler to manage slide changes
-  useEffect(() => {
-    if (!swiperRef.current) return;
+  // Handle mouse down event for rotation
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setStartX(e.clientX);
+  };
 
-    const swiper = swiperRef.current;
-    const handleSlide = (s: SwiperType) => {
-      const newIndex = s.activeIndex;
-      setActiveIndex(newIndex);
+  // Handle mouse move event for rotation
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    
+    const deltaX = e.clientX - startX;
+    const newRotation = rotationDegree + deltaX * 0.5;
+    setRotationDegree(newRotation);
+    setStartX(e.clientX);
+    
+    // Calculate which item should be active based on rotation
+    const itemCount = mediaItems.length;
+    const degreesPerItem = 360 / itemCount;
+    const normalizedRotation = ((newRotation % 360) + 360) % 360;
+    const newIndex = Math.floor(normalizedRotation / degreesPerItem) % itemCount;
+    setCurrentIndex(itemCount - 1 - newIndex);
+  };
 
-      // Pause all videos when changing slides
-      Object.values(videoRefs.current).forEach((video) => {
-        if (video && !video.paused) {
-          video.pause();
-        }
-      });
+  // Handle mouse up event to stop rotation
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
 
-      // Play the current video if it's a video slide
-      const currentItem = mediaItems[newIndex];
-      if (currentItem?.type === "video") {
-        const video = videoRefs.current[currentItem.id];
-        if (video) {
-          video.play().catch((e) => console.log("Cannot autoplay video:", e));
-        }
-      }
-    };
+  // Handle touch events for mobile
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setIsDragging(true);
+    setStartX(e.touches[0].clientX);
+  };
 
-    swiper.on("slideChange", () => handleSlide(swiper));
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+    
+    const deltaX = e.touches[0].clientX - startX;
+    const newRotation = rotationDegree + deltaX * 0.5;
+    setRotationDegree(newRotation);
+    setStartX(e.touches[0].clientX);
+    
+    // Calculate which item should be active based on rotation
+    const itemCount = mediaItems.length;
+    const degreesPerItem = 360 / itemCount;
+    const normalizedRotation = ((newRotation % 360) + 360) % 360;
+    const newIndex = Math.floor(normalizedRotation / degreesPerItem) % itemCount;
+    setCurrentIndex(itemCount - 1 - newIndex);
+  };
 
-    return () => {
-      swiper.off("slideChange");
-    };
-  }, [swiperRef.current, mediaItems]);
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+  };
 
+  // Render loading state
   if (loading) {
-    return (
-      <div className="flex justify-center items-center py-8">
-        <div className="w-8 h-8 border-4 border-gray-300 border-t-green-600 rounded-full animate-spin"></div>
-      </div>
-    );
+    return <div className="media-slider-loading">Loading media...</div>;
   }
 
+  // Render empty state
   if (mediaItems.length === 0) {
-    return (
-      <div className="text-center py-6">
-        <p className="text-gray-500">No media items found</p>
-      </div>
-    );
+    return <div className="media-slider-empty">No media items available</div>;
   }
 
   return (
-    <div className="media-slider bg-black rounded-lg overflow-hidden max-w-4xl mx-auto shadow-lg">
-      <Swiper
-        modules={[Pagination, Navigation, Autoplay]}
-        pagination={{
-          clickable: true,
-          dynamicBullets: true,
-        }}
-        navigation={true}
-        autoplay={{
-          delay: 5000,
-          disableOnInteraction: false,
-          pauseOnMouseEnter: true,
-        }}
-        loop={mediaItems.length > 1}
-        onSwiper={(swiper) => {
-          swiperRef.current = swiper;
-        }}
-        className="media-swiper"
+    <div className="media-gallery-container">
+      <h2 className="media-gallery-title">Media Gallery</h2>
+      <p className="media-gallery-subtitle">Explore our visual content showcasing our facilities, processes, and environmental impact.</p>
+      
+      <div 
+        className="media-slider-360-container"
+        ref={containerRef}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
-        {mediaItems.map((item, index) => (
-          <SwiperSlide key={item.id} className="p-2">
-            <div className="relative w-full h-full">
-              {item.type === "video" ? (
-                <video
-                  className="w-full max-h-[calc(100%-50px)] object-contain mx-auto rounded"
-                  src={item.url}
-                  controls
-                  ref={(el) => {
-                    if (el) videoRefs.current[item.id] = el;
-                  }}
-                  muted={false}
-                  playsInline
-                />
-              ) : (
-                <img
-                  src={item.url}
-                  alt={item.name}
-                  className="w-full max-h-[calc(100%-50px)] object-contain mx-auto rounded"
-                />
-              )}
-              <div className="absolute bottom-0 left-0 right-0 p-3 bg-black bg-opacity-70 rounded-b">
-                <h3 className="text-white text-sm sm:text-base font-medium truncate">
-                  {item.name}
-                </h3>
-                {item.description && (
-                  <p className="text-white text-opacity-80 text-xs sm:text-sm mt-0.5 truncate">
-                    {item.description}
-                  </p>
+        <div 
+          className="media-slider-360-carousel"
+          style={{ transform: `rotateY(${rotationDegree}deg)` }}
+        >
+          {mediaItems.map((item, index) => {
+            const angle = (index * 360) / mediaItems.length;
+            const radius = 250; // Adjust based on your container size
+            const zTranslate = radius * Math.cos((angle * Math.PI) / 180);
+            const xTranslate = radius * Math.sin((angle * Math.PI) / 180);
+            
+            return (
+              <div 
+                key={item.id}
+                className={`media-slider-360-item ${index === currentIndex ? 'active' : ''}`}
+                style={{
+                  transform: `rotateY(${-angle}deg) translateZ(${zTranslate}px) translateX(${xTranslate}px)`,
+                }}
+              >
+                {item.type === "video" ? (
+                  <video
+                    src={item.url}
+                    controls
+                    className="media-slider-360-media"
+                    title={item.name}
+                  />
+                ) : (
+                  <div className="media-slider-360-image-container">
+                    <Image
+                      src={item.url}
+                      alt={item.name}
+                      fill
+                      className="media-slider-360-media"
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                    />
+                  </div>
                 )}
+                <h3 className="media-slider-360-title">{item.name}</h3>
               </div>
-            </div>
-          </SwiperSlide>
-        ))}
-      </Swiper>
-      <div className="text-white text-xs text-right px-4 pb-1">
-        {activeIndex + 1} / {mediaItems.length}
+            );
+          })}
+        </div>
+      </div>
+      
+      <div className="media-slider-360-controls">
+        <button 
+          className="media-slider-360-control-btn"
+          onClick={() => {
+            const newRotation = rotationDegree - (360 / mediaItems.length);
+            setRotationDegree(newRotation);
+            setCurrentIndex((currentIndex + 1) % mediaItems.length);
+          }}
+        >
+          &#10094; Previous
+        </button>
+        <button 
+          className="media-slider-360-control-btn"
+          onClick={() => {
+            const newRotation = rotationDegree + (360 / mediaItems.length);
+            setRotationDegree(newRotation);
+            setCurrentIndex((currentIndex - 1 + mediaItems.length) % mediaItems.length);
+          }}
+        >
+          Next &#10095;
+        </button>
       </div>
     </div>
   );

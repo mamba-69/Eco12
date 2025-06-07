@@ -1,10 +1,175 @@
 /* MediaSlider custom styles */
 
-.media-slider {
+/* Media Gallery Container */
+.media-gallery-container {
   position: relative;
   width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
   overflow: hidden;
-  max-height: 450px;
+  color: white;
+  text-align: center;
+}
+
+.media-gallery-title {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.media-gallery-subtitle {
+  font-size: 1rem;
+  margin-bottom: 2rem;
+  opacity: 0.8;
+}
+
+/* 360 Degree Slider */
+.media-slider-360-container {
+  position: relative;
+  width: 100%;
+  height: 450px;
+  perspective: 1000px;
+  margin: 0 auto;
+  cursor: grab;
+}
+
+.media-slider-360-container:active {
+  cursor: grabbing;
+}
+
+.media-slider-360-carousel {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.1s ease-out;
+}
+
+.media-slider-360-item {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  left: 50%;
+  top: 50%;
+  transform-origin: center;
+  transform: translate(-50%, -50%) rotateY(0deg) translateZ(250px);
+  backface-visibility: hidden;
+  transition: all 0.3s ease;
+  opacity: 0.7;
+  filter: blur(1px);
+}
+
+.media-slider-360-item.active {
+  opacity: 1;
+  filter: blur(0);
+  transform: translate(-50%, -50%) rotateY(0deg) translateZ(300px) scale(1.1);
+  z-index: 10;
+}
+
+.media-slider-360-image-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.media-slider-360-media {
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.media-slider-360-title {
+  position: absolute;
+  bottom: -30px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: white;
+  font-size: 1rem;
+  font-weight: bold;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Controls */
+.media-slider-360-controls {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 3rem;
+}
+
+.media-slider-360-control-btn {
+  background-color: #22c55e;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  padding: 0.5rem 1.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.media-slider-360-control-btn:hover {
+  background-color: #16a34a;
+  transform: translateY(-2px);
+}
+
+/* Loading and Empty States */
+.media-slider-loading,
+.media-slider-empty {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+  color: white;
+  font-size: 1.2rem;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .media-slider-360-container {
+    height: 400px;
+  }
+  
+  .media-slider-360-item {
+    width: 250px;
+    height: 250px;
+  }
+}
+
+@media (max-width: 480px) {
+  .media-gallery-title {
+    font-size: 1.5rem;
+  }
+  
+  .media-gallery-subtitle {
+    font-size: 0.9rem;
+  }
+  
+  .media-slider-360-container {
+    height: 350px;
+  }
+  
+  .media-slider-360-item {
+    width: 200px;
+    height: 200px;
+  }
+  
+  .media-slider-360-controls {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .media-slider-360-control-btn {
+    width: 80%;
+  }
 }
 
 .media-swiper {
@@ -104,4 +269,4 @@
   .media-swiper .swiper-slide {
     max-height: 250px;
   }
-} 
+}

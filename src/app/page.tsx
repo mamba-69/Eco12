@@ -1,5 +1,6 @@
 import Hero from "@/app/components/home/Hero";
 import Mission from "@/app/components/home/Mission";
+import Services from "@/app/components/home/Services";
 import Features from "@/app/components/home/Features";
 import { MediaSlider } from "@/app/components/home/MediaSlider";
 
@@ -12,6 +13,7 @@ export default function Home() {
       <div className="flex-1">
         <Hero />
         <Mission />
+        <Services />
         <Features />
         <div className="container mx-auto px-4 py-12 mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4 text-center">
