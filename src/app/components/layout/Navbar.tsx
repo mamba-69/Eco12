@@ -25,15 +25,21 @@ export default function Navbar() {
   };
 
   const toggleTheme = () => {
-    // Default to 'light' as a fallback, though this condition should never occur
-    let newTheme: "light" | "dark" | "system" = "light";
-
-    if (theme === "dark") {
-      newTheme = "light";
-    } else if (theme === "light" || theme === "system") {
-      newTheme = "dark";
+    // Force check the current DOM state rather than relying on React state
+    const root = window.document.documentElement;
+    const isDark = root.classList.contains('dark');
+    
+    // Toggle to the opposite theme
+    const newTheme = isDark ? 'light' : 'dark';
+    
+    // Apply the new theme directly to DOM first
+    if (isDark) {
+      root.classList.remove('dark');
+    } else {
+      root.classList.add('dark');
     }
-
+    
+    // Then update the React state
     setTheme(newTheme);
     console.log("Theme toggled to:", newTheme);
   };

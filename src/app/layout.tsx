@@ -5,7 +5,10 @@ import RootLayoutClient from "./components/layout/RootLayoutClient";
 export const metadata: Metadata = {
   title: "Eco-Expert E-Waste Recycling - Sustainable Solutions for a Greener Future",
   description: "Eco-Expert provides comprehensive e-waste recycling solutions, material recovery, data destruction, and community education. Join us in building a sustainable future by responsibly managing electronic waste.",
-  keywords: "e-waste recycling, electronic waste, sustainable solutions, material recovery, data destruction, community education, eco-friendly, recycling services, responsible disposal, green technology",
+  keywords: "E-waste recycling, electronics waste, Eco Expert Recycling, sustainable tech India, e-waste management",
+  verification: {
+    google: "q4w13wAXU8uvOCDogG6g1ONxyqt_idPQCE1suAT385Q",
+  },
   authors: [{ name: "Eco-Expert" }],
   creator: "Eco-Expert",
   publisher: "Eco-Expert",
