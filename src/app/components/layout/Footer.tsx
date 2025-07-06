@@ -103,7 +103,7 @@ export default function Footer() {
           <div>
             <div className="flex items-center mb-4">
               <img
-                src="https://i.postimg.cc/2SW1kwbf/Final.png"
+                src="https://iili.io/FlMGxUJ.png"
                 alt="Eco-Expert Recycling"
                 className="w-12 h-12 mr-2 object-contain"
                 onError={(e) => {
