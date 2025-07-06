@@ -105,7 +105,7 @@ export default function Footer() {
               <img
                 src="https://iili.io/FlMGxUJ.png"
                 alt="Eco-Expert Recycling"
-                className="w-12 h-12 mr-2 object-contain"
+                className="w-16 h-16 mr-2 object-contain"
                 onError={(e) => {
                   // Fallback to placeholder if the remote one fails
                   const target = e.target as HTMLImageElement;

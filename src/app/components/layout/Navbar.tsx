@@ -55,9 +55,9 @@ export default function Navbar() {
           {/* Logo and site name */}
           <Link href="/" className="flex items-center space-x-2">
             <img
-              src="https://i.postimg.cc/2SW1kwbf/Final.png"
+              src="https://iili.io/FlMGxUJ.png"
               alt="Eco-Expert logo"
-              className="w-12 h-12 rounded object-contain"
+              className="w-16 h-16 rounded object-contain"
               onError={(e) => {
                 console.log("Logo failed to load, using fallback");
                 const target = e.target as HTMLImageElement;
